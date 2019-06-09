@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+     
+
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/scrollView" >
+        <LinearLayout
+                        android:translationY="20dp"
+
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"       
+            android:id="@+id/s_Buttons">
+
+           
+            <TextView
+                android:text="Settings"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:minWidth="25px"
+                android:minHeight="25px"
+                android:translationX="20dp"
+                android:id="@+id/settingstext" />
+            <TextView
+                android:text="Search For"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/textView3" />
+            <CheckBox
+                android:text="Movie Search"
+                android:checked="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/msearch" />
+            <CheckBox
+                android:text="TV-Show Search"
+                android:checked="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/tvasearch" />
+            <CheckBox
+                android:text="HD Anime Search"
+                android:checked="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/hdasearch" />
+            <CheckBox
+                android:text="Anime Search"
+                android:checked="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/asearch" />
+            <CheckBox
+                android:text="Backup Anime Search"
+                android:checked="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/basearch" />
+            <TextView
+                android:text="History"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/textView1" />
+            <CheckBox
+                android:text="Save Titles"
+                android:checked="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/savetitles" />
+            
+            <CheckBox
+                android:text="Save Links"
+                android:checked="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/savelinks" />
+            <TextView
+                android:text="Clear History"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/textView2" />
+            <Button
+                android:text="Clear History"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:textColor="@color/cardview_dark_background"
+
+                android:id="@+id/clearhistory" />
+            <Button
+                android:text="Clear Bookmarks"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:textColor="@color/cardview_dark_background"
+
+                android:id="@+id/clearbookmarks" />
+
+
+
+
+
+            </LinearLayout>
+    </ScrollView>
+
+
+</RelativeLayout>           
