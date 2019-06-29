@@ -32,10 +32,10 @@ namespace CloudStream
         void CheckBookmark(int over = -1)
         {
             bool get = (over == 1);
-            if(over == -1) {
+            if (over == -1) {
                 get = GetIfBookmarked(moveSelectedID);
             }
-            fab.SetImageResource( (get ? Resource.Drawable.abc_btn_rating_star_on_mtrl_alpha : Resource.Drawable.abc_btn_rating_star_off_mtrl_alpha));
+            fab.SetImageResource((get ? Resource.Drawable.abc_btn_rating_star_on_mtrl_alpha : Resource.Drawable.abc_btn_rating_star_off_mtrl_alpha));
 
         }
         protected override void OnCreate(Bundle savedInstanceState)
@@ -46,6 +46,9 @@ namespace CloudStream
             searchResultsActivity = this;
 
             ax_Search.ax_search.UpdateList();
+            print(DateTime.Now.Millisecond.ToString());
+            GetAllChromeDevices();
+            print(DateTime.Now.Millisecond.ToString());
 
             base.OnCreate(savedInstanceState);
             //Window.RequestFeature(WindowFeatures.NoTitle);
@@ -74,19 +77,19 @@ namespace CloudStream
             {
                 View anchor = o as View;
                 bool savedIn = GetIfBookmarked(moveSelectedID);
-                if (!savedIn) { 
+                if (!savedIn) {
                     AddBookMark(moveSelectedID);
                 }
                 else {
-                    
-                    if(movieTitles[moveSelectedID].Contains("B___")) {
+
+                    if (movieTitles[moveSelectedID].Contains("B___")) {
                         Finish();
                     }
                     RemoveBookMark(moveSelectedID);
                 }
-                CheckBookmark( (savedIn ? 0 : 1) );
+                CheckBookmark((savedIn ? 0 : 1));
                 Snackbar.Make(anchor, (savedIn ? "Removed From Bookmarks" : "Saved In Bookmarks"), Snackbar.LengthLong).Show();
-                
+
                 /*
                         .SetAction("Undo", v =>
                         {
@@ -125,14 +128,14 @@ namespace CloudStream
         public static bool done = false;
         public void AddTabs(int _seasons)
         {
-           // done = true;
+            // done = true;
             seasons = _seasons;
-           // Intent intent = new Intent(fab.Context, typeof(SearchResultsActivity));
-           // StartActivity(intent);
+            // Intent intent = new Intent(fab.Context, typeof(SearchResultsActivity));
+            // StartActivity(intent);
 
-           // Finish();
+            // Finish();
 
-           
+
         }
 
         private void SetUpViewPager(ViewPager viewPager)
@@ -142,7 +145,7 @@ namespace CloudStream
             veiws = 0;
             adapter.AddFragment(new ax_Info(), "Info");
             if (movieProvider[moveSelectedID] == 3) {
-                if(!done) { 
+                if (!done) {
                     adapter.AddFragment(new ax_Links(), "Links");
                 }
                 else {
@@ -155,15 +158,20 @@ namespace CloudStream
             }
             else {
 
-            
-                if (movieProvider[moveSelectedID] == 0) {
-                adapter.AddFragment(new ax_Links(), "Dub");
-                adapter.AddFragment(new ax_Links(), "Sub");
-            }
-            else {
-                adapter.AddFragment(new ax_Links(), "Links");
 
-            }
+                if (movieProvider[moveSelectedID] == 0) {
+                    adapter.AddFragment(new ax_Links(), "Dub");
+                    adapter.AddFragment(new ax_Links(), "Sub");
+                }
+                else {
+                    if(movieProvider[moveSelectedID] == 4) {
+                        adapter.AddFragment(new ax_Links(), "Episodes");
+                        adapter.AddFragment(new ax_Links(), "Links");
+                    }
+                    else { 
+                        adapter.AddFragment(new ax_Links(), "Links");
+                    }
+                }
             }
 
             // adapter.Fragments[1].set = "currentMain";

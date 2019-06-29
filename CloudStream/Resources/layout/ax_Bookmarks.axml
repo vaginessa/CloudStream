@@ -3,12 +3,44 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="1dp">
-    
+
+      <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/reloadbtt"
+        android:translationY="7.5dp"
+        android:translationX="10dp"
+        android:layout_marginEnd="17.5dp"
+        android:id="@+id/refreshBar" />
+      <ImageButton
+        android:background="@drawable/reload"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:translationY="5dp"
+        android:translationX="5dp"
+        android:rotation="0"
+        android:id="@+id/reloadbtt" />
+    <!--
+        <ImageButton
+        android:background="@drawable/track_right"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:translationY="5dp"
+        android:translationX="10dp"
+        android:rotation="0"
+        android:layout_toRightOf="@+id/reloadbtt"
+        android:id="@+id/nextbtt" /> -->
+
+
 
     <android.support.v7.widget.RecyclerView
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:scrollbars="vertical"
+                android:translationY="10dp"
+
+        android:layout_below="@+id/reloadbtt"
         android:id="@+id/recyclerView_movies" />
 
     <!--
@@ -31,4 +63,6 @@
     </LinearLayout>
            </ScrollView>
     -->
+
+    
 </RelativeLayout>

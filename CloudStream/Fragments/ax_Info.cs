@@ -18,6 +18,9 @@ namespace CloudStream.Fragments
 {
     public class ax_Info : SupportFragment
     {
+
+
+
         public override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -54,6 +57,46 @@ namespace CloudStream.Fragments
             }
         }
         public static ax_Info ax_info;
+        public Spinner subtitleSpinner;
+        public TextView subtitleText;
+        static List<string> subtitleFill = new List<string>();
+
+        public void SetSpinner(List<string> fill)
+        {
+            subtitleFill = fill;
+            try {
+
+            
+            Runnable r = new Runnable(_SetSpinner);
+            Activity.RunOnUiThread(r);
+            }
+            catch (System.Exception) {
+
+            }
+
+        }
+
+
+        public void _SetSpinner()
+        {
+            List<string> fill = new List<string>();
+            for (int i = 0; i < subtitleFill.Count; i++) {
+                fill.Add(subtitleFill[i]);
+            }
+            if(!useSubtitles) {
+                fill = new List<string>();
+            }
+            fill.Insert(0, "None");
+            bool gone = fill.Count <= 1;
+            subtitleSpinner.Visibility = gone ? ViewStates.Gone : ViewStates.Visible;
+            subtitleText.Visibility = gone ? ViewStates.Gone : ViewStates.Visible;
+            if (!gone) {
+                var adapter = new ArrayAdapter<string>(Context, Android.Resource.Layout.SimpleSpinnerItem, fill);
+                subtitleSpinner.Adapter = adapter;
+            }
+        }
+
+
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
             // Use this to return your custom view for this Fragment
@@ -61,10 +104,15 @@ namespace CloudStream.Fragments
             View view = inflater.Inflate(Resource.Layout.ax_Info, container, false);
             ax_info = this;
             var m_title = view.FindViewById<TextView>(Resource.Id.moveTitle);
+            subtitleSpinner = view.FindViewById<Spinner>(Resource.Id.subtitleSpinner);
+            subtitleText = view.FindViewById<TextView>(Resource.Id.subtitleText);
 
-            
+            SetSpinner(new List<string>());
+
+            subtitleSpinner.ItemSelected += SubtitleSpinner_ItemSelected;
+
             currentMovie = moviesActive[moveSelectedID];
-            m_title.Text = movieTitles[moveSelectedID].Replace("B___","");
+            m_title.Text = movieTitles[moveSelectedID].Replace("B___","").Replace(" (Bookmark)","");
 
 
             string add = "";
@@ -81,8 +129,37 @@ namespace CloudStream.Fragments
                 add += currentMovie.plot + "\n";
             }
 
-            
-           
+            ImageButton castBtt = view.FindViewById<ImageButton>(Resource.Id.imageButton1);
+            castBtt.Visibility = ChromechastExists() ? ViewStates.Visible : ViewStates.Invisible;
+            if(!ChromechastExists()) {
+                m_title.TranslationX /= 4;
+            }
+            castBtt.Click += (o, e) =>
+            {
+                PopupMenu menu = new PopupMenu(ax_Info.ax_info.Context, view);
+                menu.MenuInflater.Inflate(Resource.Menu.menu1, menu.Menu);
+
+                for (int i = 0; i < allChromeCasts.Count; i++) {
+                    menu.Menu.Add(allChromeCasts[i].FriendlyName);
+                }
+
+                menu.MenuItemClick += (s, arg) =>
+                {
+                    // Toast.MakeText(mainActivity, string.Format("Menu {0} clicked", arg.Item.TitleFormatted), ToastLength.Short).Show();
+                    print("DA: " + arg.Item.TitleFormatted);
+                    print("Pressed cast:");
+                    SetCaster(arg.Item.TitleFormatted.ToString());
+                };
+
+                menu.DismissEvent += (s, arg) =>
+                {
+                    //Toast.MakeText(mainActivity, string.Format("Menu dissmissed"), ToastLength.Short).Show();
+
+                };
+
+                menu.Show();
+            };
+
             var m_dec = view.FindViewById<TextView>(Resource.Id.movieInfo);
             m_dec.Text = add;
 
@@ -121,5 +198,10 @@ namespace CloudStream.Fragments
 
             return view;
         }
+        private void SubtitleSpinner_ItemSelected(object sender, AdapterView.ItemSelectedEventArgs e)
+        {
+            currentActiveSubtitle = e.Position - 1;
+        }
+
     }
 }

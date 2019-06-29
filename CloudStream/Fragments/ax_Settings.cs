@@ -20,6 +20,8 @@ namespace CloudStream.Fragments
 {
     public class ax_Settings : SupportFragment
     {
+
+        readonly static bool haveAnimeEnabled = true;
         public override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -36,53 +38,66 @@ namespace CloudStream.Fragments
         }
 
         /// <summary>
-        /// 0 = msearch 1 = hdasearch, 2 = asearch, 3 = basearch, 4 = savelinks, 5 = savetitles, 6 = tvasearch
+        /// 0 = msearch 1 = hdasearch, 2 = asearch, 3 = basearch, 4 = savelinks, 5 = savetitles, 6 = tvasearch, 7 = bmsearch, 8 = htvasearch
         /// </summary>
         /// <returns></returns>
         public static bool SettingsGetChecked(int i)
         {
             try {
-                bool[] bools = { msearch.Checked, hdasearch.Checked, asearch.Checked, basearch.Checked, savelinks.Checked, savetitles.Checked, tvasearch.Checked };
+                bool[] bools = { msearch.Checked, hdasearch.Checked, asearch.Checked, basearch.Checked, savelinks.Checked, savetitles.Checked, tvasearch.Checked, bmsearch.Checked, htvasearch.Checked };
                 return bools[i];
             }
             catch (Exception) {
                 var set = Application.Context.GetSharedPreferences("Settings", FileCreationMode.Private);
-                bool[] bools = { set.GetBoolean("msearch", true), set.GetBoolean("hdasearch", true), set.GetBoolean("asearch", false), set.GetBoolean("basearch", false), set.GetBoolean("savelinks", true), set.GetBoolean("savetitles", true),set.GetBoolean("tvasearch",true) };
+                bool[] bools = { set.GetBoolean("msearch", true), set.GetBoolean("hdasearch", haveAnimeEnabled), set.GetBoolean("asearch", false), set.GetBoolean("basearch", false), set.GetBoolean("savelinks", true), set.GetBoolean("savetitles", true), set.GetBoolean("tvasearch", true), set.GetBoolean("bmsearch", false), set.GetBoolean("htvasearch", false) };
                 return bools[i];
             }
         }
 
-        static CheckBox msearch, hdasearch, asearch, basearch, savelinks, savetitles, tvasearch;
+        static CheckBox msearch, hdasearch, asearch, basearch, savelinks, savetitles, tvasearch, bmsearch, htvasearch;
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
             // Use this to return your custom view for this Fragment
             // return inflater.Inflate(Resource.Layout.YourFragment, container, false);
             View view = inflater.Inflate(Resource.Layout.ax_Settings, container, false);
 
-            var cbookmarks =  view.FindViewById(Resource.Id.clearbookmarks);
-            var chistory=  view.FindViewById(Resource.Id.clearhistory);
+            var cbookmarks = view.FindViewById(Resource.Id.clearbookmarks);
+            var chistory = view.FindViewById(Resource.Id.clearhistory);
 
-            msearch =  view.FindViewById<CheckBox>(Resource.Id.msearch);
-            hdasearch =  view.FindViewById<CheckBox>(Resource.Id.hdasearch);
-            asearch =  view.FindViewById<CheckBox>(Resource.Id.asearch);
-            basearch =  view.FindViewById<CheckBox>(Resource.Id.basearch);
-            tvasearch =  view.FindViewById<CheckBox>(Resource.Id.tvasearch);
+            msearch = view.FindViewById<CheckBox>(Resource.Id.msearch);
+            hdasearch = view.FindViewById<CheckBox>(Resource.Id.hdasearch);
+            asearch = view.FindViewById<CheckBox>(Resource.Id.asearch);
+            basearch = view.FindViewById<CheckBox>(Resource.Id.basearch);
+            tvasearch = view.FindViewById<CheckBox>(Resource.Id.tvasearch);
+            htvasearch = view.FindViewById<CheckBox>(Resource.Id.htvasearch);
+            bmsearch = view.FindViewById<CheckBox>(Resource.Id.bmsearch);
 
-            savelinks =  view.FindViewById<CheckBox>(Resource.Id.savelinks);
-            savetitles =  view.FindViewById<CheckBox>(Resource.Id.savetitles);
+            savelinks = view.FindViewById<CheckBox>(Resource.Id.savelinks);
+            savetitles = view.FindViewById<CheckBox>(Resource.Id.savetitles);
 
-          //  var sdownloads =  view.FindViewById(Resource.Id.showdownloads);
+            //  var sdownloads =  view.FindViewById(Resource.Id.showdownloads);
 
-           // sdownloads.Click += (o,e) => MainActivity.mainActivity.ShowDownloads();
+            // sdownloads.Click += (o,e) => MainActivity.mainActivity.ShowDownloads();
 
 
             var set = Application.Context.GetSharedPreferences("Settings", FileCreationMode.Private);
 
             msearch.Checked = set.GetBoolean("msearch", true);
-            hdasearch.Checked = set.GetBoolean("hdasearch", true);
+            hdasearch.Checked = set.GetBoolean("hdasearch", haveAnimeEnabled);
             asearch.Checked = set.GetBoolean("asearch", false);
             basearch.Checked = set.GetBoolean("basearch", false);
-            tvasearch.Checked = set.GetBoolean("tvasearch", true);
+            tvasearch.Checked = set.GetBoolean("tvasearch", false);
+            bmsearch.Checked = set.GetBoolean("bmsearch", false);
+            htvasearch.Checked = set.GetBoolean("bmsearch", true);
+
+            if (!haveAnimeEnabled) {
+                hdasearch.Visibility = ViewStates.Gone;
+                asearch.Visibility = ViewStates.Gone;
+                basearch.Visibility = ViewStates.Gone;
+            }
+
+
+
 
             savelinks.Checked = set.GetBoolean("savelinks", true);
             savetitles.Checked = set.GetBoolean("savetitles", true);
@@ -92,6 +107,8 @@ namespace CloudStream.Fragments
             asearch.Click += (o, e) => SaveBool("asearch", asearch.Checked);
             basearch.Click += (o, e) => SaveBool("basearch", basearch.Checked);
             tvasearch.Click += (o, e) => SaveBool("tvasearch", tvasearch.Checked);
+            bmsearch.Click += (o, e) => SaveBool("bmsearch", bmsearch.Checked);
+            htvasearch.Click += (o, e) => SaveBool("htvasearch", htvasearch.Checked);
 
             savelinks.Click += (o, e) => SaveBool("savelinks", savelinks.Checked);
             savetitles.Click += (o, e) => SaveBool("savetitles", savetitles.Checked);
@@ -99,7 +116,7 @@ namespace CloudStream.Fragments
 
             chistory.SetBackgroundColor(Color.AliceBlue);
             cbookmarks.SetBackgroundColor(Color.AliceBlue);
-          //  sdownloads.SetBackgroundColor(Color.AliceBlue);
+            //  sdownloads.SetBackgroundColor(Color.AliceBlue);
 
             chistory.LongClickable = true;
             cbookmarks.LongClickable = true;

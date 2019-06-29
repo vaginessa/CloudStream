@@ -39,24 +39,34 @@ using Android;
 using Android.Content.PM;
 using YoutubeExplode;
 using YoutubeExplode.Models.MediaStreams;
+using SharpCaster.Models;
+using System.Collections.ObjectModel;
+using SharpCaster.Services;
+using SharpCaster.Controllers;
+using SharpCaster.Models.MediaStatus;
+using SharpCaster.Extensions;
+using SharpCaster.Models.ChromecastStatus;
+using Jint;
 
 namespace CloudStream
 {
-  
 
-    [Activity(Icon = "@drawable/BlueIcon", MainLauncher = true, Theme = "@style/Theme.Design.NoActionBar", ConfigurationChanges = ConfigChanges.KeyboardHidden|ConfigChanges.LayoutDirection|ConfigChanges.Orientation|ConfigChanges.ScreenSize)]
+
+    [Activity(Icon = "@drawable/BlueIcon", MainLauncher = true, Theme = "@style/Theme.Design.NoActionBar", ConfigurationChanges = ConfigChanges.KeyboardHidden | ConfigChanges.LayoutDirection | ConfigChanges.Orientation | ConfigChanges.ScreenSize)]
     public class MainActivity : AppCompatActivity
     {
-        public static int thredNumber = 0;
-        public static int bar_progress = 10;
+        public const bool useChromeCast = false;
+
         public static string searchFor = "";
+
+        public static int thredNumber = 0;
 
         public DrawerLayout mDrawerLayout;
         List<Button> btts = new List<Button>();
 
         public static void ShowSnackBar(string inp, object o)
         {
-            View _anchor = o as View; 
+            View _anchor = o as View;
             Snackbar.Make(_anchor, inp, Snackbar.LengthLong).Show();
         }
         public static void ShowSnackBar(string inp)
@@ -68,15 +78,223 @@ namespace CloudStream
         {
             Snackbar.Make(_anchor, inp, Snackbar.LengthLong).Show();
         }
- 
-            static View anchor;
+
+        static View anchor;
+
+        public static List<Chromecast> allChromeCasts = new List<Chromecast>();
+
+        public static void PlayLink(string link)
+        {
+            castLink = link;
+            _PlayLink();
+            // MethodInvoker simpleDelegate;
+            // simpleDelegate = new MethodInvoker(_PlayLink);
+            //  simpleDelegate.BeginInvoke(null, null);
+
+        }
+
+        public static bool IsConnectedToChromecast()
+        {
+            return useChromeCast ? ChromecastService.ChromeCastClient.Connected : false;
+        }
+
+        public static void SetCaster(string cast)
+        {
+            castTo = cast;
+            _SetCaster();
+        }
+
+        static async void _SetCaster()
+        {
+            print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADDDDDDDDDDDDDVVVVVVVVVVVVVVVVVVV");
+            bool done = false;
+            // try {
+            ObservableCollection<Chromecast> chromecasts = await ChromecastService.Current.StartLocatingDevices();
+
+            allChromeCasts = new List<Chromecast>();
+            if (chromecasts.Count > 0) {
+                for (int i = 0; i < chromecasts.Count; i++) {
+                    bool passes = true;
+                    for (int f = 0; f < allChromeCasts.Count; f++) {
+                        if (allChromeCasts[f].DeviceUri == chromecasts[i].DeviceUri) {
+                            passes = false;
+                        }
+                    }
+                    if (!allChromeCasts.Contains(chromecasts[i]) && passes) {
+                        allChromeCasts.Add(chromecasts[i]);
+                    }
+                }
+            }
+
+            for (int i = 0; i < allChromeCasts.Count; i++) {
+                if (allChromeCasts[i].FriendlyName == castTo && !done) {
+                    done = true;
+                    print("_________________ Playing Chromecast ON " + castTo + " __________________________");
+                    if (ChromecastService.Current.ChromeCastClient.Connected) {
+                        //await _controller.StopApplication();
+                        //   da.url = new Uri("https://i.redd.it/c29bxq0xu2431.jpg");
+                        print("DD1");
+                        await ChromecastService.ChromeCastClient.DisconnectChromecast();
+                        print("DD2");
+                        //  await ChromecastService.ChromeCastClient.DisconnectChromecast();
+                        // print("DD3");
+
+
+                    }
+                    else {
+                        print("DD4");
+                    }
+                    print("AA1");
+                    // var devices = await ChromecastService.StartLocatingDevices();
+                    print("AA2");
+                    ChromecastService.ConnectToChromecast(allChromeCasts[i]);
+                    print("AA3");
+
+                    //if (_controller == null) {
+                    //   await Task.Delay(5000);
+
+                    print("AA22");
+
+                    // _controller = await ChromecastService.Current.ChromeCastClient.LaunchSharpCaster();
+                    // }
+                    print("AA33");
+
+
+
+                    /*
+               var track = new Track
+               {
+                   Name = "English Subtitle",
+                   TrackId = 100,
+                   Type = "TEXT",
+                   SubType = "captions",
+                   Language = "en-US",
+                   TrackContentId =
+"https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/tracks/DesigningForGoogleCast-en.vtt"
+               };
+               print("AA3.5");
+             
+               print("AA4");
+               print("AA5");
+
+               */
+                    //  }
+                }
+            }
+            //catch (System.Exception) {
+
+            //    print("!!!Error!!!");
+            //    ShowSnackBar("Error casting, bad link?",ax_Links.ax_links.View);
+            //}
+        }
+
+
+        static string castTo;
+        static string castLink;
+
+        static async void _PlayLink(object sender = null, SharpCaster.Models.ChromecastStatus.ChromecastApplication e = null)
+        {
+            print("AA333");
+            await _controller.LoadMedia(castLink, "video/mp4", null, "BUFFERED");
+            print("AA444");
+            await _controller.Play();
+            print("AA555555");
+
+        }
+        static readonly ChromecastService ChromecastService = ChromecastService.Current;
+
+
+        public static void GetAllChromeDevices()
+        {
+            MethodInvoker simpleDelegate;
+
+            simpleDelegate = new MethodInvoker(_GetAllChromeDevices);
+            simpleDelegate.BeginInvoke(null, null);
+        }
+        static async void _GetAllChromeDevices()
+        {
+
+            ObservableCollection<Chromecast> chromecasts = await ChromecastService.Current.StartLocatingDevices();
+
+            allChromeCasts = new List<Chromecast>();
+            if (chromecasts.Count > 0) {
+                for (int i = 0; i < chromecasts.Count; i++) {
+                    bool passes = true;
+                    for (int f = 0; f < allChromeCasts.Count; f++) {
+                        if (allChromeCasts[f].DeviceUri == chromecasts[i].DeviceUri) {
+                            passes = false;
+                        }
+                    }
+                    if (!allChromeCasts.Contains(chromecasts[i]) && passes) {
+                        allChromeCasts.Add(chromecasts[i]);
+                    }
+                }
+            }
+        }
+
+
+        public static bool ChromechastExists()
+        {
+            if (allChromeCasts == null) return false;
+            print("Chromecasts = " + allChromeCasts.Count);
+
+            return useChromeCast ? allChromeCasts.Count > 0 : false;
+        }
+
+
+        public static SharpCasterDemoController _controller;
+
+        private async void ChromeCastClient_ApplicationStarted(object sender, SharpCaster.Models.ChromecastStatus.ChromecastApplication e)
+        {
+            print("DA1");
+        }
+
+        private async void ChromeCastClient_ConnectedChanged(object sender, EventArgs e)
+        {
+            print("da2");
+
+            if (_controller == null) {
+                _controller = await ChromecastService.ChromeCastClient.LaunchSharpCaster();
+            }
+            print("AA4");
+
+            /*
+            ChromecastService.ChromeCastClient.RunningApplication.DisplayName = "DA";
+            ChromecastService.ChromeCastClient.RunningApplication.StatusText = "DA2";
+            print("AA4");
+            */
+            // _controller = await ChromecastService.ChromeCastClient.LaunchSharpCaster();
+
+        }
+        void ChromeCastClient_MediaStatusChanged(object sender, MediaStatus s)
+        {
+            print("da6");
+        }
+        void ChromeCastClient_StatusChanged(object sender, ChromecastStatus s)
+        {
+            print("Da5");
+        }
+        async void ChromeCreate()
+        {
+            print("Created");
+            ChromecastService.ChromeCastClient.ConnectedChanged += ChromeCastClient_ConnectedChanged;
+            ChromecastService.ChromeCastClient.ApplicationStarted += ChromeCastClient_ApplicationStarted;
+            ChromecastService.ChromeCastClient.ChromecastStatusChanged += ChromeCastClient_StatusChanged;
+            ChromecastService.ChromeCastClient.MediaStatusChanged += ChromeCastClient_MediaStatusChanged;
+            //ChromecastService.ChromeCastClient.ApplicationStarted += _PlayLink;
+
+        }
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
             RequestPermission(this);
+            if (useChromeCast) {
+                ChromeCreate();
+            }
+
             mainActivity = this;
             _mainActivity = this;
-          // SaveVideoToDisk("https://youtu.be/dQw4w9WgXcQ","mp4NeverGonaGiveYouUp");
+            // SaveVideoToDisk("https://youtu.be/dQw4w9WgXcQ","mp4NeverGonaGiveYouUp");
 
             //RequestWindowFeature(Android.Views.WindowFeatures.ActionBar);
 
@@ -87,7 +305,7 @@ namespace CloudStream
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.Main);
 
-           
+
             SupportToolbar toolBar = FindViewById<SupportToolbar>(Resource.Id.toolBar);
             SetSupportActionBar(toolBar);
             toolBar.Visibility = ViewStates.Gone;
@@ -101,16 +319,16 @@ namespace CloudStream
             //ab.SetDisplayHomeAsUpEnabled(true);
 
             mDrawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout);
-           mDrawerLayout.SetWillNotDraw(false); //.Visibility = ViewStates.Gone;
-            //NavigationView navigationView = FindViewById<NavigationView>(Resource.Id.nav_view);
-          //  navigationView.Visibility = ViewStates.Gone;
-            // if (navigationView != null)
-            //  {
-            //      SetUpDrawerContent(navigationView);
-            //  }
+            mDrawerLayout.SetWillNotDraw(false); //.Visibility = ViewStates.Gone;
+                                                 //NavigationView navigationView = FindViewById<NavigationView>(Resource.Id.nav_view);
+                                                 //  navigationView.Visibility = ViewStates.Gone;
+                                                 // if (navigationView != null)
+                                                 //  {
+                                                 //      SetUpDrawerContent(navigationView);
+                                                 //  }
 
             TabLayout tabs = FindViewById<TabLayout>(Resource.Id.tabs);
-           
+
             ViewPager viewPager = FindViewById<ViewPager>(Resource.Id.viewpager);
 
             SetUpViewPager(viewPager);
@@ -120,22 +338,22 @@ namespace CloudStream
             FloatingActionButton fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
             //fab.SetImageResource( Resource.Drawable.settings_white_192x192);
             fab.Visibility = ViewStates.Gone;
-/*            
-            fab.Click += (o, e) =>
-            {
-                anchor = o as View;
-
-                Snackbar.Make(anchor, "Yay Snackbar!!", Snackbar.LengthLong)
-                        .SetAction("Action", v =>
+            /*            
+                        fab.Click += (o, e) =>
                         {
-                            //Do something here
-                            Intent intent = new Intent(fab.Context, typeof(SearchResultsActivity));
-                            StartActivity(intent);
-                        })
-                        .Show();
-            };*/
+                            anchor = o as View;
 
-          
+                            Snackbar.Make(anchor, "Yay Snackbar!!", Snackbar.LengthLong)
+                                    .SetAction("Action", v =>
+                                    {
+                                        //Do something here
+                                        Intent intent = new Intent(fab.Context, typeof(SearchResultsActivity));
+                                        StartActivity(intent);
+                                    })
+                                    .Show();
+                        };*/
+
+
         }
         public static int CalculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight)
         {
@@ -164,15 +382,15 @@ namespace CloudStream
         {
             TabAdapter adapter = new TabAdapter(SupportFragmentManager);
             //adapter.AddFragment(new Fragment1(), "Search");
-           // adapter.AddFragment(new Fragment2(), "Movie");
+            // adapter.AddFragment(new Fragment2(), "Movie");
             //adapter.AddFragment(new Fragment3(), "Links");
-          
+
             adapter.AddFragment(new ax_Search(), "Search");
             adapter.AddFragment(new ax_Bookmarks(), "Bookmark");
             adapter.AddFragment(new ax_Downloads(), "Download");
             adapter.AddFragment(new ax_Settings(), "Settings");
             //adapter.AddFragment(new Fragment1(), "things");
-           // adapter.AddFragment(new Fragment2(), "AA");
+            // adapter.AddFragment(new Fragment2(), "AA");
             // adapter.Fragments[1].
             //FindViewById<SearchView>(Resource.Id.da);
             //adapter.Fragments[0].Dispose();
@@ -182,36 +400,35 @@ namespace CloudStream
 
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
-            switch (item.ItemId)
-            {
+            switch (item.ItemId) {
                 case Android.Resource.Id.Home:
                     mDrawerLayout.OpenDrawer((int)GravityFlags.Left);
                     return true;
 
                 default:
-                    return base.OnOptionsItemSelected(item);                    
+                    return base.OnOptionsItemSelected(item);
             }
         }
-        public void DownloadLink(string title,string link)
+        public void DownloadLink(string title, string link)
         {
             if (link.ToLower().Contains("youtu")) {
                 SaveVideoToDisk(link, title);
                 ShowSnackBar("YouTube Download Started!");
             }
             else if (link.Contains("mp4upload.com/embed-")) {
-                string d = Getmp4uploadByID(link.Replace("mp4upload.com/embed-", "").Replace("www.", "").Replace("//", "").Replace("https:", "").Replace(".html",""));
+                string d = Getmp4uploadByID(link.Replace("mp4upload.com/embed-", "").Replace("www.", "").Replace("//", "").Replace("https:", "").Replace(".html", ""));
                 StartNewDownload(d, title, "Other", false);
                 ShowSnackBar("Mp4 Download Started!");
             }
             else {
-                StartNewDownload(link, title, "Other",false);
+                StartNewDownload(link, title, "Other", false);
                 ShowSnackBar("Download Started!");
 
             }
         }
 
 
-            private void SetUpDrawerContent(NavigationView navigationView)
+        private void SetUpDrawerContent(NavigationView navigationView)
         {
             navigationView.NavigationItemSelected += (object sender, NavigationView.NavigationItemSelectedEventArgs e) =>
             {
@@ -225,7 +442,7 @@ namespace CloudStream
             public List<SupportFragment> Fragments { get; set; }
             public List<string> FragmentNames { get; set; }
 
-            public TabAdapter (SupportFragmentManager sfm) : base (sfm)
+            public TabAdapter(SupportFragmentManager sfm) : base(sfm)
             {
                 Fragments = new List<SupportFragment>();
                 FragmentNames = new List<string>();
@@ -239,8 +456,7 @@ namespace CloudStream
 
             public override int Count
             {
-                get
-                {
+                get {
                     return Fragments.Count;
                 }
             }
@@ -255,6 +471,8 @@ namespace CloudStream
                 return new Java.Lang.String(FragmentNames[position]);
             }
         }
+
+        public static bool useSubtitles = false;
         public static MainActivity mainActivity;
         public MainActivity _mainActivity;
         public class Movie
@@ -272,13 +490,15 @@ namespace CloudStream
         }
 
         public static Movie currentMovie = new Movie();
-       public static List<string> movieTitles = new List<string>();
-       public static List<string> fwordLink = new List<string>();
-       public static List<string> activeLinks = new List<string>();
-       public static List<Movie> moviesActive = new List<Movie>();
-       public static List<bool> movieIsAnime = new List<bool>();
-       public static List<int> movieProvider = new List<int>();
+        public static List<string> movieTitles = new List<string>();
+        public static List<string> fwordLink = new List<string>();
+        public static List<string> activeLinks = new List<string>();
+        public static List<Movie> moviesActive = new List<Movie>();
+        public static List<bool> movieIsAnime = new List<bool>();
+        public static List<int> movieProvider = new List<int>();
         public static List<string> activeLinksNames = new List<string>();
+        public static List<string> activeSubtitles = new List<string>();
+        public static List<string> activeSubtitlesNames = new List<string>();
 
         static readonly HttpClient _client = new HttpClient();
         public delegate void MethodInvoker();
@@ -287,12 +507,15 @@ namespace CloudStream
         public delegate void DelegateWithParameters(int f, string realMoveLink);
         public delegate void DelegateWithParameters_search(string inp);
         public delegate void DelegateWithParameters_link(string sp, string ep, int cThred);
+        public delegate void DelegateWithParameters_int(int i);
+
 
         static int urlServers = 10;
         static int otherServers = 1;
+
         static int urlsDone = 0;
         static string selectedTitle = "";
-        static int provider = 1;
+        //static int provider = 1;
         static readonly bool[] providerDubStatus = { true, false, false }; // sub/dub provider need to show status
 
         public static bool debug = false;
@@ -303,15 +526,15 @@ namespace CloudStream
 
         private void RequestPermission(Activity context)
         {
-            bool hasPermission = ( ContextCompat.CheckSelfPermission(context, Manifest.Permission.WriteExternalStorage) == Permission.Granted);
+            bool hasPermission = (ContextCompat.CheckSelfPermission(context, Manifest.Permission.WriteExternalStorage) == Permission.Granted);
             if (!hasPermission) {
                 ActivityCompat.RequestPermissions(context,
                    new string[] { Manifest.Permission.WriteExternalStorage },
                  REQUEST_WRITE_STORAGE);
             }
-           
+
         }
-        static async void SaveVideoToDisk(string link,string title)
+        static async void SaveVideoToDisk(string link, string title)
         {
             var id = YoutubeClient.ParseVideoId(link);
 
@@ -346,9 +569,9 @@ namespace CloudStream
 
             // Download stream to file
 
-            string shortPath = "YouTube/" + title + ".mp4"; 
-            string path = Android.OS.Environment.DirectoryDownloads +"/" +  shortPath;
-            string truePath = Android.OS.Environment.ExternalStorageDirectory + "/" + path ;
+            string shortPath = "YouTube/" + title + ".mp4";
+            string path = Android.OS.Environment.DirectoryDownloads + "/" + shortPath;
+            string truePath = Android.OS.Environment.ExternalStorageDirectory + "/" + path;
 
             string rootPath = Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/YouTube";
 
@@ -374,25 +597,25 @@ namespace CloudStream
             }
 
         }
-        public static void StartNewDownload(string url,string title,string dir = "Movie",bool fromlinks = true, string dec ="")
+        public static void StartNewDownload(string url, string title, string dir = "Movie", bool fromlinks = true, string dec = "")
         {
-            DownloadManager.Request request = new DownloadManager.Request( Android.Net.Uri.Parse(url)); /*init a request*/
+            DownloadManager.Request request = new DownloadManager.Request(Android.Net.Uri.Parse(url)); /*init a request*/
             request.SetDescription(title); //this description apears inthe android notification 
             request.SetTitle(title);//this description apears inthe android notification 
                                     // request.SetDestinationInExternalFilesDir(ax_Links.ax_links.Context,
                                     //        dir,
                                     //       title); //set destination
                                     //OR
-            string path = dir +"/" + title;
+            string path = dir + "/" + title;
 
             request.SetDestinationInExternalPublicDir(Android.OS.Environment.DirectoryDownloads, path);
             request.SetVisibleInDownloadsUi(true);
             request.SetNotificationVisibility(DownloadVisibility.VisibleNotifyCompleted);
 
             DownloadManager manager;
-            if(fromlinks) {
+            if (fromlinks) {
                 manager = (DownloadManager)ax_Links.ax_links.Context.GetSystemService(Context.DownloadService);
-                ShowSnackBar("Download Started!",ax_Links.ax_links.View);
+                ShowSnackBar("Download Started!", ax_Links.ax_links.View);
 
             }
             else {
@@ -400,7 +623,7 @@ namespace CloudStream
 
             }
             long downloadId = manager.Enqueue(request); //start the download and return the id of the download. this id can be used to get info about the file (the size, the download progress ...) you can also stop the download by using this id     
-           
+
 
             var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
             var edit = localC.Edit();
@@ -422,32 +645,32 @@ namespace CloudStream
             long longId = DownloadsGetLong(title);
             string pathId = DownloadGetPath(title);
             bool error = true;
-            if (longId != -1) { 
+            if (longId != -1) {
                 DownloadManager manager = (DownloadManager)c.GetSystemService(Context.DownloadService);
                 Android.Net.Uri uri = manager.GetUriForDownloadedFile(longId);
-         
+
                 try {
                     manager.Remove(longId);
-                    ShowSnackBar("Download Cancelled",v);
+                    ShowSnackBar("Download Cancelled", v);
                     error = false;
 
                 }
                 catch (System.Exception) {
                     print("Error Removing");
                 }
-          
-                
+
+
             }
             else {
                 print("Could not get long :(");
             }
-            if(pathId != "-1") {
+            if (pathId != "-1") {
                 try {
                     print("Path : " + pathId);
                     string truePath = Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/" + pathId;
                     print(truePath);
                     System.IO.File.Delete(truePath);
-                    ShowSnackBar("Deleted file",v);
+                    ShowSnackBar("Deleted file", v);
                     error = false;
 
                 }
@@ -459,8 +682,8 @@ namespace CloudStream
             else {
                 print("Path is null");
             }
-            if(error) {
-                ShowSnackBar("Error deleting file :(",v);
+            if (error) {
+                ShowSnackBar("Error deleting file :(", v);
             }
             else {
                 var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
@@ -494,7 +717,7 @@ namespace CloudStream
             allTitles.CopyTo(tempVal, 0);
             string lookfor = title.Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "");
             for (int i = 0; i < tempVal.Length; i++) {
-                if(tempVal[i].Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "") == lookfor) { 
+                if (tempVal[i].Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "") == lookfor) {
                     return true;
                 }
 
@@ -512,7 +735,7 @@ namespace CloudStream
             string lookfor = title.Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "");
             for (int i = 0; i < tempVal.Length; i++) {
                 if (tempVal[i].Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "") == lookfor) {
-                    return localC.GetLong(tempVal[i],-1);
+                    return localC.GetLong(tempVal[i], -1);
                 }
 
             }
@@ -562,14 +785,62 @@ namespace CloudStream
 
         }
 
-        static void DownloadGogo(string url)
+        static void PraseJavaScript(string result)
         {
+            realXToken = result;
+        }
+
+        static string realXToken = "";
+
+        static async void DownloadGogo(string url)
+        {
+            print("Downloading gogo: " + url);
+
             WebClient client = new WebClient();
+            client.Headers.Add("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)");
+
             try {
-                string d = client.DownloadString(url);
-                tokenCode = FindHTML(d, "var tc = \'", "'");
-                _token = FindHTML(d, "_token\": \"", "\"");
-                GetAPI();
+                string d = "";
+
+                for (int i = 0; i < 5; i++) {
+                    if (d == "") {
+                        try {
+
+                            d = client.DownloadString(url);
+
+                        }
+                        catch (System.Exception) {
+                            print("Error gogo");
+                            Java.Lang.Thread.Sleep(1000);
+                        }
+                    }
+                }
+
+
+
+                if (d != "") {
+                    print("Passed gogo download site");
+                    tokenCode = FindHTML(d, "var tc = \'", "'");
+                    _token = FindHTML(d, "_token\": \"", "\"");
+                    string funct = "function _tsd_tsd_ds(" + FindHTML(d, "function _tsd_tsd_ds(", "</script>").Replace("\"", "'") + " log(_tsd_tsd_ds('" + tokenCode + "'))";
+                    // print(funct);
+                    if (funct == "function _tsd_tsd_ds( log(_tsd_tsd_ds(''))") {
+                        print(d);
+                    }
+                    var engine = new Engine()
+                    .SetValue("log", new Action<string>(PraseJavaScript));
+
+                    engine.Execute(@funct);
+
+                    GetAPI();
+
+                }
+                else {
+                    print("Dident get gogo");
+                    hdMovieIsDone = true;
+
+                }
+
             }
             catch (System.Exception) {
                 print("Error");
@@ -735,7 +1006,7 @@ namespace CloudStream
             System.Uri myUri = new System.Uri("https://gomostream.com/decoding_v3.php");
             HttpWebRequest webRequest = (HttpWebRequest)HttpWebRequest.Create(myUri);
             webRequest.Method = "POST";
-            webRequest.Headers.Add("x-token", xtokens[currentXtoken]); //it2ShBXbtBn12198295 JnVh9WbXF11289366}
+            webRequest.Headers.Add("x-token", realXToken); //it2ShBXbtBn12198295 JnVh9WbXF11289366}
 
             webRequest.Headers.Add("X-Requested-With", "XMLHttpRequest");
             webRequest.Headers.Add("DNT", "1");
@@ -788,10 +1059,9 @@ namespace CloudStream
                         print("-------------------- HD --------------------");
                         string url = tempTitle + "https://verystream.com/gettoken/" + FindHTML(d, "videolink\">", "<");
                         print(url);
-                        if(!activeLinks.Contains(url)) { 
+                        if (!activeLinks.Contains(url) && url != "https://verystream.com/gettoken/") {
                             activeLinks.Add(url);
                             activeLinksNames.Add("HD Verystream");
-
                         }
 
                         print("--------------------------------------------");
@@ -809,7 +1079,7 @@ namespace CloudStream
                         print("-------------------- HD --------------------");
                         string url = tempTitle + GetgogoByFile(d);
                         print(url);
-                        if (!activeLinks.Contains(url)) {
+                        if (!activeLinks.Contains(url) && !url.EndsWith(".viduplayer.com/urlset/v.mp4")) {
                             activeLinks.Add(url);
                             activeLinksNames.Add("HD Viduplayer");
                         }
@@ -871,7 +1141,7 @@ namespace CloudStream
         }
         static List<string> allPages = new List<string>();
         static int pagesDone = 0;
-        static int totalPages = 360; 
+        static int totalPages = 360;
         static string __key = ""; // make your own key >:( 
         //[{"imdId":"tt0120366","slug":"traveller-1","title":"Traveller","quality":360},{"imdId":"tt9021234","slug":"the-legend-of-5-mile-cave","title":"The Legend of 5 Mile Cave","quality":720},{"imdId":"tt0318081","slug":"a-sound-of-thunder","title":"A Sound of Thunder","quality":1080},{"imdId":"tt8123728","slug":"the-guard-of-auschwitz","title":"The Guard of Auschwitz","quality":1080},{"imdId":"tt0316882","slug":"warriors-of-virtue-the-return-to-tao","title":"Warriors of Virtue: The Return to Tao","quality":360},{"imdId":"tt4975920","slug":"the-kid-1","title":"The Kid","quality":1080},{"imdId":"tt6563576","slug":"the-queen-s-corgi","title":"The Queen's Corgi","quality":1080},{"imdId":"tt9169592","slug":"wanda-sykes-not-normal","title":"Wanda Sykes: Not Normal","quality":1080},{"imdId":"tt6098380","slug":"isabelle-1","title":"Isabelle","quality":1080},{"imdId":"tt00382621","slug":"cr-nicas","title":"Cr\u00c3\u00b3nicas","quality":360},{"imdId":"tt0101252","slug":"29th-street","title":"29th Street","quality":360},{"imdId":"tt8917752","slug":"joy-1","title":"Joy","quality":1080},{"imdId":"tt10136680","slug":"after-maria","title":"After Maria","quality":1080},{"imdId":"tt9557416","slug":"lineage-of-lies","title":"Lineage of Lies","quality":720},{"imdId":"tt9366716","slug":"dagram","title":"DaGram","quality":1080},{"imdId":"tt9496886","slug":"goddesses-in-the-flames-of-war","title":"Goddesses In The Flames Of War","quality":1080},{"imdId":"tt9412268","slug":"furie","title":"Furie","quality":1080},{"imdId":"tt3810486","slug":"the-innocent-bastard","title":"The Innocent Bastard","quality":720},{"imdId":"tt0086232","slug":"sahara-3","title":"Sahara","quality":1080},{"imdId":"tt10171746","slug":"brendan-schaub-you-d-be-surprised","title":"Brendan Schaub: You'd Be Surprised","quality":1080},{"imdId":"tt0108041","slug":"sankofa","title":"Sankofa","quality":360},{"imdId":"tt10050766","slug":"bren-brown-the-call-to-courage","title":"Bren\u00c3\u00a9 Brown: The Call to Courage","quality":1080},{"imdId":"tt0039317","slug":"the-devil-thumbs-a-ride","title":"The Devil Thumbs a Ride","quality":720},{"imdId":"tt8547366","slug":"adam-carolla-not-taco-bell-material","title":"Adam Carolla: Not Taco Bell Material","quality":1080},{"imdId":"tt4960466","slug":"dark-highlands","title":"Dark Highlands","quality":720},{"imdId":"tt5037684","slug":"the-rainbow-experiment","title":"The Rainbow Experiment","quality":720},{"imdId":"tt7481192","slug":"sex-and-assassins","title":"Sex and Assassins","quality":720},{"imdId":"tt3602422","slug":"shed-of-the-dead","title":"Shed of the Dead","quality":1080},{"imdId":"tt3953420","slug":"king-of-beasts","title":"King of Beasts","quality":1080},{"imdId":"tt7399140","slug":"believe-2","title":"Believe","quality":1080},{"imdId":"tt7476122","slug":"jimbo","title":"Jimbo","quality":1080},{"imdId":"tt5157682","slug":"the-climb","title":"The Climb","quality":1080},{"imdId":"tt5952522","slug":"soul-sessions","title":"Soul Sessions","quality":1080},{"imdId":"tt5755622","slug":"nowhere-to-hide-1","title":"Nowhere to Hide","quality":1080},{"imdId":"tt2834944","slug":"hamlet-hutch","title":"Hamlet & Hutch","quality":720},{"imdId":"tt6857250","slug":"boonie-bears-entangled-worlds","title":"Boonie Bears: Entangled Worlds","quality":1080},{"imdId":"tt4465538","slug":"juveniles","title":"Juveniles","quality":1080},{"imdId":"tt7558166","slug":"trickster","title":"Trickster","quality":1080},{"imdId":"tt4082314","slug":"dark-sense","title":"Dark Sense","quality":1080},{"imdId":"tt10079698","slug":"attack-in-la","title":"Attack in LA","quality":1080},{"imdId":"tt7069740","slug":"barbie-dreamtopia-festival-of-fun","title":"Barbie Dreamtopia: Festival of Fun","quality":1080},{"imdId":"tt10244900","slug":"hailey-dean-mysteries-killer-sentence","title":"Hailey Dean Mysteries: Killer Sentence","quality":1080},{"imdId":"tt6236780","slug":"rottentail","title":"Rottentail","quality":1080},{"imdId":"tt6025356","slug":"muerte-tales-of-horror","title":"Muerte: Tales of Horror","quality":1080},{"imdId":"tt8875622","slug":"rituals-of-guilt","title":"Rituals of Guilt","quality":1080},{"imdId":"tt6597612","slug":"j-lia-ist","title":"J\u00c3\u00balia ist","quality":1080},{"imdId":"tt5929226","slug":"pure-hearts","title":"Pure Hearts","quality":720},{"imdId":"tt5859038","slug":"know-your-enemy","title":"Know Your Enemy","quality":1080},{"imdId":"tt6652828","slug":"daze-like-this","title":"Daze Like This","quality":720},{"imdId":"tt4179338","slug":"fourth-quarter","title":"Fourth Quarter","quality":1080},{"imdId":"tt7520184","slug":"swamp-zombies-2","title":"Swamp Zombies 2","quality":1080},{"imdId":"tt4876096","slug":"avenues","title":"Avenues","quality":1080},{"imdId":"tt4110388","slug":"superlopez","title":"Superlopez","quality":1080},{"imdId":"tt4942694","slug":"60-seconds-to-die","title":"60 Seconds to Die","quality":1080},{"imdId":"tt8959820","slug":"petta","title":"Petta","quality":1080},{"imdId":"tt6451260","slug":"paris-pigalle","title":"Paris Pigalle","quality":1080},{"imdId":"tt8073604","slug":"evil-bong-777","title":"Evil Bong 777","quality":1080},{"imdId":"tt7422552","slug":"funny-story","title":"Funny Story","quality":1080},{"imdId":"tt2981746","slug":"being-frank-the-chris-sievey-story","title":"Being Frank: The Chris Sievey Story","quality":360},{"imdId":"tt8836988","slug":"avengement","title":"Avengement","quality":1080},{"imdId":"tt5862166","slug":"the-poison-rose","title":"The Poison Rose","quality":1080},{"imdId":"tt0048316","slug":"love-is-a-many-splendored-thing","title":"Love Is a Many-Splendored Thing","quality":1080},{"imdId":"tt0056350","slug":"the-pirates-of-blood-river","title":"The Pirates of Blood River","quality":1080},{"imdId":"tt0064747","slug":"the-oblong-box","title":"The Oblong Box","quality":1080},{"imdId":"tt0092751","slug":"china-girl","title":"China Girl","quality":1080},{"imdId":"tt8179388","slug":"rim-of-the-world","title":"Rim of the World","quality":1080},{"imdId":"tt0069956","slug":"sacrifice-1","title":"Sacrifice!","quality":1080},{"imdId":"tt0065895","slug":"machine-gun-mccain","title":"Machine Gun McCain","quality":1080},{"imdId":"tt5238904","slug":"assimilate","title":"Assimilate","quality":1080},{"imdId":"tt1489887","slug":"booksmart","title":"Booksmart","quality":1080},{"imdId":"tt7772580","slug":"the-perfection","title":"The Perfection","quality":1080},{"imdId":"tt0050972","slug":"silk-stockings","title":"Silk Stockings","quality":1080},{"imdId":"tt1833844","slug":"berberian-sound-studio","title":"Berberian Sound Studio","quality":1080},{"imdId":"tt0228786","slug":"the-crimson-rivers","title":"The Crimson Rivers","quality":1080},{"imdId":"tt6383494","slug":"holy-lands","title":"Holy Lands","quality":1080},{"imdId":"tt7090040","slug":"roads-trees-and-honey-bees","title":"Roads, Trees and Honey Bees","quality":1080},{"imdId":"tt0092944","slug":"eat-the-rich","title":"Eat the Rich","quality":1080},{"imdId":"tt0075950","slug":"the-domino-principle","title":"The Domino Principle","quality":1080},{"imdId":"tt0203975","slug":"tart","title":"Tart","quality":1080},{"imdId":"tt0093225","slug":"housekeeping","title":"Housekeeping","quality":1080},{"imdId":"tt0283509","slug":"no-man-s-land-1","title":"No Man's Land","quality":1080},{"imdId":"tt0091752","slug":"the-phantom-empire","title":"The Phantom Empire","quality":1080},{"imdId":"tt0090203","slug":"the-trip-to-bountiful-1","title":"The Trip to Bountiful","quality":1080},{"imdId":"tt0073312","slug":"love-and-death","title":"Love and Death","quality":1080},{"imdId":"tt0459250","slug":"the-cure-trilogy","title":"The Cure: Trilogy","quality":1080},{"imdId":"tt0114489","slug":"soldier-boyz","title":"Soldier Boyz","quality":1080},{"imdId":"tt0067658","slug":"von-richthofen-and-brown","title":"Von Richthofen and Brown","quality":1080},{"imdId":"tt0029322","slug":"nothing-sacred","title":"Nothing Sacred","quality":1080},{"imdId":"tt9818000","slug":"girl-dorm","title":"Girl Dorm","quality":1080},{"imdId":"tt4219706","slug":"demon-squad","title":"Demon Squad","quality":1080},{"imdId":"tt0091830","slug":"the-green-ray","title":"The Green Ray","quality":1080},{"imdId":"tt6547786","slug":"life-like","title":"Life Like","quality":1080},{"imdId":"tt6021482","slug":"american-exit","title":"American Exit","quality":1080},{"imdId":"tt9056818","slug":"last-breath","title":"Last Breath","quality":1080},{"imdId":"tt7144200","slug":"the-siren","title":"The Siren","quality":1080},{"imdId":"tt8912932","slug":"room-37-the-mysterious-death-of-johnny-thunders","title":"Room 37: The Mysterious Death of Johnny Thunders","quality":1080},{"imdId":"tt4981292","slug":"unwritten","title":"Unwritten","quality":1080},{"imdId":"tt6534422","slug":"a-brilliant-monster","title":"A Brilliant Monster","quality":1080},{"imdId":"tt6902696","slug":"gloria-bell","title":"Gloria Bell","quality":1080},{"imdId":"tt8731138","slug":"long-way-home","title":"Long Way Home","quality":1080}]
         static void GetPage(int page, bool movie)
@@ -975,7 +1245,7 @@ namespace CloudStream
         static void ReadFile(bool movie, string searchString)
         {
 
-          
+
 
 
             string path = _path + "\\saveAll" + (movie ? "Movie" : "Series") + "Data.txt";
@@ -1026,7 +1296,7 @@ namespace CloudStream
         {
             var localC = Application.Context.GetSharedPreferences("History", FileCreationMode.Private);
             int watched = localC.GetInt(title.Replace("B___", "").Replace(" (Bookmark)", ""), 0);
-           // print("ÖÖ00: " + title + "::" + watched);
+            // print("ÖÖ00: " + title + "::" + watched);
 
             return watched > 0;
         }
@@ -1041,7 +1311,7 @@ namespace CloudStream
                 edit.PutInt(title, watched);
             }
             else {
-                if(watched > 1) {
+                if (watched > 1) {
                     edit.Remove(title);
                 }
                 else {
@@ -1060,12 +1330,12 @@ namespace CloudStream
             List<bool> _movieIsAnime = new List<bool>();
             List<int> _movieProvider = new List<int>();
             for (int i = 0; i < movieTitles.Count; i++) {
-                if(!movieTitles[i].Contains("B___")) { 
-                _movieTitles.Add(movieTitles[i]);
-                _moviesActive.Add(moviesActive[i]);
-                _movieIsAnime.Add(movieIsAnime[i]);
-                _movieProvider.Add(movieProvider[i]);
-                _fwordLink.Add(fwordLink[i]);
+                if (!movieTitles[i].Contains("B___")) {
+                    _movieTitles.Add(movieTitles[i]);
+                    _moviesActive.Add(moviesActive[i]);
+                    _movieIsAnime.Add(movieIsAnime[i]);
+                    _movieProvider.Add(movieProvider[i]);
+                    _fwordLink.Add(fwordLink[i]);
                 }
             }
             movieTitles = _movieTitles;
@@ -1077,12 +1347,12 @@ namespace CloudStream
 
             var localC = Application.Context.GetSharedPreferences("Bookmarks", FileCreationMode.Private);
             int rows = localC.GetInt("Rows", -1);
-            if(rows != -1) { 
+            if (rows != -1) {
                 for (int i = 0; i < rows; i++) {
                     string line = localC.GetString("k" + i, "-1");
-                    if(line != "-1") {
-                        string title = FindHTML(line, "title:", ",") + " (Bookmark)"; 
-                        if (!movieTitles.Contains(title)) { 
+                    if (line != "-1") {
+                        string title = FindHTML(line, "title:", ",") + " (Bookmark)";
+                        if (!movieTitles.Contains(title)) {
                             Movie m = new Movie();
                             m.title = title;
                             moviesActive.Add(m);
@@ -1138,7 +1408,7 @@ namespace CloudStream
                 for (int i = 0; i < rows; i++) {
                     string line = localC.GetString("k" + i, "-1");
                     if (line != "-1") {
-                        string title = FindHTML(line, "title:", ",").Replace("B___","").Replace(" (Bookmark)","");
+                        string title = FindHTML(line, "title:", ",").Replace("B___", "").Replace(" (Bookmark)", "");
                         print(title);
                         try {
                             if (title == movieTitles[titleID].Replace("B___", "").Replace(" (Bookmark)", "")) {
@@ -1148,7 +1418,7 @@ namespace CloudStream
                         catch (System.Exception) {
                             return true;
                         }
-                        
+
                     }
                 }
             }
@@ -1157,7 +1427,7 @@ namespace CloudStream
         public static void RemoveBookMark(int titleID)
         {
 
-            if(titleID >= movieTitles.Count || titleID < 0) {
+            if (titleID >= movieTitles.Count || titleID < 0) {
                 return;
             }
 
@@ -1170,7 +1440,7 @@ namespace CloudStream
                 for (int i = 0; i < rows; i++) {
                     string line = localC.GetString("k" + i, "-1");
                     if (line != "-1") {
-                        if (FindHTML(line, "title:", ",").Replace("B___", "").Replace(" (Bookmark)", "") == movieTitles[titleID].Replace("B___", "").Replace( " (Bookmark)","")) {
+                        if (FindHTML(line, "title:", ",").Replace("B___", "").Replace(" (Bookmark)", "") == movieTitles[titleID].Replace("B___", "").Replace(" (Bookmark)", "")) {
                             print("Removed: " + movieTitles[titleID].Replace("B___", "") + "!");
                         }
                         else {
@@ -1189,7 +1459,7 @@ namespace CloudStream
             edit.Commit();
             GetBookMarks();
             ax_Bookmarks.ax_bookmarks.UpdateList();
-           // ax_Search.ax_search.ChangeBar(100);
+            // ax_Search.ax_search.ChangeBar(100);
 
             /*
             string path = _path + "\\bookmarks.txt";
@@ -1269,11 +1539,11 @@ namespace CloudStream
             //  sw.WriteLine(write);
             int diffTotal = totalRows++;
             edit.PutInt("Rows", totalRows);
-            print("DIFFTOTAL: " +diffTotal);
+            print("DIFFTOTAL: " + diffTotal);
             print("totalRows: " + totalRows);
             edit.PutString("k" + diffTotal, write);
             edit.Commit();
-            print("_ROWS: " + localC.GetInt("Rows", -2) );
+            print("_ROWS: " + localC.GetInt("Rows", -2));
 
             print("Saved bookmark!");
             ax_Bookmarks.ax_bookmarks.UpdateList();
@@ -1355,14 +1625,14 @@ namespace CloudStream
                 clearNext = false;
                 Clear();
             }
-           // Console.WriteLine(s);
+            // Console.WriteLine(s);
 
             System.Diagnostics.Debug.WriteLine(s);
         }
 
         public static void Search(string inp)
         {
-            
+
             movieTitles = new List<string>();
             fwordLink = new List<string>();
             activeLinks = new List<string>();
@@ -1376,7 +1646,7 @@ namespace CloudStream
             IAsyncResult tag =
                 titles_search.BeginInvoke(inp, null, null);
                 */
-          GetTitles(inp);
+            GetTitles(inp);
             //return ;
         }
 
@@ -1464,50 +1734,219 @@ namespace CloudStream
         static void GetLinkServer(int f, string realMoveLink)
         {
             int cThred = thredNumber;
-
+            print("Get link server " + realMoveLink);
             string jsn = _WebRequest(realMoveLink + "?server=server_" + f);
             urlsDone++;
             progress = (int)System.Math.Round((urlsDone * 100f) / (urlServers + otherServers), MidpointRounding.AwayFromZero);
             ax_Links.ax_links.ChangeBar(progress); // 1   //int.Parse(MathF.Floor(100 * (urlsDone / (urlServers + otherServers))).ToString());  
-                                                                                        
-            
+            if (ax_Links.ax_links_sub != null) {
+                ax_Links.ax_links_sub.ChangeBar(progress);
+            }
+
             //print(bar.Progress + " | " + urlsDone);
-                                                                                                                               //print(jsn);
+            //print(jsn);
+
 
             while (jsn.Contains("http")) {
                 int _start = jsn.IndexOf("http");
                 jsn = jsn.Substring(_start, jsn.Length - _start);
-                string newM = jsn.Substring(0, jsn.IndexOf("\""));
-                newM = newM.Replace("\\", "");
-                if (!activeLinks.Contains(newM)) {
-                    if (cThred != thredNumber) return;
+                int id = jsn.IndexOf("\"");
+                if (id != -1) {
+                    string newM = jsn.Substring(0, id);
+                    newM = newM.Replace("\\", "");
+                    if (!activeLinks.Contains(newM)) {
+                        if (cThred != thredNumber) return;
 
-                    mirrorCounter++;
-                    activeLinks.Add(newM);
-                    activeLinksNames.Add("Mirror " + mirrorCounter);
+                        mirrorCounter++;
+                        activeLinks.Add(newM);
+                        activeLinksNames.Add("Mirror " + mirrorCounter);
 
-                    print(newM);
-                    print("");
+                        print(newM);
+                        print("");
+                    }
                 }
                 jsn = jsn.Substring(4, jsn.Length - 4);
             }
         }
 
+        public static int HighestHistory(string title)
+        {
+            var localC = Application.Context.GetSharedPreferences("History", FileCreationMode.Private);
 
 
-        public  static int moveSelectedID = 0;
+            IDictionary<string, object> allData = localC.All;
+            ICollection<string> allTitles = allData.Keys;
+            string[] tempVal = new string[allData.Count];
+            allTitles.CopyTo(tempVal, 0);
+
+
+            string lookfor = title.Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "");
+            List<string> allLike = new List<string>();
+            for (int i = 0; i < tempVal.Length; i++) {
+                if (tempVal[i].StartsWith(title) && tempVal[i] != title && !allLike.Contains(title)) {
+                    allLike.Add(tempVal[i]);
+                    print(")) " + tempVal[i]);
+                }
+            }
+            // print("ÖÖ00: " + title + "::" + watched);
+
+            return allLike.Count;
+        }
+
+        public static int moveSelectedID = 0;
         static bool hdMovieIsDone = false;
         static bool __done = false;
-        public static void GetURLFromTitle(int titleID = -1)
+
+        //Subtitles::
+        //    <script>window.subtitles = [{"max":["English"],"kind":"subtitles","srclang":"en","label":"English","src":"https:\/\/static.movies123.pro\/files\/tracks\/7Qb72bR9HOeBARWA7S68SsMXnWTJ29E00cnCACJ4KQZDoKR6pMigskHNAJYZYuRHJo3PJnaqW-oRQmrIp0SQrXb95zyifNPLFNLuTPyzQG0.srt"}]</script>    </block></div></div></section>
+        public static string currentEpisodeName = "";
+        public static int currentActiveSubtitle = -1;
+
+        public static void GetUrlFromMovie123(int titleID, int cThred, string realMoveLink, bool isMovie = true, string episode = "-1")
         {
-            __done = true;
-            __selSeason = 0;
+            print("RealMovieLink:" + realMoveLink);
+            mirrorCounter = 0;
+            string find = movieTitles[titleID].ToLower().Replace("b___", "").Replace(" (bookmark)", "").Replace(" (movie)", "").Replace(" (tv-series)", "").Replace(" (tv-serie)", "").Replace(" (hd tv-serie)", "").Replace(" (hd tv-series)", "");
+            print("FIND GOGO:" + find);
+            Regex rgx = new Regex("[^a-zA-Z0-9 -]");
+            find = rgx.Replace(find, "");
+            find = find.Replace(" - ", "-").Replace(" ", "-");
+            find = find.Replace("-season-", "/");
+            for (int i = 0; i < 10; i++) {
+                if (find.EndsWith("/" + i)) {
+                    find = find.Replace("/" + i, "/0" + i);
+                }
+            }
+            if (episode != "-1") {
+                find += "-" + episode;
+                currentEpisodeName = episode;
+            }
+            for (int i = 0; i < 10; i++) {
+                if (find.EndsWith("/" + i)) {
+                    find = find.Replace("/" + i, "/0" + i);
+                }
+            }
+            int errors = 0;
+            try {
+
+                DelegateWithParameters_search linkServer =
+                    new DelegateWithParameters_search(DownloadGogo);
+
+                if (cThred != thredNumber) return;
+
+
+                IAsyncResult tag =
+                    linkServer.BeginInvoke("https://gomostream.com/" + (isMovie ? "movie" : "show") + "/" + find, null, null);
+
+
+                // DownloadGogo("https://gomostream.com/movie/" + find.Replace("-movie", ""));
+
+                /*
+                string d = client.DownloadString();
+                tokenCode = FindHTML(d, "var tc = \'", "'");
+                _token = FindHTML(d, "_token\": \"", "\"");
+                GetAPI();
+                */
+            }
+            catch (System.Exception) {
+                errors++;
+            }
+            hdMovieIsDone = false;
+            if (errors == 1) {
+                print("HD Link error");
+                print("");
+                hdMovieIsDone = true;
+
+            }
+
+            for (int f = 0; f < urlServers; f++) {
+                // GetLinkServer(f, realMoveLink);
+
+                // create the delegate
+                DelegateWithParameters linkServer =
+                    new DelegateWithParameters(GetLinkServer);
+
+                if (cThred != thredNumber) return;
+
+                IAsyncResult tag =
+                    linkServer.BeginInvoke(f, realMoveLink, null, null);
+
+                //linkServer.EndInvoke(tag);
+            }
+            haveLowLink = false;
+            try {
+                WebClient client = new WebClient();
+
+                string d = client.DownloadString(realMoveLink);
+                string lookfor = "\",\"src\":\"http";
+                while (d.Contains(lookfor)) {
+
+                    string lan = FindReverseHTML(d, lookfor, "\"");
+                    string link = "http" + FindHTML(d, lookfor, "\"").Replace("\\", "");
+                    activeSubtitles.Add(link);
+                    activeSubtitlesNames.Add(lan);
+                    print("SUBTITLE: " + lan + " | " + link);
+                    d = d.Substring(d.IndexOf(lookfor) + 1, d.Length - d.IndexOf(lookfor) - 1);
+                }
+                ax_Info.ax_info.SetSpinner(activeSubtitlesNames);
+            }
+            catch (System.Exception) {
+
+            }
+
+
+            if (cThred != thredNumber) return;
+
+            try {
+                //  GetLowLink(RemoveBloatTitle(movieTitles[titleID]));
+            }
+            catch (System.Exception) {
+                //print("Low link error");
+            }
+            while (urlsDone < urlServers) {
+                if (cThred != thredNumber) return;
+
+                Java.Lang.Thread.Sleep(10);
+            }
+            /*
+            while (!haveLowLink) {
+                if (cThred != thredNumber) return;
+
+                Java.Lang.Thread.Sleep(10);
+            }
+            */
+            while (!hdMovieIsDone) {
+                if (cThred != thredNumber) return;
+
+                Java.Lang.Thread.Sleep(10);
+            }
+            if (ax_Links.ax_links != null) {
+                ax_Links.ax_links.ChangeBar(100, false);
+            }
+            if (ax_Links.ax_links_sub != null) {
+                ax_Links.ax_links_sub.ChangeBar(100);
+            }
+
+        }
+        
+        
+        public static void GetURLFromTitle(int titleID = -1, bool onlyEps = false, int tNum = -1)
+        {
+            if(ax_Info.ax_info != null) {
+                ax_Info.ax_info.SetSpinner(new List<string>());
+            }
+
+            int addToTitleEps = 0;
+            string tempThred = tNum.ToString();
+            int ccThrednum = int.Parse(tempThred);
+
             string inter = thredNumber.ToString();
             int cThred = int.Parse(inter);
             print("---------------------------------" + cThred + " | " + thredNumber + "--------------------------------------------");
-            tempTitle = "";
-            urlsDone = 0;
-            currentXtoken = 0;
+            string realMoveLink = fwordLink[titleID];
+            __done = true;
+            __selSeason = 0;
+            int provider = movieProvider[titleID];
             if (titleID == -1) {
                 for (int i = 0; i < movieTitles.Count; i++) {
                     if (selectedTitle == movieTitles[i]) {
@@ -1515,221 +1954,273 @@ namespace CloudStream
                     }
                 }
             }
-            string realMoveLink = fwordLink[titleID];
-            activeLinks = new List<string>();
-            activeLinksNames = new List<string>();
-            mirrorCounter = 0;
-            /*for (int i = 0; i < 3; i++) {
-                int slash = mD.IndexOf("/");
-                mD = mD.Substring(slash + 1, mD.Length - slash - 1);
-            }*/
-            //print(mD);
 
-            // }
-            provider = movieProvider[titleID];
+            if (!onlyEps) {
+
+                tempTitle = "";
+                urlsDone = 0;
+                currentXtoken = 0;
+
+                activeLinks = new List<string>();
+                activeLinksNames = new List<string>();
+                activeSubtitles = new List<string>();
+                activeSubtitlesNames = new List<string>();
+                mirrorCounter = 0;
+                currentActiveSubtitle = -1;
+
+            }
+            print(movieTitles[titleID] + ":::::" + movieProvider[titleID] + "||||||" + provider + "-----" + movieIsAnime[titleID]);
             if (!movieIsAnime[titleID]) {
                 WebClient client = new WebClient();
 
-                if (provider == -1) {
-                    string find = movieTitles[titleID].ToLower();
-                    Regex rgx = new Regex("[^a-zA-Z0-9 -]");
-                    find = rgx.Replace(find, "");
-                    find = find.Replace(" - ", "-").Replace(" ", "-");
-                    int errors = 0;
-                    try {
-                        string d = client.DownloadString("https://gomostream.com/movie/" + find);
-                        tokenCode = FindHTML(d, "var tc = \'", "'");
-                        _token = FindHTML(d, "_token\": \"", "\"");
-                        GetAPI();
+                if (!onlyEps) {
+                    if (provider == -1) {
+                        GetUrlFromMovie123(titleID, cThred, realMoveLink);
+
+                        print("Done!!");
                     }
-                    catch (System.Exception) {
-                        errors++;
+                    else if (provider == -3) {
+                        string d = "";
+                        try {
+                            d = client.DownloadString(fwordLink[titleID]);
+                        }
+                        catch (System.Exception) {
+
+                        }
+                        if (d != "") {
+                            tokenCode = FindHTML(d, "var tc = \'", "'");
+                            _token = FindHTML(d, "_token\": \"", "\"");
+                            GetAPI();
+                        }
+                        else {
+                            print("Error downloading: " + fwordLink[titleID]);
+                        }
                     }
-                    hdMovieIsDone = false;
-                    if (errors == 1) {
-                        print("HD Link error");
-                        print("");
-                        hdMovieIsDone = true;
+                    else if (provider == -2) {
+                        //currentXtoken = 1;
+                        GetSeriesLink(fwordLink[titleID]);
+                        for (int i = 0; i < seriesLinks.Count; i++) {
+                            if (tryDownloadingTv) {
+                                string d = "";
+                                try {
+                                    d = client.DownloadString(seriesLinks[i]);
+                                }
+                                catch (System.Exception) {
+
+                                }
+                                if (d != "") {
+                                    tempTitle = seriesLinks[i].Replace("https://user.gomostream.com/show/", "").Replace("-", " ").Replace("/", " ") + "| ";
+                                    currentXtoken = 1;
+                                    tokenCode = FindHTML(d, "id\': \'", "\'");
+                                    tokenCode = FindHTML(d, "var tc = \'", "'");
+                                    _token = FindHTML(d, "_token\": \"", "\"");
+                                    GetAPI();
+                                }
+                                else {
+                                    print("Error downloading: " + seriesLinks[i]);
+                                }
+                            }
+                            else {
+                                print(seriesLinks[i]);
+                            }
+                        }
+                    }
+                    else if (provider == 3) {
+                        //currentXtoken = 1;
+                        __series = fwordLink[titleID];
+                        _GetAPI(cThred);
+                        __done = false;
+                    }
+                    else if (provider == -5) {
+                        string d = client.DownloadString(fwordLink[titleID]);
+                        //https://vcstream.to/player?fid=5cea538a2cf69&page=embed
+                        // string embeded = "https://vcstream.to/embed/" + FindHTML(d, "src=\"https://vcstream.to/embed/", "\"");
+                        string find = FindHTML(d, "src=\"https://vcstream.to/embed/", "\"");
+                        if (find != "") {
+                            string embeded = "https://vcstream.to/player?fid=" + find + "&page=embed";
+
+                            d = client.DownloadString(embeded);
+                            string file = FindHTML(d, "\"file\\\":\\\"", "\\\"}").Replace("\\\\\\/", "/");
+                            activeLinks.Add(file);
+                            activeLinksNames.Add("PUTLOCKER");
+
+                        }
+                        else {
+                            string gogoLink = "https://gomostream.com/" + FindHTML(d, "https://gomostream.com/", "\"");
+                            if (gogoLink != "https://gomostream.com/") {
+                                hdMovieIsDone = false;
+                                DownloadGogo(gogoLink);
+
+                                while (!hdMovieIsDone) {
+                                    if (cThred != thredNumber) return;
+
+                                    Java.Lang.Thread.Sleep(10);
+                                }
+                            }
+                            else {
+                                string openloadLink = "https://openload.co/embed/" + FindHTML(d, "https://openload.co/embed/", "\"");
+                                if (openloadLink != "https://openload.co/embed/") {
+                                    activeLinks.Add(openloadLink);
+                                    activeLinksNames.Add("OPENLOAD");
+                                }
+
+                            }
+                        }
+
+
+
+
 
                     }
-
-                    for (int f = 0; f < urlServers; f++) {
-                        // GetLinkServer(f, realMoveLink);
-
-                        // create the delegate
-                        DelegateWithParameters linkServer =
-                            new DelegateWithParameters(GetLinkServer);
-
-                        if (cThred != thredNumber) return;
-
-                        IAsyncResult tag =
-                            linkServer.BeginInvoke(f, realMoveLink, null, null);
-
-                        //linkServer.EndInvoke(tag);
-                    }
-                    haveLowLink = false;
-                    if (cThred != thredNumber) return;
-
-                    try {
-
-                        GetLowLink(movieTitles[titleID]);
-                    }
-                    catch (System.Exception) {
-
-                    }
-                    while (urlsDone < urlServers) {
-                        if (cThred != thredNumber) return;
-
-                        Java.Lang.Thread.Sleep(10);
-                    }
-                    while (!haveLowLink) {
-                        if (cThred != thredNumber) return;
-
-                        Java.Lang.Thread.Sleep(10);
-                    }
-                    while (!hdMovieIsDone) {
-                        if (cThred != thredNumber) return;
-
-                        Java.Lang.Thread.Sleep(10);
-                    }
-                    print("Done!!");
                 }
-                else if (provider == -3) {
+                else {
+                    if (provider == 3) {
+                        __series = fwordLink[titleID];
+
+                        _GetAPI(thredNumber, false);
+                        while (!_APIDone) {
+                            if (cThred != thredNumber) {
+                                return;
+                            }
+                            Java.Lang.Thread.Sleep(10);
+                        }
+                        addToTitleEps = __totalLinks;
+                    }
+                    else {
+                        addToTitleEps = -1;
+                    }
+                }
+
+                if (provider == 4) {
+                    addToTitleEps = 0;
+                    //<a data-ep-id="9DXf8Rsv" href="/tv-series/the-orville-season-2/gMSTqyRs/9DXf8Rsv-watch-free.html" title="Episode 09: Identity, Part 2" class="PbBgtidTnPxraqPIHruO ">
+                    //    < span class="yYnGHyiHQRdFTEMmNPga">Episode 09: Identity, Part 2</span>
                     string d = "";
                     try {
-                        d = client.DownloadString(fwordLink[titleID]);
+                        d = client.DownloadString("https://movies123.pro" + fwordLink[titleID]);
                     }
                     catch (System.Exception) {
 
                     }
                     if (d != "") {
-                        tokenCode = FindHTML(d, "var tc = \'", "'");
-                        _token = FindHTML(d, "_token\": \"", "\"");
-                        GetAPI();
-                    }
-                    else {
-                        print("Error downloading: " + fwordLink[titleID]);
-                    }
-                }
-                else if (provider == -2) {
-                    //currentXtoken = 1;
-                    GetSeriesLink(fwordLink[titleID]);
-                    for (int i = 0; i < seriesLinks.Count; i++) {
-                        if (tryDownloadingTv) {
-                            string d = "";
-                            try {
-                                d = client.DownloadString(seriesLinks[i]);
-                            }
-                            catch (System.Exception) {
+                        string lookfor = "\" href=\"" + fwordLink[titleID];
 
+                        while (d.Contains(lookfor)) {
+                            string fullUrl = fwordLink[titleID] + FindHTML(d, lookfor, "\""); // ch-free.html" title="
+                            string title = FindHTML(d, fullUrl + "\" title=\"", "\"");
+                            if (title != "") {
+                                if (!onlyEps) {
+                                    activeLinks.Add(fullUrl);
+                                    activeLinksNames.Add(title);
+                                }
+                                else {
+                                    addToTitleEps++;
+                                }
                             }
-                            if (d != "") {
-                                tempTitle = seriesLinks[i].Replace("https://user.gomostream.com/show/", "").Replace("-", " ").Replace("/", " ") + "| ";
-                                currentXtoken = 1;
-                                tokenCode = FindHTML(d, "id\': \'", "\'");
-                                tokenCode = FindHTML(d, "var tc = \'", "'");
-                                _token = FindHTML(d, "_token\": \"", "\"");
-                                GetAPI();
-                            }
-                            else {
-                                print("Error downloading: " + seriesLinks[i]);
+
+                            int endIndex = d.IndexOf(title) + 1;
+                            d = d.Substring(endIndex, d.Length - endIndex);
+                            if (title == "") {
+                                d = "";
                             }
                         }
-                        else {
-                            print(seriesLinks[i]);
-                        }
+
                     }
-                }
-                else if (provider == 3) {
-                    //currentXtoken = 1;
-                    __series = fwordLink[titleID];
-                    _GetAPI(cThred);
-                    __done = false;
+
                 }
 
             }
             else {
                 if (provider == 1) {
                     WebClient client = new WebClient();
+                    print("Daa13");
                     string d = "";
                     try {
                         d = client.DownloadString("https://ww.9animes.net/" + realMoveLink.Replace(" ", "-"));
-
                     }
                     catch (System.Exception) {
 
                     }
-                    if(d != "") { 
-                    string realLink = FindHTML(d, "<link rel=\"canonical\" href=\"", "\"");
+                    print("Daa12");
+                    if (d != "") {
+                        print("Daa11");
+                        string realLink = FindHTML(d, "<link rel=\"canonical\" href=\"", "\"");
                         try {
 
-                       
-                    bool dub = movieTitles[titleID].Contains("Dubbed");
-                    if (dub) {
-                        realLink.Replace("subbed", "dubbed");
-                    }
-                    else {
-                        realLink.Replace("dubbed", "subbed");
-                    }
-                    d = client.DownloadString(realLink);
 
-                    string templateS = realLink.Replace(FindHTML(realLink, "episode", "/") + "/", "");
-                    string s = "<option value=\"" + templateS;
-                    while (d.Contains(s)) {
-                        string url = templateS + FindHTML(d, s, "\"");
-                        string dUrl = client.DownloadString(url);
-                        string title = FindHTML(dUrl, "To watch <strong>", "<");
-                        // print(dUrl);
-                        string allBox = "";
-                        if (dUrl.Contains("//captched.com/embed/")) {
-                            allBox = "https://captched.com/embed/iframe.php?u=" + FindHTML(dUrl, "//captched.com/embed/", "\"");
-
-                            // string dAllBox = client.DownloadString(allBox);
-                            //print(dAllBox);
-                        }
-
-                        if (dUrl.Contains("https://www.mp4upload.com/embed-")) {
-                            string mp4URL = FindHTML(dUrl, "https://www.mp4upload.com/embed-", "\"").Replace(".html", "");
-                            string printAll = title;
-                            if (allBox != "") {
-                                printAll += " | Browser: " + allBox;
-                            }
-                            string realMp4 = Getmp4uploadByID(mp4URL);
-                            if(realMp4 != "") {
-                                    if (realMp4 != "") {
-                                        printAll += " | BrowserMp4: " + "https://www.mp4upload.com/embed-" + mp4URL + ".html" + " | DownloadMp4: " + realMp4;
-                                        if (!activeLinks.Contains(realMp4)) {
-                                            print("---------------------------------" + cThred + " | " + thredNumber + "--------------------------------------------");
-
-                                            if (cThred != thredNumber) return;
-
-                                            activeLinks.Add(realMp4);
-                                            activeLinksNames.Add(title);
-                                            progress = 0;
-                                            ax_Links.ax_links.ChangeBar(progress);
-
-                                        }
-                                        print(printAll);
-                                    }
-                            }
-                        }
-                        else {
-                            if (allBox != "") {
-                                print(title + " | Error, Browser: " + allBox);
+                            bool dub = movieTitles[titleID].Contains("Dubbed");
+                            if (dub) {
+                                realLink.Replace("subbed", "dubbed");
                             }
                             else {
-                                print(title + " | Error");
+                                realLink.Replace("dubbed", "subbed");
                             }
-                            //"https://vidstreaming.io/streaming.php?id="
-                        }
-                        d = d.Substring(d.IndexOf(s) + 1, d.Length - d.IndexOf(s) - 1);
+                            d = client.DownloadString(realLink);
 
-                    }
-                    
-                         }
+                            string templateS = realLink.Replace(FindHTML(realLink, "episode", "/") + "/", "");
+                            string s = "<option value=\"" + templateS;
+                            while (d.Contains(s)) {
+                                if (!onlyEps) {
+                                    string url = templateS + FindHTML(d, s, "\"");
+                                    string dUrl = client.DownloadString(url);
+                                    string title = FindHTML(dUrl, "To watch <strong>", "<");
+                                    // print(dUrl);
+                                    string allBox = "";
+                                    if (dUrl.Contains("//captched.com/embed/")) {
+                                        allBox = "https://captched.com/embed/iframe.php?u=" + FindHTML(dUrl, "//captched.com/embed/", "\"");
+
+                                        // string dAllBox = client.DownloadString(allBox);
+                                        //print(dAllBox);
+                                    }
+
+                                    if (dUrl.Contains("https://www.mp4upload.com/embed-")) {
+                                        string mp4URL = FindHTML(dUrl, "https://www.mp4upload.com/embed-", "\"").Replace(".html", "");
+                                        string printAll = title;
+                                        if (allBox != "") {
+                                            printAll += " | Browser: " + allBox;
+                                        }
+                                        string realMp4 = Getmp4uploadByID(mp4URL);
+                                        if (realMp4 != "") {
+                                            if (realMp4 != "") {
+                                                printAll += " | BrowserMp4: " + "https://www.mp4upload.com/embed-" + mp4URL + ".html" + " | DownloadMp4: " + realMp4;
+                                                if (!activeLinks.Contains(realMp4)) {
+                                                    print("---------------------------------" + cThred + " | " + thredNumber + "--------------------------------------------");
+
+                                                    if (cThred != thredNumber) return;
+
+                                                    activeLinks.Add(realMp4);
+                                                    activeLinksNames.Add(title);
+                                                    progress = 0;
+                                                    ax_Links.ax_links.ChangeBar(progress);
+
+                                                }
+                                                print(printAll);
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        if (allBox != "") {
+                                            print(title + " | Error, Browser: " + allBox);
+                                        }
+                                        else {
+                                            print(title + " | Error");
+                                        }
+                                        //"https://vidstreaming.io/streaming.php?id="
+                                    }
+
+                                }
+                                else {
+                                    addToTitleEps++;
+                                    print(addToTitleEps + " ||| " + movieTitles[titleID]);
+                                }
+                                d = d.Substring(d.IndexOf(s) + 1, d.Length - d.IndexOf(s) - 1);
+
+                            }
+
+                        }
                         catch (System.Exception) {
 
-                    }
+                        }
                     }
                     //  print(d);
                     //  print(d);
@@ -1740,7 +2231,6 @@ namespace CloudStream
                     print(Getmp4uploadByID(mp4URL));
                     */
                 }
-
                 if (provider == 0) {
                     // try {
 
@@ -1761,8 +2251,9 @@ namespace CloudStream
                         List<string> downloads = new List<string>();
                         List<string> names = new List<string>();
                         List<int> nums = new List<int>();
-                        print(d);
+                        // print(d);
                         while (d.Contains("text-right ep-num\'>")) {
+
                             try {
                                 string dstring = ("https://" + FindHTML(d, "<div class=\'episode-wrap\'>", "\'", 28));
                                 string name = FindHTML(d, "ep-anime-name-an\'>", "<");
@@ -1773,10 +2264,12 @@ namespace CloudStream
                                 int epNumPlace = d.IndexOf("text-right ep-num\'>") + 1; // to prevent while(true)
 
                                 d = d.Substring(epNumPlace, d.Length - epNumPlace);
-                               // if (dub == isDub) {
-                                    nums.Add(num);
-                                    names.Add(name + (dub ? " (Dub)" : " (Sub)"));
-                                    downloads.Add(dstring);
+                                // if (dub == isDub) {
+                                nums.Add(num);
+                                names.Add(name + (dub ? " (Dub)" : " (Sub)"));
+                                downloads.Add(dstring);
+                                addToTitleEps++;
+
                                 //}
                             }
                             catch (System.Exception) {
@@ -1788,72 +2281,74 @@ namespace CloudStream
                             }
 
                         }
+                        if (!onlyEps) {
 
-                        List<string> newDownloads = new List<string>();
-                        List<string> newNames = new List<string>();
-                        List<int> taken = new List<int>();
-                        for (int i = 0; i < nums.Count; i++) {
-                            int lowest = 10000000;
-                            int rnum = 0;
-                            for (int x = 0; x < nums.Count; x++) {
-                                if (nums[x] < lowest && !taken.Contains(x)) {
-                                    rnum = x;
-                                    lowest = nums[x];
+                            List<string> newDownloads = new List<string>();
+                            List<string> newNames = new List<string>();
+                            List<int> taken = new List<int>();
+                            for (int i = 0; i < nums.Count; i++) {
+                                int lowest = 10000000;
+                                int rnum = 0;
+                                for (int x = 0; x < nums.Count; x++) {
+                                    if (nums[x] < lowest && !taken.Contains(x)) {
+                                        rnum = x;
+                                        lowest = nums[x];
+                                    }
                                 }
-                            }
-                            taken.Add(rnum);
-                            newNames.Add(names[rnum]);
-                            newDownloads.Add(downloads[rnum]);
-                        }
-
-                        for (int i = 0; i < newDownloads.Count; i++) {
-                            print(newDownloads[i]);
-                            d = client.DownloadString(newDownloads[i]);
-                            string mp4Find = "mp4upload\",\"id\":\"";
-                            string mp4upload = FindHTML(d, mp4Find, "\"");
-                            string ttp = FindHTML(d,mp4upload +  "\",\"type\":\"","\"");
-
-                            // TO get corrent
-                            int ccc = 0;
-                            while (  ((ttp == "subbed" && newNames[i].Contains("(Dub)")) || (ttp == "dubbed" && newNames[i].Contains("(Sub)"))) && mp4upload != "" && ccc < 30) {
-                                ccc++;
-                                string _ttpFind = mp4upload + "\",\"type\":\"";
-                                int ttpFind = d.IndexOf(_ttpFind);
-                                print(ttpFind.ToString());
-                                d = d.Substring(ttpFind + 1, d.Length - ttpFind - 1);
-                                mp4upload = FindHTML(d, "mp4upload\",\"id\":\"", "\"");
-                                ttp = FindHTML(d, mp4upload + "\",\"type\":\"", "\"");
-                            }
-                            if(ccc == 30) {
-                                mp4upload = "";
-                            }
-                            print(ttp + "|" + newNames[i]);
-                             if(mp4upload != "") { 
-
-
-                            string rLink = Getmp4uploadByID(mp4upload);
-                            //<script type='text/javascript'>var episode_videos = [{"host":"trollvid","id":"ba4f06fe","type":"dubbed","date":"2015-12-20 09:32:53"},{"host":"trollvid","id":"252bbb32c682","type":"subbed","date":"2019-04-08 18:15:01"},{"host":"trollvid","id":"e0c600d9573d","type":"subbed","date":"2019-04-08 18:15:01"},
-                            //{ "host":"mp4upload","id":"93vet46b3k43","type":"subbed","date":"2015-12-20 09:32:53"},{"host":"mp4upload","id":"zjmyxp4x0zmu","type":"subbed","date":"2019-02-10 21:14:48"},{"host":"mp4upload","id":"1s5nmi90lyqo","type":"dubbed","date":"2019-04-08 17:52:06"}];</script>
-
-                            print(newNames[i] + " | BrowserMp4: " + "https://www.mp4upload.com/embed-" + mp4upload + ".html" + " | DownloadMp4: " + rLink);
-                                if(!activeLinks.Contains(rLink)) {
-                                    print("---------------------------------" + cThred + " | " + thredNumber + "--------------------------------------------");
-
-                                    if (cThred != thredNumber) return;
-
-                                    activeLinks.Add(rLink);
-                            activeLinksNames.Add(newNames[i]);
-                             progress = (int) System.Math.Round((100f * i) / newDownloads.Count);
-                            ax_Links.ax_links.ChangeBar(progress);
-                            try {
-                                ax_Links.ax_links_sub.ChangeBar(progress);
-
-                            }
-                            catch (System.Exception) {
-                            }
-                            }
+                                taken.Add(rnum);
+                                newNames.Add(names[rnum]);
+                                newDownloads.Add(downloads[rnum]);
                             }
 
+                            for (int i = 0; i < newDownloads.Count; i++) {
+                                print(newDownloads[i]);
+                                d = client.DownloadString(newDownloads[i]);
+                                string mp4Find = "mp4upload\",\"id\":\"";
+                                string mp4upload = FindHTML(d, mp4Find, "\"");
+                                string ttp = FindHTML(d, mp4upload + "\",\"type\":\"", "\"");
+
+                                // TO get corrent
+                                int ccc = 0;
+                                while (((ttp == "subbed" && newNames[i].Contains("(Dub)")) || (ttp == "dubbed" && newNames[i].Contains("(Sub)"))) && mp4upload != "" && ccc < 30) {
+                                    ccc++;
+                                    string _ttpFind = mp4upload + "\",\"type\":\"";
+                                    int ttpFind = d.IndexOf(_ttpFind);
+                                    print(ttpFind.ToString());
+                                    d = d.Substring(ttpFind + 1, d.Length - ttpFind - 1);
+                                    mp4upload = FindHTML(d, "mp4upload\",\"id\":\"", "\"");
+                                    ttp = FindHTML(d, mp4upload + "\",\"type\":\"", "\"");
+                                }
+                                if (ccc == 30) {
+                                    mp4upload = "";
+                                }
+                                print(ttp + "|" + newNames[i]);
+                                if (mp4upload != "") {
+
+
+                                    string rLink = Getmp4uploadByID(mp4upload);
+                                    //<script type='text/javascript'>var episode_videos = [{"host":"trollvid","id":"ba4f06fe","type":"dubbed","date":"2015-12-20 09:32:53"},{"host":"trollvid","id":"252bbb32c682","type":"subbed","date":"2019-04-08 18:15:01"},{"host":"trollvid","id":"e0c600d9573d","type":"subbed","date":"2019-04-08 18:15:01"},
+                                    //{ "host":"mp4upload","id":"93vet46b3k43","type":"subbed","date":"2015-12-20 09:32:53"},{"host":"mp4upload","id":"zjmyxp4x0zmu","type":"subbed","date":"2019-02-10 21:14:48"},{"host":"mp4upload","id":"1s5nmi90lyqo","type":"dubbed","date":"2019-04-08 17:52:06"}];</script>
+
+                                    print(newNames[i] + " | BrowserMp4: " + "https://www.mp4upload.com/embed-" + mp4upload + ".html" + " | DownloadMp4: " + rLink);
+                                    if (!activeLinks.Contains(rLink)) {
+                                        print("---------------------------------" + cThred + " | " + thredNumber + "--------------------------------------------");
+
+                                        if (cThred != thredNumber) return;
+
+                                        activeLinks.Add(rLink);
+                                        activeLinksNames.Add(newNames[i]);
+                                        progress = (int)System.Math.Round((100f * i) / newDownloads.Count);
+                                        ax_Links.ax_links.ChangeBar(progress);
+                                        try {
+                                            ax_Links.ax_links_sub.ChangeBar(progress);
+
+                                        }
+                                        catch (System.Exception) {
+                                        }
+                                    }
+                                }
+
+                            }
                         }
                     }
                     else {
@@ -1874,84 +2369,101 @@ namespace CloudStream
                     catch (System.Exception) {
 
                     }
-                    if(d != "") { 
-                    string id = FindHTML(d, "<input type=\"hidden\" value=\"", "\"");
-                    d = client.DownloadString("https://ajax.apimovie.xyz/ajax/load-list-episode?ep_start=0&ep_end=100000&id=" + id + "&default_ep=0");
-                    //print(d);
-                    // Console.ReadLine();
-                    string fS = "<li><a href=\" ";
-                    List<string> _links = new List<string>();
-                    while (d.Contains(fS)) {
-                        string _link = FindHTML(d, fS, "\"");
-                        _links.Add(_link);
-                        d = d.Substring(d.IndexOf(fS) + 1, d.Length - 1 - d.IndexOf(fS));
-                    }
-                    for (int i = 0; i < _links.Count; i++) {
-                        string title = ToTitle(_links[i]);
-
-                        d = client.DownloadString("https://www3.gogoanime.io" + _links[i]);
-                        string mp4 = "https://www.mp4upload.com/embed-" + FindHTML(d, "data-video=\"https://www.mp4upload.com/embed-", "\"");
-                        if (mp4 == "https://www.mp4upload.com/embed-") {
-                            mp4 = FindHTML(d, "data-video=\"//vidstreaming.io/streaming.php?", "\"");
-                            if (mp4 != "") {
-                                mp4 = "http://vidstreaming.io/streaming.php?" + mp4;
-                                d = client.DownloadString(mp4);
-                                string mxLink = FindHTML(d, "sources:[{file: \'", "\'");
-                                print("Backup: " + title + " | Browser: " + mp4 + " | RAW (NO ADS): " + mxLink);
-                                if (!activeLinks.Contains(mxLink)) {
-                                        print("---------------------------------" + cThred + " | " + thredNumber + "--------------------------------------------");
-
-                                        if (cThred != thredNumber) return;
-
-                                        activeLinks.Add(mxLink);
-                                    activeLinksNames.Add(title);
-                                    progress = (int)System.Math.Round((100f * i) / _links.Count);
-                                    ax_Links.ax_links.ChangeBar(progress);
-                                }
-                            }
-                            else {
-                                print(title + " | Error :(");
-                            }
+                    if (d != "") {
+                        string id = FindHTML(d, "<input type=\"hidden\" value=\"", "\"");
+                        d = client.DownloadString("https://ajax.apimovie.xyz/ajax/load-list-episode?ep_start=0&ep_end=100000&id=" + id + "&default_ep=0");
+                        //print(d);
+                        // Console.ReadLine();
+                        string fS = "<li><a href=\" ";
+                        List<string> _links = new List<string>();
+                        while (d.Contains(fS)) {
+                            string _link = FindHTML(d, fS, "\"");
+                            _links.Add(_link);
+                            d = d.Substring(d.IndexOf(fS) + 1, d.Length - 1 - d.IndexOf(fS));
+                        }
+                        if (onlyEps) {
+                            addToTitleEps = _links.Count;
                         }
                         else {
+                            for (int i = 0; i < _links.Count; i++) {
+                                string title = ToTitle(_links[i]);
 
-                            try {
-                                d = client.DownloadString(mp4);
-                                string mxLink = Getmp4uploadByFile(d);
-                                print(title + " | BrowserMp4: " + mp4 + " | DownloadMp4: " + mxLink);
-                                    if (!activeLinks.Contains(mxLink)) {
-                                        print("---------------------------------" + cThred + " | " + thredNumber + "--------------------------------------------");
+                                d = client.DownloadString("https://www3.gogoanime.io" + _links[i]);
+                                string mp4 = "https://www.mp4upload.com/embed-" + FindHTML(d, "data-video=\"https://www.mp4upload.com/embed-", "\"");
+                                if (mp4 == "https://www.mp4upload.com/embed-") {
+                                    mp4 = FindHTML(d, "data-video=\"//vidstreaming.io/streaming.php?", "\"");
+                                    if (mp4 != "") {
+                                        mp4 = "http://vidstreaming.io/streaming.php?" + mp4;
+                                        d = client.DownloadString(mp4);
+                                        string mxLink = FindHTML(d, "sources:[{file: \'", "\'");
+                                        print("Backup: " + title + " | Browser: " + mp4 + " | RAW (NO ADS): " + mxLink);
+                                        if (!activeLinks.Contains(mxLink)) {
+                                            print("---------------------------------" + cThred + " | " + thredNumber + "--------------------------------------------");
 
-                                        if (cThred != thredNumber) return;
-                                        activeLinks.Add(mxLink);
-                                        activeLinksNames.Add(title);
-                                        progress = (int)System.Math.Round((100f * i) / _links.Count);
-                                        ax_Links.ax_links.ChangeBar(progress);
+                                            if (cThred != thredNumber) return;
+                                            if (!mxLink.StartsWith("Error")) {
+                                                activeLinks.Add(mxLink);
+                                                activeLinksNames.Add(title);
+                                                progress = (int)System.Math.Round((100f * i) / _links.Count);
+                                                ax_Links.ax_links.ChangeBar(progress);
+                                            }
+                                            else {
+                                                print("vidstreaming mx link starts w error");
+                                            }
+                                        }
                                     }
-                            }
-                            catch (System.Exception) {
-                                print(title + " | BrowserMp4: " + mp4);
+                                    else {
+                                        print(title + " | Error :(");
+                                    }
+                                }
+                                else {
+
+                                    try {
+                                        d = client.DownloadString(mp4);
+                                        string mxLink = Getmp4uploadByFile(d);
+                                        print(title + " | BrowserMp4: " + mp4 + " | DownloadMp4: " + mxLink);
+                                        if (!activeLinks.Contains(mxLink)) {
+                                            print("---------------------------------" + cThred + " | " + thredNumber + "--------------------------------------------");
+
+                                            if (cThred != thredNumber) return;
+                                            activeLinks.Add(mxLink);
+                                            activeLinksNames.Add(title);
+                                            progress = (int)System.Math.Round((100f * i) / _links.Count);
+                                            ax_Links.ax_links.ChangeBar(progress);
+                                        }
+                                    }
+                                    catch (System.Exception) {
+                                        print(title + " | BrowserMp4: " + mp4);
+
+                                    }
+                                }
 
                             }
                         }
-
-                    }
                     }
                 }
             }
             while (!__done) {
                 Java.Lang.Thread.Sleep(10);
+                if (cThred != thredNumber) return;
+
             }
+            // if (addToTitleEps != -1) {
+            print(addToTitleEps + "<-->" + movieTitles[titleID] + "|" + ccThrednum + "<>");
+            ax_Bookmarks.AddTitleEps(addToTitleEps, titleID, ccThrednum);
+            //  }
             progress = 100;
         }
         static async Task GetLowLink(string serchText)
         {
-            bool mx = !debug;
+            print("LOW LINK: " + serchText);
+
+            bool mx = debug;
             string rinput = serchText.ToLower().Replace(" ", "+");
 
             string f6utl = "https://www6.fmovie.cc/?s=" + rinput;
             WebClient client = new WebClient();
-
+            print("AAAAAAAA1");
             WebRequest request = WebRequest.Create(
            f6utl);
             request.Credentials = CredentialCache.DefaultCredentials;
@@ -1960,9 +2472,12 @@ namespace CloudStream
                 // Open the stream using a StreamReader for easy access.  
                 StreamReader reader = new StreamReader(dataStream);
                 // Read the content.  
-                string responseFromServer = reader.ReadToEnd();
+                string responseFromServer = reader.ReadToEnd().ToLower();
+                print("AAAAAAAA2");
                 // Display the content.  
                 if (responseFromServer.Contains(serchText)) {
+                    print("AAAAAAAA3");
+                    print(responseFromServer);
                     int endID = responseFromServer.IndexOf(">" + serchText + "</a>");
                     string startFind = "alt=\"" + serchText + "\"><a class=\"titlecover\" style=\"\" href=\"";
                     int startID = responseFromServer.IndexOf(startFind);
@@ -1970,6 +2485,7 @@ namespace CloudStream
                     string firstUrl = "https://www6.fmovie.cc/movies/";
                     string inUrl = movieUrl.Substring(firstUrl.Length, movieUrl.Length - firstUrl.Length - 1);
                     string rUrl = "https://api.123movie.cc/search.php?ep=" + inUrl + "&server_name=serverf4";
+                    print("AAAAAAAA4");
                     if (!mx) {
                         print("Taken from");
                         print(movieUrl);
@@ -1992,6 +2508,7 @@ namespace CloudStream
                     string start = "https://serverf4.org/";
                     string end = "#poster=&caption=";
                     int indexStart = realURLDownload.IndexOf(start);
+                    print("AAAAAAAA5");
                     if (indexStart != -1) {
                         string raw = realURLDownload.Substring(indexStart, -indexStart + realURLDownload.IndexOf(end));
                         if (!mx) {
@@ -2030,6 +2547,7 @@ namespace CloudStream
                         var _responseString = await _response.Content.ReadAsStringAsync();
 
                         string _all = _responseString.ToString();
+                        print("AAAAAAAA6");
 
                         int mxStart = _all.IndexOf("\"data\":[{\"file\":") + 17;
                         int mxEnd = _all.IndexOf("label") - 3;
@@ -2037,6 +2555,7 @@ namespace CloudStream
                         string quality = _all.Substring(mxEnd, _all.Length - mxEnd);
                         int qEnd = quality.IndexOf("p");
                         string rq = quality.Substring(11, qEnd - 10);
+                        print("AAAAAAAA7");
 
                         if (!mx) {
                             print("");
@@ -2049,24 +2568,30 @@ namespace CloudStream
                         print("");
                         if (!activeLinks.Contains(mxURL)) {
                             activeLinks.Add(mxURL);
-                        
-                        activeLinksNames.Add("Backup Link (" + rq + ")");
 
-                        movieIsAnime.Add(false);
-                        movieProvider.Add(-1);
+                            activeLinksNames.Add("Backup Link (" + rq + ")");
+
+                            movieIsAnime.Add(false);
+                            movieProvider.Add(-1);
                         }
+                        print("Low Link 3");
+
                         haveLowLink = true;
 
                     }
                     else {
+                        print("Low Link Error 2");
                         haveLowLink = true;
-
                     }
-                } else {
+                }
+                else {
+                    print("Low link error 1");
                     haveLowLink = true;
 
                 }
             }
+            print("Low link error 5");
+
         }
         static string ReadDataMovie(string all, string inp)
         {
@@ -2081,112 +2606,132 @@ namespace CloudStream
         {
             try {
 
-            
-            string movies123 = "https://movies123.pro/search/" + rinput.Replace("+", " ");
 
-            WebClient client = new WebClient();
-            string mD = "";
-            try {
-                mD = client.DownloadString(movies123);
-           }
-           catch (System.Exception) {
+                string movies123 = "https://movies123.pro/search/" + rinput.Replace("+", " ");
 
-            }
-            while (mD.Contains("/movie/")) {
-                /*
-
-                data - filmName = "Iron Man"
-            data - year = "2008"
-            data - imdb = "IMDb: 7.9"
-            data - duration = "126 min"
-            data - country = "United States"
-            data - genre = "Action, Adventure, Sci-Fi"
-            data - descript = "Tony a boss of a Technology group, after his encounter in Afghanistan, became a symbol of justice as he built High-Tech armors and suits, to act as..."
-            data - star_prefix = ""
-            data - key = "0"
-            data - quality = "itemAbsolute_hd"
-            data - rating = "4.75"
-                    */
-
-
-                Movie m = new Movie();
-                m.year = ReadDataMovie(mD, "data-year");
-                m.imdbRating = ReadDataMovie(mD, "data-imdb");
-                m.runtime = ReadDataMovie(mD, "data-duration");
-                m.genre = ReadDataMovie(mD, "data-genre");
-                m.plot = ReadDataMovie(mD, "data-descript");
-                m.posterID = ReadDataMovie(mD, "<img src=\"/dist/image/default_poster.jpg\" data-src");
-                m.type = "movie";
-
-                if (debug) {
-                    print(m.title);
-                    print(m.imdbRating);
-                    print(m.runtime);
-                    print(m.genre);
-                    print(m.plot);
-                    print(m.posterID);
+                WebClient client = new WebClient();
+                string mD = "";
+                try {
+                    mD = client.DownloadString(movies123);
                 }
+                catch (System.Exception) {
+
+                }
+                bool canMovie = ax_Settings.SettingsGetChecked(0);
+                bool canShow = ax_Settings.SettingsGetChecked(8);
+
+                while (mD.Contains("/movie/") || mD.Contains("/tv-series/")) {
+                    /*
+
+                    data - filmName = "Iron Man"
+                data - year = "2008"
+                data - imdb = "IMDb: 7.9"
+                data - duration = "126 min"
+                data - country = "United States"
+                data - genre = "Action, Adventure, Sci-Fi"
+                data - descript = "Tony a boss of a Technology group, after his encounter in Afghanistan, became a symbol of justice as he built High-Tech armors and suits, to act as..."
+                data - star_prefix = ""
+                data - key = "0"
+                data - quality = "itemAbsolute_hd"
+                data - rating = "4.75"
+                        */
+                    print("--::--");
+                    int tvIndex = mD.IndexOf("/tv-series/");
+                    int movieIndex = mD.IndexOf("/movie/");
+                    bool isMovie = movieIndex < tvIndex;
+
+                    if (tvIndex == -1) { isMovie = true; }
+                    if (movieIndex == -1) { isMovie = false; }
 
 
-                int mStart = mD.IndexOf("/movie/");
+                    Movie m = new Movie();
+                    m.year = ReadDataMovie(mD, "data-year");
+                    m.imdbRating = ReadDataMovie(mD, "data-imdb");
+                    m.runtime = ReadDataMovie(mD, "data-duration");
+                    m.genre = ReadDataMovie(mD, "data-genre");
+                    m.plot = ReadDataMovie(mD, "data-descript");
+                    m.posterID = ReadDataMovie(mD, "<img src=\"/dist/image/default_poster.jpg\" data-src");
+                    m.type = isMovie ? "movie" : "tv-series";
 
-                mD = mD.Substring(mStart, mD.Length - mStart);
-                mD = mD.Substring(7, mD.Length - 7);
+                    if (debug) {
+                        print(m.title);
+                        print(m.imdbRating);
+                        print(m.runtime);
+                        print(m.genre);
+                        print(m.plot);
+                        print(m.posterID);
+                    }
+                    string lookfor = isMovie ? "/movie/" : "/tv-series/";
+
+                    int mStart = mD.IndexOf(lookfor);
+
+                    mD = mD.Substring(mStart, mD.Length - mStart);
+                    mD = mD.Substring(7, mD.Length - 7);
 
 
-                string rmd = "/movie/" + mD;
-                //string realAPILink = mD.Substring(0, mD.IndexOf("-"));
-                string _realMoveLink = "https://movies123.pro" + rmd.Substring(0, rmd.IndexOf("\""));
-                    
-                fwordLink.Add(_realMoveLink);
+                    string rmd = lookfor + mD;
+                    //string realAPILink = mD.Substring(0, mD.IndexOf("-"));
+                    string _realMoveLink = "https://movies123.pro" + rmd.Substring(0, rmd.IndexOf("\""));
+                    if (!isMovie) {
+                        _realMoveLink = rmd.Substring(0, rmd.IndexOf("\"")); // /tv-series/ies/the-orville-season-2/gMSTqyRs
+                        _realMoveLink = _realMoveLink.Substring(11, _realMoveLink.Length - 11); //ies/the-orville-season-2/gMSTqyRs
+                        string found = _realMoveLink.Substring(0, _realMoveLink.IndexOf("/"));
+                        if (!found.Contains("-")) {
+                            _realMoveLink = _realMoveLink.Replace(found, ""); //the-orville-season-2/gMSTqyRs
+                        }
+                        _realMoveLink = "/tv-series" + _realMoveLink;
+                    }
 
+                    fwordLink.Add(_realMoveLink);
+                    print("::::::::::::::::::::::" + _realMoveLink + " | " + isMovie);
 
-                int titleStart = mD.IndexOf("title=\"");
-                string _allrmd = mD.Substring(titleStart + 7, mD.Length - titleStart - 7);
-                _allrmd = _allrmd.Substring(0, _allrmd.IndexOf("\""));
-                _allrmd = _allrmd.Replace("&amp;", "and");
-                m.title = _allrmd;
-                moviesActive.Add(m);
-                movieIsAnime.Add(false);
-                movieTitles.Add(_allrmd);
-                movieProvider.Add(-1);
-            }
-            linksDone++;
-         //   SortMovies();
+                    int titleStart = mD.IndexOf("title=\"");
+                    string _allrmd = mD.Substring(titleStart + 7, mD.Length - titleStart - 7);
+                    _allrmd = _allrmd.Substring(0, _allrmd.IndexOf("\""));
+                    _allrmd = _allrmd.Replace("&amp;", "and");
+                    m.title = _allrmd;
+                    if ((isMovie && canMovie) || (!isMovie && canShow)) {
+                        moviesActive.Add(m);
+                        movieIsAnime.Add(false);
+                        movieTitles.Add(_allrmd);
+                        movieProvider.Add(isMovie ? -1 : 4);
+                    }
+                }
+                linksDone++;
+                //   SortMovies();
 
-            ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
+                ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
             }
             catch (System.Exception) {
 
             }
         }
+
         static void Link2()
         {
             try {
+                WebClient client = new WebClient();
+                string gogoAnime = "https://www3.gogoanime.io//search.html?keyword=" + rinput.Replace("+", "%");
 
-           
-            WebClient client = new WebClient();
-            string gogoAnime = "https://www3.gogoanime.io//search.html?keyword=" + rinput.Replace("+", "%");
+                string _d = client.DownloadString(gogoAnime);
 
-            string _d = client.DownloadString(gogoAnime);
+                // <p class="name"><a href="/category/mob-psycho-100" title="Mob Psycho 100">Mob Psycho 100</a></p>
+                string look = "<p class=\"name\"><a href=\"/category/";
+                while (_d.Contains(look)) {
+                    string ur = FindHTML(_d, look, "\"");
+                    Movie m = new Movie();
+                    m.title = ToTitle(ur);
+                    moviesActive.Add(m);
+                    movieIsAnime.Add(true);
+                    movieTitles.Add(m.title);
+                    movieProvider.Add(2);
+                    fwordLink.Add(ur);
+                    _d = _d.Substring(_d.IndexOf(look) + 1, _d.Length - _d.IndexOf(look) - 1);
+                }
+                linksDone++;
+                //SortMovies();
 
-            // <p class="name"><a href="/category/mob-psycho-100" title="Mob Psycho 100">Mob Psycho 100</a></p>
-            string look = "<p class=\"name\"><a href=\"/category/";
-            while (_d.Contains(look)) {
-                string ur = FindHTML(_d, look, "\"");
-                Movie m = new Movie();
-                m.title = ToTitle(ur);
-                moviesActive.Add(m);
-                movieIsAnime.Add(true);
-                movieTitles.Add(m.title);
-                movieProvider.Add(2);
-                fwordLink.Add(ur);
-                _d = _d.Substring(_d.IndexOf(look) + 1, _d.Length - _d.IndexOf(look) - 1);
-            }
-            linksDone++;
-            //SortMovies();
-
-            ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
+                ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
             }
             catch (System.Exception) {
 
@@ -2196,45 +2741,45 @@ namespace CloudStream
         {
             try {
 
-           
-            string kuroani = "https://ww1.kuroani.me/search?term=" + rinput;
 
-            WebClient client = new WebClient();
+                string kuroani = "https://ww1.kuroani.me/search?term=" + rinput;
 
-            string download = client.DownloadString(kuroani);
+                WebClient client = new WebClient();
 
-            // print(download);
-            //</div><a href='http://ww1.kuroani.me/anime/ // link, '
-            //id='epilink'> //name, <
-            //id='headerA_5'><img src=' // poster, '
+                string download = client.DownloadString(kuroani);
 
-
-
-            string endFile = "id=\'headerA_5'><img src=\'"; // poster ID file 
-            while (download.Contains(endFile)) {
-                Movie m = new Movie();
-                string fLink = "https://ww1.kuroani.me/anime/" + FindHTML(download, "</div><a href=\'http://ww1.kuroani.me/anime/", "\'");
-                if (!fwordLink.Contains(fLink)) {
-                    fwordLink.Add(fLink); // link
-                    m.title = FindHTML(download, "id=\'epilink\'>", "<"); // name
-                    m.posterID = FindHTML(download, endFile, "\'"); // poster
-                    m.type = "anime";
+                // print(download);
+                //</div><a href='http://ww1.kuroani.me/anime/ // link, '
+                //id='epilink'> //name, <
+                //id='headerA_5'><img src=' // poster, '
 
 
-                    moviesActive.Add(m);
-                    movieIsAnime.Add(true);
-                    movieTitles.Add(m.title);
-                    movieProvider.Add(0);
+
+                string endFile = "id=\'headerA_5'><img src=\'"; // poster ID file 
+                while (download.Contains(endFile)) {
+                    Movie m = new Movie();
+                    string fLink = "https://ww1.kuroani.me/anime/" + FindHTML(download, "</div><a href=\'http://ww1.kuroani.me/anime/", "\'");
+                    if (!fwordLink.Contains(fLink)) {
+                        fwordLink.Add(fLink); // link
+                        m.title = FindHTML(download, "id=\'epilink\'>", "<"); // name
+                        m.posterID = FindHTML(download, endFile, "\'"); // poster
+                        m.type = "anime";
 
 
+                        moviesActive.Add(m);
+                        movieIsAnime.Add(true);
+                        movieTitles.Add(m.title);
+                        movieProvider.Add(0);
+
+
+                    }
+                    int end = download.IndexOf(endFile);
+                    download = download.Substring(end + endFile.Length, download.Length - end - endFile.Length);
                 }
-                int end = download.IndexOf(endFile);
-                download = download.Substring(end + endFile.Length, download.Length - end - endFile.Length);
-            }
-            linksDone++;
-           // SortMovies();
+                linksDone++;
+                // SortMovies();
 
-            ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
+                ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
             }
             catch (System.Exception) {
 
@@ -2244,34 +2789,34 @@ namespace CloudStream
         {
             try {
 
-           
-            WebClient client = new WebClient();
 
-            string d = client.DownloadString("https://ww.9animes.net/list-all-english-subbed-dubbed-animes/");
-            List<string> matches = new List<string>();
-            while (d.Contains("</option>")) {
-                string a = FindReverseHTML(d, "</option>", ">");
-                if (FuzzyMatch(a, _serchText)) {
-                    matches.Add(a);
+                WebClient client = new WebClient();
+
+                string d = client.DownloadString("https://ww.9animes.net/list-all-english-subbed-dubbed-animes/");
+                List<string> matches = new List<string>();
+                while (d.Contains("</option>")) {
+                    string a = FindReverseHTML(d, "</option>", ">");
+                    if (FuzzyMatch(a, _serchText)) {
+                        matches.Add(a);
+                    }
+                    d = d.Substring(d.IndexOf("</option>") + 1, d.Length - d.IndexOf("</option>") - 1);
+                    //  "<link rel="canonical" href=""
                 }
-                d = d.Substring(d.IndexOf("</option>") + 1, d.Length - d.IndexOf("</option>") - 1);
-                //  "<link rel="canonical" href=""
-            }
-            for (int i = 0; i < matches.Count; i++) {
-                Movie m = new Movie();
-                m.title = matches[i];
-                m.type = "anime";
-                fwordLink.Add(m.title.Replace("-", "").Replace("(English Dubbed)", "").Replace("(English Subbed)", ""));
+                for (int i = 0; i < matches.Count; i++) {
+                    Movie m = new Movie();
+                    m.title = matches[i];
+                    m.type = "anime";
+                    fwordLink.Add(m.title.Replace("-", "").Replace("(English Dubbed)", "").Replace("(English Subbed)", ""));
 
-                moviesActive.Add(m);
-                movieIsAnime.Add(true);
-                movieTitles.Add(m.title);
-                movieProvider.Add(1);
+                    moviesActive.Add(m);
+                    movieIsAnime.Add(true);
+                    movieTitles.Add(m.title);
+                    movieProvider.Add(1);
 
-            }
-            linksDone++;
-           // SortMovies();
-            ax_Search.ax_search.ChangeBar(  (int)System.Math.Round(linksDone*100/totalLinks));
+                }
+                linksDone++;
+                // SortMovies();
+                ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
             }
             catch (System.Exception) {
 
@@ -2292,11 +2837,11 @@ namespace CloudStream
                     d = d.Substring(d.IndexOf(lookfor) + 1, d.Length - d.IndexOf(lookfor) - 1);
 
                     fwordLink.Add(realNum);
-                    string date = " (" + FindHTML(d, "<b>First Air Date: </b> <b>", "-") +")";
-                    if(date.Contains("<") || date.Contains("Oops! Unknown")) {
+                    string date = " (" + FindHTML(d, "<b>First Air Date: </b> <b>", "-") + ")";
+                    if (date.Contains("<") || date.Contains("Oops! Unknown")) {
                         date = "";
                     }
-                    string _title = ToTitle(dd.Replace("/", "").Replace(realNum, "")).Replace(" All Season","") + date;
+                    string _title = ToTitle(dd.Replace("/", "").Replace(realNum, "")).Replace(" All Season", "") + date;
 
                     Movie m = new Movie();
                     m.title = _title;
@@ -2319,11 +2864,56 @@ namespace CloudStream
             catch {
 
             }
-               
+
         }
 
+        static void Link6()
+        {
+            try {
 
-        static readonly float totalLinks = 4f;
+
+                WebClient client = new WebClient();
+
+                string d = client.DownloadString("https://zmovies.me/search/" + rinput);
+                string lookfor = "<div class=\"name\"> <a href=\"";
+                while (d.Contains(lookfor)) {
+                    string link = FindHTML(d, lookfor, "\"");
+                    string poster = FindHTML(d, "data-original=\"", "\"");
+                    string quality = FindHTML(d, "<div class=\"status\">", " </div>").Replace(" ", "").Replace("\n", "");
+                    string year = FindHTML(d, "<div class=\"tooltip hide\"></div>", " </div>").Replace(" ", "").Replace("\n", "");
+                    print("____");
+                    print(poster);
+                    print(quality);
+                    print(year);
+
+                    d = d.Substring(d.IndexOf(lookfor) + 1, d.Length - d.IndexOf(lookfor) - 1);
+                    string title = FindHTML(d, "title=\"", "\"").Replace("Watch ", "");
+
+
+                    Movie m = new Movie();
+                    m.title = title + " (" + quality + ")";
+                    m.posterID = poster;
+                    m.year = year;
+
+                    moviesActive.Add(m);
+                    movieIsAnime.Add(false);
+                    movieTitles.Add(m.title);
+                    movieProvider.Add(-5);
+                    fwordLink.Add(link);
+
+                }
+
+                linksDone++;
+                // SortMovies();
+                ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
+
+            }
+            catch {
+
+            }
+
+        }
+        static float totalLinks = 6f;
         static string rinput = "";
         static string _serchText;
         static int linksDone = 0;
@@ -2331,7 +2921,7 @@ namespace CloudStream
         {
             _serchText = serchText;
             ax_Search.ax_search.ChangeBar(10);
-          
+
 
             rinput = serchText.ToLower().Replace(" ", "+");
             string fmovesUrl = "https://www7.fmovies.to/search?keyword=" + rinput;
@@ -2350,7 +2940,7 @@ namespace CloudStream
 
             // if movie
 
-      
+
 
 
             movieTitles = new List<string>();
@@ -2370,7 +2960,7 @@ namespace CloudStream
             linksDone = 0;
             int tLinks = 0;
             MethodInvoker simpleDelegate;
-            if(ax_Settings.SettingsGetChecked(0)) { 
+            if (ax_Settings.SettingsGetChecked(0) || ax_Settings.SettingsGetChecked(8)) {
                 tLinks++;
                 simpleDelegate = new MethodInvoker(Link1);
                 simpleDelegate.BeginInvoke(null, null);
@@ -2395,15 +2985,21 @@ namespace CloudStream
                 simpleDelegate = new MethodInvoker(Link5);
                 simpleDelegate.BeginInvoke(null, null);
             }
+            if (ax_Settings.SettingsGetChecked(7)) {
+                tLinks++;
+                simpleDelegate = new MethodInvoker(Link6);
+                simpleDelegate.BeginInvoke(null, null);
+            }
+            totalLinks = tLinks;
+
             GetBookMarks();
 
 
             while (linksDone < tLinks) {
-               
-               Java.Lang.Thread.Sleep(10);
+                Java.Lang.Thread.Sleep(10);
             }
+
             SortMovies();
-            Java.Lang.Thread.Sleep(100);
 
 
             // string d = client.DownloadString("https://ww.9animes.net/Ueno-san-wa-Bukiyou");
@@ -2470,76 +3066,102 @@ namespace CloudStream
             }
             return "";
         }
+        readonly static string[] allProviderNames = { "HD Movie", "TV-Series", "Movie", "HD Anime", "Anime Backup", "Anime", "TV-Series", "Movie Backup", "HD Tv-Series" };
+        readonly static string[] allQualityNames = { "sd", "cam", "720p", "1080p", "360p", "480p", "hd" };
+
+        static string RemoveBloatTitle(string title)
+        {
+            for (int i = 0; i < allProviderNames.Length; i++) {
+                title = title.Replace(" (" + allProviderNames[i] + ")", "");
+            }
+            title = title.Replace("B___", "").Replace(" (Bookmark)", "");
+            title = title.ToLower();
+            for (int i = 0; i < allQualityNames.Length; i++) {
+                title = title.Replace(" (" + allQualityNames[i] + ")", "");
+            }
+
+            return title;
+        }
 
         static string SortName(int lastP)
         {
             string add = " (";
             //switch my ass
             if (lastP == -3) {
-                add += "HD Movie";
+                add += allProviderNames[0];
             }
             else if (lastP == -2) {
-                add += "TV-Show";
+                add += allProviderNames[1];
             }
             else if (lastP == -1) {
-                add += "Movie";
+                add += allProviderNames[2];
             }
             else if (lastP == 2) {
-                add += "HD Anime";
+                add += allProviderNames[3];
             }
             else if (lastP == 1) {
-                add += "Anime Backup";
+                add += allProviderNames[4];
             }
             else if (lastP == 0) {
-                add += "Anime";
+                add += allProviderNames[5];
             }
             else if (lastP == 3) {
-                add += "TV-Show";
+                add += allProviderNames[6];
+            }
+            else if (lastP == -5) {
+                add += allProviderNames[7];
+            }
+            else if (lastP == 4) {
+                add += allProviderNames[8];
             }
             add += ")";
             return add;
         }
 
-        public static void SortMovies()
+        static void SortMovies()
         {
-            
-            int[] order = { -3, 3, - 2, -1, 2, 0, 1 };
-            for (int i = 0; i < movieTitles.Count; i++) {
-                if(!movieTitles[i].Contains(SortName(movieProvider[i]))) {
-                    movieTitles[i] += SortName(movieProvider[i]);
-                }
-            }
-            int[] newPos = new int[movieTitles.Count];
-            int counter = 0;
-            for (int j = 0; j < order.Length; j++) {
-                for (int i = 0; i < movieTitles.Count; i++) {
-                    if (movieProvider[i] == order[j]) {
-                        newPos[i] = counter;
-                        counter++;
-                    }
-                }
-            }
+
             List<string> _movieTitles = new List<string>();
             List<string> _fwordLink = new List<string>();
             List<Movie> _moviesActive = new List<Movie>();
             List<bool> _movieIsAnime = new List<bool>();
             List<int> _movieProvider = new List<int>();
-            for (int i = 0; i < newPos.Length; i++) {
-                    _movieTitles.Add(movieTitles[newPos[i]]);
-                    _moviesActive.Add(moviesActive[newPos[i]]);
-                    _movieIsAnime.Add(movieIsAnime[newPos[i]]);
-                    _movieProvider.Add(movieProvider[newPos[i]]);
-                    _fwordLink.Add(fwordLink[newPos[i]]);
+
+            int[] order = { -3, -1, -5, 4, 3, -2, 2, 0, 1 };
+
+            for (int i = 0; i < movieTitles.Count; i++) {
+                if (!movieTitles[i].Contains(SortName(movieProvider[i]))) {
+                    movieTitles[i] += SortName(movieProvider[i]);
+                }
             }
+
+            /*
+            int[] newPos = new int[movieTitles.Count];
+            int counter = 0;
+
+            for (int j = 0; j < order.Length; j++) {
+                for (int i = 0; i < movieTitles.Count; i++) {
+                    if (movieProvider[i] == order[j]) {
+                        newPos[i] = counter;
+                        counter++;
+
+                        _movieTitles.Add(movieTitles[i]);
+                        _moviesActive.Add(moviesActive[i]);
+                        _movieIsAnime.Add(movieIsAnime[i]);
+                        _movieProvider.Add(movieProvider[i]);
+                        _fwordLink.Add(fwordLink[i]);
+                    }
+                }
+            }
+
             movieTitles = _movieTitles;
             fwordLink = _fwordLink;
             moviesActive = _moviesActive;
             movieIsAnime = _movieIsAnime;
             movieProvider = _movieProvider;
-            for (int i = 0; i < movieTitles.Count; i++) {
-              //  print(movieTitles[i]);
-            }
+            */
         }
+
 
         static string __series = "1399";
         static string __season = "1";
@@ -2550,7 +3172,9 @@ namespace CloudStream
         static int __linksDone = 0;
         static int __cThred = 0;
         public static int __selSeason = 0; //0 == all, other = season
-        static void _GetAPI(int cThred)
+
+
+        static int GetTotalEps()
         {
             WebClient client = new WebClient();
             string d = client.DownloadString("https://grabthebeast.com/tv-series/" + __series);
@@ -2562,17 +3186,44 @@ namespace CloudStream
                     highest = i;
                 }
             }
+            return highest;
+        }
+        static int GetTotalSeasons()
+        {
+            WebClient client = new WebClient();
+            string d = client.DownloadString("https://grabthebeast.com/tv-series/" + __series);
+            //   print(d);
+
+            int highest = 0;
+            for (int i = 0; i < 100; i++) {
+                if (d.Contains("data-season=\"" + i + "\"")) {
+                    highest = i;
+                }
+            }
+            return highest;
+        }
+
+        static bool _APIDone = false;
+        static bool __downloadEps = false;
+        static void _GetAPI(int cThred, bool downloadEps = true)
+        {
+            print("GETAPI TV");
+            __downloadEps = downloadEps;
             __currentSeason = 0;
-            __totalSeasons = highest;
+            __totalSeasons = GetTotalSeasons();
+            __totalLinks = -1;
+            _APIDone = false;
             __epsCount = new List<int>();
 
-            SearchResultsActivity.searchResultsActivity.AddTabs(__totalSeasons);
-            ax_Info.ax_info.AddTabs(__totalSeasons);
+            if (downloadEps) {
+                SearchResultsActivity.searchResultsActivity.AddTabs(__totalSeasons);
+                ax_Info.ax_info.AddTabs(__totalSeasons);
+            }
 
-            for (int i = 0; i < highest; i++) {
+            for (int i = 0; i < __totalSeasons; i++) {
                 __epsCount.Add(0);
             }
-            print("Seasons: " + highest);
+            print("Seasons: " + __totalSeasons);
 
             GetSeries(cThred);
         }
@@ -2601,101 +3252,106 @@ namespace CloudStream
                     print(__epsCount[i] + "__");
                     __totalLinks += __epsCount[i];
                 }
-                //for (int i = 0; i < totalPages; i++) {
-                for (int s = 0; s < __epsCount.Count; s++) {
-                    for (int e = 0; e < __epsCount[s]; e++) {
-                        DelegateWithParameters_link linkServer =
-                       new DelegateWithParameters_link(__GetLinkSeries);
 
-                        IAsyncResult tag =
-                            linkServer.BeginInvoke((s+1).ToString(), (e + 1).ToString(),cThred , null, null);
+                _APIDone = true;
+                if (__downloadEps) {
+                    //for (int i = 0; i < totalPages; i++) {
+                    for (int s = 0; s < __epsCount.Count; s++) {
+                        for (int e = 0; e < __epsCount[s]; e++) {
+                            DelegateWithParameters_link linkServer =
+                           new DelegateWithParameters_link(__GetLinkSeries);
+
+                            IAsyncResult tag =
+                                linkServer.BeginInvoke((s + 1).ToString(), (e + 1).ToString(), cThred, null, null);
+                        }
                     }
                 }
-                
+                else {
+                }
                 //}
             }
         }
 
-        static void __GetLinkSeries(string sp,string ep, int cThred)
+        static void __GetLinkSeries(string sp, string ep, int cThred)
         {
             try {
 
-           
-            if (cThred != thredNumber) return;
 
-            WebClient client = new WebClient();
-            string d = client.DownloadString("https://grabthebeast.com/stream/"+__series+"/season/" + sp + "/episode/" + ep);
-            if (cThred != thredNumber) return;
-
-            //print(d);
-            string lookfor = "<source src=\"";
-
-            int hgstSize = 0;
-            string displayLink = "";
-            while (d.Contains(lookfor)) {
-                string allD = FindHTML(d, lookfor, " />");
-                string link = allD.Substring(0, allD.IndexOf("\""));
-                string size = FindHTML(allD, "size=\"", "\"");
-               // print(link);
-               // print(size);
-                int sz = int.Parse(size);
-                if(sz > hgstSize) {
-                    displayLink = link;
-                }
                 if (cThred != thredNumber) return;
 
-                activeLinks.Add(link);
-                activeLinksNames.Add("Season " + sp + " | Episode " + ep + " (" + size + "p)");
+                WebClient client = new WebClient();
+                string d = client.DownloadString("https://grabthebeast.com/stream/" + __series + "/season/" + sp + "/episode/" + ep);
+                if (cThred != thredNumber) return;
 
-                d = d.Substring(d.IndexOf(lookfor) + 1, d.Length - d.IndexOf(lookfor) - 1);
-                progress = (int)System.Math.Round((__linksDone * 100f / __totalLinks));
-                try {
-                
-                if (__selSeason == 0 || __selSeason == int.Parse( sp)) {
-                    ax_Links.ax_links.ChangeBar(progress);
+                //print(d);
+                string lookfor = "<source src=\"";
 
-                }
-                else {
-                    ax_Links.ax_links.ChangeBar(progress,false);
+                int hgstSize = 0;
+                string displayLink = "";
+                while (d.Contains(lookfor)) {
+                    string allD = FindHTML(d, lookfor, " />");
+                    string link = allD.Substring(0, allD.IndexOf("\""));
+                    string size = FindHTML(allD, "size=\"", "\"");
+                    // print(link);
+                    // print(size);
+                    int sz = int.Parse(size);
+                    if (sz > hgstSize) {
+                        displayLink = link;
+                    }
+                    if (cThred != thredNumber) return;
 
-                }
-                }
-                catch (System.Exception) {
+                    activeLinks.Add(link);
+                    activeLinksNames.Add("Season " + sp + " | Episode " + ep + " (" + size + "p)");
 
-                }
-                /*
-                for (int i = 0; i < ax_Links.ax_Links_all.Count; i++) {
+                    d = d.Substring(d.IndexOf(lookfor) + 1, d.Length - d.IndexOf(lookfor) - 1);
+                    progress = (int)System.Math.Round((__linksDone * 100f / __totalLinks));
                     try {
-                        ax_Links.ax_Links_all[i].ChangeBar(progress);
+
+                        if (__selSeason == 0 || __selSeason == int.Parse(sp)) {
+                            ax_Links.ax_links.ChangeBar(progress);
+
+                        }
+                        else {
+                            ax_Links.ax_links.ChangeBar(progress, false);
+
+                        }
+                    }
+                    catch (System.Exception) {
+
+                    }
+                    /*
+                    for (int i = 0; i < ax_Links.ax_Links_all.Count; i++) {
+                        try {
+                            ax_Links.ax_Links_all[i].ChangeBar(progress);
+                        }
+                        catch (System.Exception) {
+
+                        }
+                    }
+                    */
+                }
+                print(displayLink);
+                //activeLinks.Add(displayLink);
+                //activeLinksNames.Add(movieTitles[moveSelectedID] +  " Season " + sp + " | Episode " + ep);
+                __linksDone++;
+                if (__linksDone >= __totalLinks) {
+                    __done = true;
+                    progress = 100;
+                    try {
+
+                        if (__selSeason == 0 || __selSeason == int.Parse(sp)) {
+                            ax_Links.ax_links.ChangeBar(progress);
+
+                        }
+                        else {
+                            ax_Links.ax_links.ChangeBar(progress, false);
+
+                        }
                     }
                     catch (System.Exception) {
 
                     }
                 }
-                */
-            }
-            print(displayLink);
-            //activeLinks.Add(displayLink);
-            //activeLinksNames.Add(movieTitles[moveSelectedID] +  " Season " + sp + " | Episode " + ep);
-            __linksDone++;
-            if(__linksDone >= __totalLinks) {
-                __done = true;
-                progress = 100;
-                try {
-
-                    if (__selSeason == 0 || __selSeason == int.Parse(sp)) {
-                        ax_Links.ax_links.ChangeBar(progress);
-
-                    }
-                    else {
-                        ax_Links.ax_links.ChangeBar(progress, false);
-
-                    }
-                }
-                catch (System.Exception) {
-
-                }
-            }
             }
             catch (System.Exception) {
 
@@ -2730,15 +3386,20 @@ namespace CloudStream
                     if (result.Contains("/stream/" + __series + "/season/" + __currentSeason + "/episode/" + i)) {
                         highest = i;
                     }
+                }
+                try {
+                    __epsCount[__currentSeason - 1] = highest;
+                    print("Season: " + __currentSeason + " | TotalEps: " + highest);
+                    GetSeries(__cThred);
+                }
+                catch (System.Exception) {
 
                 }
-                __epsCount[__currentSeason - 1] = highest;
-                print("Season: " + __currentSeason + " | TotalEps: " + highest);
-                GetSeries(__cThred);
+
             }
         }
 
-     
+
 
         // LICENSE
         //

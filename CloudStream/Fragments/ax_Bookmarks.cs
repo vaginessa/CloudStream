@@ -20,7 +20,7 @@ using CloudStream.Fragments;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -41,6 +41,7 @@ using Android.Support.V4.Content;
 using Android.Graphics;
 using Android.Support.V4.Content.Res;
 using static Android.Content.Res.Resources;
+using System.Threading.Tasks;
 
 namespace CloudStream.Fragments
 {
@@ -64,7 +65,7 @@ namespace CloudStream.Fragments
         static Java.Lang.Thread sThred;
         static bool searchDone = true;
         _w.RecyclerView _re;
-
+        static ImageButton refreshButton;
         public override void OnResume()
         {
             UpdateList();
@@ -75,6 +76,9 @@ namespace CloudStream.Fragments
             UpdateList();
             base.OnStart();
         }
+
+        static bool refreshing = false;
+        static int thredNum = 0;
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
 
@@ -89,7 +93,40 @@ namespace CloudStream.Fragments
             _w.RecyclerView re = view.FindViewById<_w.RecyclerView>(Resource.Id.recyclerView_movies);
             _re = re;
 
-            
+            refreshButton = view.FindViewById<ImageButton>(Resource.Id.reloadbtt);
+            refreshBar = view.FindViewById<ProgressBar>(Resource.Id.refreshBar);
+            // refreshBar.Visibility = ViewStates.Gone;
+
+            refreshButton.Click += (o, e) =>
+            {
+                //  refreshBar.Visibility = ViewStates.Visible;
+                // if(!refreshing) { 
+                thredNum++;
+                thredNumber++;
+                print("RefreshBtt clicked");
+
+                if (!refreshing) {
+                    ShowSnackBar("Loading the amount of links");
+
+
+                    MethodInvoker simpleDelegate;
+                    simpleDelegate = new MethodInvoker(GetAllEps);
+                    simpleDelegate.BeginInvoke(null, null);
+                }
+                else {
+                    ShowSnackBar("Loading Progress Aborted");
+
+                    refreshBar.Progress = 0;
+                    refreshButton.Rotation = 0;
+                    refreshRot = 0;
+                    ax_Bookmarks.ax_bookmarks.UpdateList();
+                }
+
+                refreshing = !refreshing;
+
+            };
+
+
             re.SetItemClickListener((rv, position, _view) =>
             {
                 //An item has been clicked
@@ -108,29 +145,177 @@ namespace CloudStream.Fragments
             SetUpRecyclerView(_re);
 
 
+
+
+            /*
+            refresher = view.FindViewById<SwipeRefreshLayout>(Resource.Id.refresher);
+
+            refresher.Refresh += (o,e) =>
+            {
+                print("DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaLLLLLLLLLLLLLLLLLLLLLLLL");
+                MethodInvoker simpleDelegate;
+                    simpleDelegate = new MethodInvoker(GetAllEps);
+                    simpleDelegate.BeginInvoke(null, null);
+               
+
+
+            };
+            */
+
+
             return view;
         }
+        // static SwipeRefreshLayout refresher;
+        static ProgressBar refreshBar;
         void _UpdateList()
         {
 
             SetUpRecyclerView(_re);
+            //refresher.Refreshing = false;
 
+        }
+
+        static float refreshRot = 0;
+
+        static void RefreshLoading()
+        {
+            print("RefreshLoading");
+            //refreshButton.SetColorFilter(Color.ParseColor("#b5fff8"));
+            string tempThred = thredNum.ToString();
+            int cThred = int.Parse(tempThred);
+            // refreshButton.SetBackgroundColor(Color.BlueViolet);
+            while (refreshing) {
+                Java.Lang.Thread.Sleep(10);
+                refreshRot += 1f;
+                refreshButton.Rotation = refreshRot;
+                if (cThred != thredNum) {
+                    return;
+                }
+            }
+
+            // refreshButton.SetBackgroundColor(Color.White);
+            refreshButton.Rotation = 0;
+            refreshRot = 0;
+            //  refreshButton.SetColorFilter(Color.ParseColor("#FFFFFF"));
+
+
+        }
+
+        static List<string> addWatched = new List<string>();
+
+        static int totalMovies = 0;
+        static int currentMovieId = 0;
+
+        public static void AddTitleEps(int _addToTitleEps, int movie, int cThred)
+        {
+
+
+            if (cThred != thredNum) {
+                return;
+            }
+            currentMovieId++;
+            refreshBar.Progress = (int)System.Math.Round((currentMovieId) * 100f / (totalMovies));
+            string newEps = "";
+            if (movieProvider[movie] == 4) {
+                newEps = " [" + _addToTitleEps + "]";
+
+            }
+            else {
+
+                newEps = " [" + HighestHistory(movieTitles[movie].Replace("B___", "").Replace(" (Bookmark)", "")) + "/" + _addToTitleEps + "]";
+            }
+
+            if (_addToTitleEps == -1) {
+                newEps = "";
+            }
+
+            addWatched.Add(movieTitles[movie] + ";" + newEps);
+            if (currentMovieId >= totalMovies) {
+                print("Done adding!");
+                ax_Bookmarks.ax_bookmarks.UpdateList();
+                refreshing = false;
+            }
+        }
+
+        static void GetAllEps()
+        {
+            MethodInvoker simpleDelegate2 = new MethodInvoker(RefreshLoading);
+            simpleDelegate2.BeginInvoke(null, null);
+
+            string tempThred = thredNum.ToString();
+            int cThred = int.Parse(tempThred);
+            addWatched = new List<string>();
+            List<int> watch = new List<int>();
+            List<int> watch_multi = new List<int>();
+
+            for (int i = 0; i < movieTitles.Count; i++) {
+                if (movieTitles[i].Contains("B___")) {
+                    if (movieProvider[i] != 3) { // 3 cant be multithreded
+                        watch_multi.Add(i);
+                        print("Multi add: " + movieTitles[i]);
+                    }
+                    else {
+                        watch.Add(i);
+                        print("Watch add: " + movieTitles[i]);
+
+                    }
+                }
+            }
+
+            currentMovieId = 0;
+            totalMovies = watch.Count + watch_multi.Count;
+
+            for (int q = 0; q < watch.Count; q++) {
+                int i = watch[q];
+                thredNumber++;
+                refreshBar.Progress = (int)System.Math.Round((q + 0.5f) * 100f / (totalMovies));
+                if (cThred != thredNum) {
+                    return;
+                }
+                GetURLFromTitle(i, true, thredNum);
+                if (cThred != thredNum) {
+                    return;
+                }
+                //AddTitleEps(addToTitleEps, i);
+
+            }
+            for (int i = 0; i < watch_multi.Count; i++) {
+                DelegateWithParameters_int linkServer =
+                               new DelegateWithParameters_int(MultiWatchGetEps);
+
+                linkServer.BeginInvoke(watch_multi[i], null, null);
+
+
+            }
+            if (cThred != thredNum) {
+                return;
+            }
+
+
+        }
+
+        public static void MultiWatchGetEps(int movieId)
+        {
+            // if(movieProvider[movieId] != 3) {
+            //  print(">>>>>>>>>>>>>>>>>>>>>" + movieTitles[movieId]);
+            GetURLFromTitle(movieId, true, thredNum);
+            //}
         }
 
 
 
         public void UpdateList()
         {
-                Runnable m = new Runnable(_UpdateList);
-                Activity.RunOnUiThread(m);
-            
+            Runnable m = new Runnable(_UpdateList);
+            Activity.RunOnUiThread(m);
         }
 
 
         List<int> wlink = new List<int>();
         void SetUpRecyclerView(_w.RecyclerView recyclerView)
         {
-           
+            //  refreshBar.Visibility = ViewStates.Gone;
+
             /*
             List<string> _movieTitles = new List<string>();
             List<string> _fwordLink = new List<string>();
@@ -153,7 +338,8 @@ namespace CloudStream.Fragments
             movieProvider = _movieProvider;
             */
             GetBookMarks();
-       
+
+
             //var values = GetRandomSubList(Cheeses.CheeseStrings, 30);
             wlink = new List<int>();
 
@@ -161,12 +347,18 @@ namespace CloudStream.Fragments
             for (int i = 0; i < movieTitles.Count; i++) {
                 if (movieTitles[i].Contains("B___")) {
                     print("--" + movieTitles[i]);
-                    values.Add(movieTitles[i].Replace("B___",""));
+                    string addTo = "";
+                    for (int q = 0; q < addWatched.Count; q++) {
+                        if (addWatched[q].StartsWith(movieTitles[i] + ";")) {
+                            addTo = addWatched[q].Substring(addWatched[q].IndexOf(";") + 1, addWatched[q].Length - addWatched[q].IndexOf(";") - 1);
+                        }
+                    }
+                    values.Add(movieTitles[i].Replace("B___", "").Replace(" (Bookmark)", "") + addTo);
                     wlink.Add(i);
                 }
             }
 
-         
+
             //.Replace("B___", "")
             recyclerView.SetLayoutManager(new _w.LinearLayoutManager(recyclerView.Context));
 

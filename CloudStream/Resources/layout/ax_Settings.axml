@@ -43,7 +43,21 @@
                 android:translationX="20dp"
                 android:id="@+id/msearch" />
             <CheckBox
-                android:text="TV-Show Search"
+                android:text="Backup Movie Search"
+                android:checked="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/bmsearch" />
+            <CheckBox
+                android:text="HD TV-Series Search"
+                android:checked="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/htvasearch" />
+             <CheckBox
+                android:text="TV-Series Search"
                 android:checked="true"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
