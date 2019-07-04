@@ -26,14 +26,14 @@ namespace CloudStream
     {
         protected override void OnCreate(Bundle savedInstanceState)
         {
-         
+
             base.OnCreate(savedInstanceState);
             //Window.RequestFeature(WindowFeatures.NoTitle);
             SetContentView(Resource.Layout.Activity_Linkdownload);
 
             Button btnDownload = FindViewById<Button>(Resource.Id.btnDownload_2);
 
-           EditText title = FindViewById<EditText>(Resource.Id.txtTitle);
+            EditText title = FindViewById<EditText>(Resource.Id.txtTitle);
             EditText link = FindViewById<EditText>(Resource.Id.txtLink);
 
             //  TextInputLayout passwordWrapper = FindViewById<TextInputLayout>(Resource.Id.txt);
@@ -41,8 +41,8 @@ namespace CloudStream
 
             btnDownload.Click += (o, e) =>
             {
-                
-                if(title.Text != "" && link.Text != "") {
+
+                if (title.Text != "" && link.Text != "") {
                     mainActivity.DownloadLink(title.Text, link.Text);
                     Finish();
                 }

@@ -41,52 +41,47 @@ using Android.Graphics;
 
 namespace CloudStream.Fragments
 {
-   
-    
+
+
     public class ax_Downloads : SupportFragment
 
     {
-         public static ax_Downloads ax_downloads;
-         static  string TAG						= "MX.IntentTest";
-	
-	 static  string RESULT_VIEW				= "com.mxtech.intent.result.VIEW";
+        public static ax_Downloads ax_downloads;
+        static string TAG = "MX.IntentTest";
+
+        static string RESULT_VIEW = "com.mxtech.intent.result.VIEW";
         // static  int RESULT_ERROR = Activity.RESULT_FIRST_USER + 0;
         private static int REQUEST_CODE = 0x8001; // This can be changed as you wish.
 
-        static string EXTRA_DECODER			= "decode_mode";	// (byte)
-	static string EXTRA_VIDEO 				= "video";
-	static string EXTRA_EXPLICIT_LIST		= "video_list_is_explicit";
-	static string EXTRA_DURATION			= "duration";
-	static string EXTRA_SUBTITLES			= "subs";
-	static string EXTRA_SUBTITLE_NAMES 	= "subs.name";
-	static string EXTRA_SUBTITLE_FILENAMES = "subs.filename";
-	static string EXTRA_ENABLED_SUBTITLES	= "subs.enable";
-	static string EXTRA_POSITION			= "position";
-	static string EXTRA_RETURN_RESULT		= "return_result";
-	static string EXTRA_HEADERS			= "headers";
-	static string EXTRA_END_BY				= "end_by";
-	static string EXTRA_VIDEO_ZOOM			= "video_zoom";
-	static string EXTRA_DAR_HORZ			= "DAR_horz";						
-	static string EXTRA_DAR_VERT			= "DAR_vert";
-	static string EXTRA_STICKY				= "sticky";
-	static string EXTRA_ORIENTATION 		= "orientation";
-	static string EXTRA_SUPPRESS_ERROR_MESSAGE = "suppress_error_message";  
-	static string EXTRA_SECURE_URI 		= "secure_uri";
-	static string EXTRA_KEYS_DPAD_UPDOWN 	= "keys.dpad_up_down";
-           
-	static string EXTRA_LIST				= "video_list";
-	       
-	static string EXTRA_TITLE				= "title";
-	static string EXTRA_TITLES				= "video_list.name";
-           
-	static string EXTRA_SIZE               = "size";
-	static string EXTRA_SIZES              = "video_list.size";
-	       
-	static string EXTRA_FILENAME           = "filename";
-	static string EXTRA_FILENAMES          = "video_list.filename";
-	       
-	static string EXTRA_HASH_OPENSUBTITLES	= "hash.opensubtitles";
-	static string EXTRA_HASHES_OPENSUBTITLES = "video_list.hash.opensubtitles";
+        const string EXTRA_DECODER = "decode_mode";    // (byte)
+        const string EXTRA_VIDEO = "video";
+        const string EXTRA_EXPLICIT_LIST = "video_list_is_explicit";
+        const string EXTRA_DURATION = "duration";
+        const string EXTRA_SUBTITLES = "subs";
+        const string EXTRA_SUBTITLE_NAMES = "subs.name";
+        const string EXTRA_SUBTITLE_FILENAMES = "subs.filename";
+        const string EXTRA_ENABLED_SUBTITLES = "subs.enable";
+        const string EXTRA_POSITION = "position";
+        const string EXTRA_RETURN_RESULT = "return_result";
+        const string EXTRA_HEADERS = "headers";
+        const string EXTRA_END_BY = "end_by";
+        const string EXTRA_VIDEO_ZOOM = "video_zoom";
+        const string EXTRA_DAR_HORZ = "DAR_horz";
+        const string EXTRA_DAR_VERT = "DAR_vert";
+        const string EXTRA_STICKY = "sticky";
+        const string EXTRA_ORIENTATION = "orientation";
+        const string EXTRA_SUPPRESS_ERROR_MESSAGE = "suppress_error_message";
+        const string EXTRA_SECURE_URI = "secure_uri";
+        const string EXTRA_KEYS_DPAD_UPDOWN = "keys.dpad_up_down";
+        const string EXTRA_LIST = "video_list";
+        const string EXTRA_TITLE = "title";
+        const string EXTRA_TITLES = "video_list.name";
+        const string EXTRA_SIZE = "size";
+        const string EXTRA_SIZES = "video_list.size";
+        const string EXTRA_FILENAME = "filename";
+        const string EXTRA_FILENAMES = "video_list.filename";
+        const string EXTRA_HASH_OPENSUBTITLES = "hash.opensubtitles";
+        const string EXTRA_HASHES_OPENSUBTITLES = "video_list.hash.opensubtitles";
 
         public override void OnCreate(Bundle savedInstanceState)
         {
@@ -96,10 +91,10 @@ namespace CloudStream.Fragments
         }
 
         _w.RecyclerView _re;
-        
+
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
-           
+
             View view = inflater.Inflate(Resource.Layout.ax_Downloads, container, false);
             ax_downloads = this;
             Button btt = view.FindViewById<Button>(Resource.Id.newLink);
@@ -113,22 +108,22 @@ namespace CloudStream.Fragments
 
             _w.RecyclerView re = view.FindViewById<_w.RecyclerView>(Resource.Id.recyclerView_links);
             _re = re;
-            
+
             re.SetItemClickListener((rv, position, _view) =>
             {
-                try {
+               // try {
 
                     DoLink(0, position);
-                  
-                }
-                catch (System.Exception) {
 
-                    print("Error getting:" + position);
-                }
+               // }
+               // catch (System.Exception) {
+
+               //     print("Error getting:" + position);
+               // }
 
 
             });
-            
+
             SetUpRecyclerView(_re);
 
             return view;
@@ -141,27 +136,27 @@ namespace CloudStream.Fragments
 
 
         List<string> allValues = new List<string>();
-  
+
         void SetUpRecyclerView(_w.RecyclerView recyclerView)
         {
             //var values = GetRandomSubList(Cheeses.CheeseStrings, 30);
 
-           
+
             List<string> values = new List<string>();
             var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
-            IDictionary<string,object> allData = localC.All;
+            IDictionary<string, object> allData = localC.All;
             ICollection<string> allTitles = allData.Keys;
             string[] tempVal = new string[allData.Count];
-            allTitles.CopyTo(tempVal,0);
+            allTitles.CopyTo(tempVal, 0);
 
             values = new List<string>();
 
             for (int i = 0; i < tempVal.Length; i++) {
-                if(!tempVal[i].Contains("P___")) { 
+                if (!tempVal[i].Contains("P___")) {
                     values.Add(tempVal[i]);
                 }
             }
-          
+
             allValues = values;
 
             recyclerView.SetLayoutManager(new _w.LinearLayoutManager(recyclerView.Context));
@@ -176,7 +171,7 @@ namespace CloudStream.Fragments
 
             void MAdapter_ItemLongClick(object sender, int e)
             {
-                HistoryPressTitle(movieTitles[moveSelectedID] + "|" + activeLinksNames[e],true);
+                HistoryPressTitle(movieTitles[moveSelectedID] + "|" + activeLinksNames[e], true);
                 //UpdateList();
             }
             // System.Diagnostics.Debug.WriteLine("QQQ:" + movieTitles.Count.ToString());
@@ -234,7 +229,8 @@ namespace CloudStream.Fragments
                 simpleHolder.mImgBtt.SetBackgroundColor(new Color(0, 0, 0, 0));
                 simpleHolder.mImgBtt.SetImageResource(Resource.Drawable.warrow2);
 
-                simpleHolder.mImgBtt.Click += (o, e) => {
+                simpleHolder.mImgBtt.Click += (o, e) =>
+                {
                     print("Click" + position + "|");
                     BtnShow_Click(o, e, position, holder.ItemView);
                 };
@@ -284,7 +280,8 @@ namespace CloudStream.Fragments
                     ax_downloads.DoLink(TitleToInt(arg.Item.TitleFormatted.ToString()), pos);
                 };
 
-                menu.DismissEvent += (s, arg) => {
+                menu.DismissEvent += (s, arg) =>
+                {
                     //Toast.MakeText(mainActivity, string.Format("Menu dissmissed"), ToastLength.Short).Show();
 
                 };
@@ -324,19 +321,48 @@ namespace CloudStream.Fragments
                 }
                 else {
                     string path = localC.GetString("P___" + storage, "-1");
-                    if(path != "-1") { 
+                    if (path != "-1") {
+
                         string truePath = "file://" + Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/" + path;
                         print(truePath);
-                        Intent intent = new Intent(Intent.ActionView);
-                        Java.Net.URI url = new Java.Net.URI(truePath);
-                        
-                        Java.IO.File f = new Java.IO.File(url);
 
+                      //  Java.Net.URI url = new Java.Net.URI(truePath);
+                     //   Java.IO.File f = new Java.IO.File(url);
                         Android.Net.Uri uri = Android.Net.Uri.Parse(truePath);
+
+                        /*
+                        Intent intent = new Intent(Intent.ActionView);
+
+
+                        print(uri.EncodedPath);
+
                         intent.SetData(uri);
                         intent.PutExtra(EXTRA_TITLE, storage);
                         intent.PutExtra(EXTRA_RETURN_RESULT, true);
+                        intent.PutExtra(EXTRA_VIDEO, true);
+
+                        print("Put extra");
+                        intent.SetType ("video/mp4");
                         StartActivityForResult(intent, REQUEST_CODE);
+                        print("Started Activity Download file");
+                        */
+
+                        int vlcRequestCode = 42;
+                        Intent vlcIntent = new Intent(Intent.ActionView);
+                        vlcIntent.SetPackage("org.videolan.vlc");
+
+                        vlcIntent.SetDataAndType (uri, "video/*");
+
+                        vlcIntent.PutExtra("title", storage);
+                        vlcIntent.AddFlags(ActivityFlags.GrantReadUriPermission);
+                        StartActivityForResult(vlcIntent, vlcRequestCode); //IF GETTING ERROR DOWNGRADE TO API BELOW 24; HINT: https://stackoverflow.com/questions/38200282/android-os-fileuriexposedexception-file-storage-emulated-0-test-txt-exposed
+
+                        //vlcIntent.PutExtra("from_start", false);
+                        //vlcIntent.PutExtra("position", 90000l);
+                        //vlcIntent.PutExtra("subtitles_location", "/sdcard/Movies/Fifty-Fifty.srt");
+
+                        //StartActivity(intent);
+
                     }
 
                 }
@@ -345,7 +371,7 @@ namespace CloudStream.Fragments
             }
 
             else if (id == 1) {
-                RemoveDownload(allValues[pos], mainActivity,this.View);
+                RemoveDownload(allValues[pos], mainActivity, this.View);
             }
         }
 

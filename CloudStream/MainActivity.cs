@@ -69,14 +69,27 @@ namespace CloudStream
             View _anchor = o as View;
             Snackbar.Make(_anchor, inp, Snackbar.LengthLong).Show();
         }
+
         public static void ShowSnackBar(string inp)
         {
             View _anchor = mainActivity.mDrawerLayout.RootView;
             Snackbar.Make(_anchor, inp, Snackbar.LengthLong).Show();
         }
+
         public static void ShowSnackBar(string inp, View _anchor)
         {
             Snackbar.Make(_anchor, inp, Snackbar.LengthLong).Show();
+        }
+
+        public static void ShowSnackBar(string inp, string actionText, Action<View> a)
+        {
+            View _anchor = mainActivity.mDrawerLayout.RootView;
+            Snackbar.Make(_anchor, inp, Snackbar.LengthLong).SetAction(actionText, a).Show();
+        }
+
+        public static void ShowSnackBar(string inp, View _anchor, string actionText, Action<View> a)
+        {
+            Snackbar.Make(_anchor, inp, Snackbar.LengthLong).SetAction(actionText, a).Show();
         }
 
         static View anchor;
@@ -588,7 +601,7 @@ namespace CloudStream
                 print("Download yt failed");
                 ShowSnackBar("Youtube Download Failed");
 
-                
+
             }
 
             var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
@@ -690,16 +703,28 @@ namespace CloudStream
             else {
                 print("Path is null");
             }
-            if (error) {
-                ShowSnackBar("Error deleting file :(", v);
-            }
-            else {
+
+
+            Action rem = () =>
+            {
                 var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
 
                 var edit = localC.Edit();
                 edit.Remove(title);
                 edit.Remove("P___" + title);
                 edit.Commit();
+            };
+
+            Action<View> removeRef = (View) =>
+            {
+                Task.Factory.StartNew(rem);
+            };
+
+            if (error) {
+                ShowSnackBar("Error deleting file :(", v, "Remove Reference", removeRef);
+            }
+            else {
+                Task.Factory.StartNew(rem);
             }
             try {
                 ax_Downloads.ax_downloads.UpdateList();
@@ -1936,11 +1961,11 @@ namespace CloudStream
             }
 
         }
-        
-        
+
+
         public static void GetURLFromTitle(int titleID = -1, bool onlyEps = false, int tNum = -1)
         {
-            if(ax_Info.ax_info != null) {
+            if (ax_Info.ax_info != null) {
                 ax_Info.ax_info.SetSpinner(new List<string>());
             }
 

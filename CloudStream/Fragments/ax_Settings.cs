@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
 using Android.App;
 using Android.Content;
 using Android.Graphics;
@@ -62,12 +61,13 @@ namespace CloudStream.Fragments
                 return bools[i];
             }
         }
+
         /// <summary>
         /// 0 = def actions; 1 = sec action
         /// </summary>
         /// <param name="i"></param>
         /// <returns></returns>
-        public static int SettingsGetDef(int i,bool axLinkSett = false)
+        public static int SettingsGetDef(int i, bool axLinkSett = false)
         {
 
             int r = defActions[i];
@@ -76,11 +76,11 @@ namespace CloudStream.Fragments
                 string[] keys = { "defAct", "secAct" };
                 int[] ret = { 0, 1 };
                 r = set.GetInt(keys[i], ret[i]);
-                if(r == -1) {
+                if (r == -1) {
                     r = ret[i];
                 }
             }
-            if(axLinkSett) {
+            if (axLinkSett) {
                 r = CheckToReal(r, true);
             }
 
@@ -209,7 +209,7 @@ namespace CloudStream.Fragments
 
         static int CheckToReal(int c, bool return_q = false)
         {
-            if(return_q) {
+            if (return_q) {
                 for (int q = 0; q < ax_Links.checks.Length; q++) {
                     if (defChecks[c] == ax_Links.checks[q]) {
                         return q;
@@ -223,7 +223,7 @@ namespace CloudStream.Fragments
                     }
                 }
             }
-           
+
 
             return -1;
         }

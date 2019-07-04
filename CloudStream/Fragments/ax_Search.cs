@@ -42,11 +42,11 @@ using Android.Graphics;
 
 namespace CloudStream.Fragments
 {
-  
+
     public class ax_Search : SupportFragment
 
     {
-        
+
         public static ax_Search ax_search;
 
         public override void OnCreate(Bundle savedInstanceState)
@@ -57,18 +57,18 @@ namespace CloudStream.Fragments
         }
 
         List<Button> btts = new List<Button>();
-       static View __view;
+        static View __view;
         View ___view;
-        public  ProgressBar pbar;
+        public ProgressBar pbar;
         static Java.Lang.Thread sThred;
         static bool searchDone = true;
         _w.RecyclerView _re;
-        public static   SearchView searchView;
+        public static SearchView searchView;
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
 
             View view = inflater.Inflate(Resource.Layout.ax_Search, container, false);
-           // _w.RecyclerView rez = view as _w.RecyclerView;
+            // _w.RecyclerView rez = view as _w.RecyclerView;
 
             __view = view;
             ___view = view;
@@ -85,41 +85,41 @@ namespace CloudStream.Fragments
 
             search.SetQueryHint(new Java.Lang.String("Movie Search"));
             //search.SetQuery(new Java.Lang.String("HELLO"), true);
-       
+
             search.QueryTextSubmit += async (o, e) =>
             {
                 search.ClearFocus();
 
                 if (searchDone) {
                     searchDone = false;
-                MainActivity.searchFor = e.Query;
-                // Intent intent = new Intent(search.Context, typeof(SearchResultsActivity));
-                //StartActivity(intent);
-                Action onCompleted = () =>
-                {
+                    MainActivity.searchFor = e.Query;
+                    // Intent intent = new Intent(search.Context, typeof(SearchResultsActivity));
+                    //StartActivity(intent);
+                    Action onCompleted = () =>
+                    {
                     //print("daaaaaaaaaaaaaaaa")
                     // UpdateList();
                     ChangeBar(100);
-                     searchDone = true;
+                        searchDone = true;
                     // 
                 };
-                
-                sThred = new Java.Lang.Thread(
-                  () =>
-                  {
-                      try {
-                          Search(e.Query);
+
+                    sThred = new Java.Lang.Thread(
+                      () =>
+                      {
+                          try {
+                              Search(e.Query);
                           //Thread.Sleep(1000);
                       }
-                      finally {
-                          onCompleted();
-                          sThred.Join();
-                         //invoke(onCompleted);
+                          finally {
+                              onCompleted();
+                              sThred.Join();
+                          //invoke(onCompleted);
                       }
-                  });
-                sThred.Start();
+                      });
+                    sThred.Start();
 
-                ChangeBar(0);
+                    ChangeBar(0);
                 }
             };
             re.SetItemClickListener((rv, position, _view) =>
@@ -129,9 +129,9 @@ namespace CloudStream.Fragments
 
 
             });
-            
+
             re.LongClickable = true;
-            
+
             /*
             re.LongClickable = true;
             re.SetOnLongClickListener((rv, position, _view) =>
@@ -181,7 +181,7 @@ namespace CloudStream.Fragments
 
             // imm.HideSoftInputFromInputMethod(search.WindowToken, HideSoftInputFlags.None);
             //search.RequestFocusFromTouch();
-        
+
 
             return view;
         }
@@ -191,12 +191,12 @@ namespace CloudStream.Fragments
         public void UpdateList()
         {
             SetUpRecyclerView(_re);
-        
+
         }
 
-       
 
-        
+
+
 
 
         public void ChangeBar(int i)
@@ -208,7 +208,7 @@ namespace CloudStream.Fragments
             //    System.Diagnostics.Debug.WriteLine("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB:" + movieTitles.Count.ToString());
             //_re.CallOnClick();
             //}
-           pbar.Progress = i;
+            pbar.Progress = i;
             if (i >= 100) {
                 Runnable m = new Runnable(UpdateList);
                 try {
@@ -230,7 +230,7 @@ namespace CloudStream.Fragments
 
             wlink = new List<int>();
             for (int i = 0; i < movieTitles.Count; i++) {
-                if(!movieTitles[i].Contains("B___")) { 
+                if (!movieTitles[i].Contains("B___")) {
                     values.Add(MainActivity.movieTitles[i]);
                     wlink.Add(i);
                 }
@@ -240,7 +240,7 @@ namespace CloudStream.Fragments
             var adapter = new SimpleStringRecyclerViewAdapter(recyclerView.Context, values, Activity.Resources);
             adapter.ItemClick += MAdapter_ItemLongClick;
             recyclerView.SetAdapter(adapter);
-          // System.Diagnostics.Debug.WriteLine("QQQ:" + movieTitles.Count.ToString());
+            // System.Diagnostics.Debug.WriteLine("QQQ:" + movieTitles.Count.ToString());
 
             // if(   !recyclerView.itemc) { 
 
@@ -251,7 +251,7 @@ namespace CloudStream.Fragments
 
         void SelectMovie(_w.RecyclerView rv, int position, View _view)
         {
-          var check=  __view.FindViewById<CheckBox>(Resource.Id.checkBox1);
+            var check = __view.FindViewById<CheckBox>(Resource.Id.checkBox1);
             if (!check.Checked) {
 
                 //An item has been clicked
@@ -278,9 +278,9 @@ namespace CloudStream.Fragments
         }
         private void MAdapter_ItemLongClick(object sender, int e)
         {
-           // UpdateList();
+            // UpdateList();
             print("LongClick: " + e);
-           // _re.ClearFocus();
+            // _re.ClearFocus();
 
             //Toast.MakeText(this, "This is photo number " + photoNum, ToastLength.Short).Show();
         }
@@ -327,7 +327,7 @@ namespace CloudStream.Fragments
                 simpleHolder.mImgBtt.Visibility = ViewStates.Gone;
 
                 if (HistoryGetTitlePressed(mValues[position])) {
-                  //  print(mValues[position]);
+                    //  print(mValues[position]);
                     simpleHolder.mTxtView.SetTextColor(Color.ParseColor("#b5fff8"));
                 }
                 else {

@@ -39,13 +39,13 @@ namespace CloudStream.Fragments
             catch (System.Exception) {
             }
 
-           
+
         }
         int seasons = 0;
         void _AddTabs()
         {
 
-            if(seasons > 0) { 
+            if (seasons > 0) {
                 btts[0].Text = "Show All";
 
                 for (int i = 1; i <= seasons; i++) {
@@ -66,9 +66,9 @@ namespace CloudStream.Fragments
             subtitleFill = fill;
             try {
 
-            
-            Runnable r = new Runnable(_SetSpinner);
-            Activity.RunOnUiThread(r);
+
+                Runnable r = new Runnable(_SetSpinner);
+                Activity.RunOnUiThread(r);
             }
             catch (System.Exception) {
 
@@ -83,7 +83,7 @@ namespace CloudStream.Fragments
             for (int i = 0; i < subtitleFill.Count; i++) {
                 fill.Add(subtitleFill[i]);
             }
-            if(!useSubtitles) {
+            if (!useSubtitles) {
                 fill = new List<string>();
             }
             fill.Insert(0, "None");
@@ -112,12 +112,12 @@ namespace CloudStream.Fragments
             subtitleSpinner.ItemSelected += SubtitleSpinner_ItemSelected;
 
             currentMovie = moviesActive[moveSelectedID];
-            m_title.Text = movieTitles[moveSelectedID].Replace("B___","").Replace(" (Bookmark)","");
+            m_title.Text = movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "");
 
 
             string add = "";
-            if(currentMovie.imdbRating != null) {
-                add += currentMovie.imdbRating + "\n"; 
+            if (currentMovie.imdbRating != null) {
+                add += currentMovie.imdbRating + "\n";
             }
             if (currentMovie.year != null) {
                 add += currentMovie.year + "\n";
@@ -131,7 +131,7 @@ namespace CloudStream.Fragments
 
             ImageButton castBtt = view.FindViewById<ImageButton>(Resource.Id.imageButton1);
             castBtt.Visibility = ChromechastExists() ? ViewStates.Visible : ViewStates.Invisible;
-            if(!ChromechastExists()) {
+            if (!ChromechastExists()) {
                 m_title.TranslationX /= 4;
             }
             castBtt.Click += (o, e) =>
@@ -181,7 +181,7 @@ namespace CloudStream.Fragments
                 {
                     string txt = button.Text;
                     txt = txt.Replace("Only Season ", "");
-                    if(txt == "Show All") {
+                    if (txt == "Show All") {
                         __selSeason = 0;
                     }
                     else {

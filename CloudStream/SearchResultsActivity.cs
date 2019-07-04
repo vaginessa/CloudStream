@@ -164,11 +164,11 @@ namespace CloudStream
                     adapter.AddFragment(new ax_Links(), "Sub");
                 }
                 else {
-                    if(movieProvider[moveSelectedID] == 4) {
+                    if (movieProvider[moveSelectedID] == 4) {
                         adapter.AddFragment(new ax_Links(), "Episodes");
                         adapter.AddFragment(new ax_Links(), "Links");
                     }
-                    else { 
+                    else {
                         adapter.AddFragment(new ax_Links(), "Links");
                     }
                 }
