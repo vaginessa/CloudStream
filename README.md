@@ -25,7 +25,11 @@ It takes the links from:
 
 https://movies123.pro/ (Movies)
 
-https://grabthebeast.com/ (Tv-Shows)
+https://zmovies.me/ (Movies)
+
+https://movies123.pro/ (Tv-Series)
+
+https://grabthebeast.com/ (Tv-Series)
 
 https://www3.gogoanime.io/ (Anime)
 
