@@ -143,32 +143,52 @@ namespace CloudStream.Fragments
             {
                 var check = view.FindViewById<CheckBox>(Resource.Id.checkBox1);
 
+                string linkName = activeLinksNames[flink[position]];
+
+                bool overideSettings = (movieProvider[moveSelectedID] == 4 && linkName.StartsWith("Episode") && currentMain);
+
+                int rAct = 0;
 
                 if (!check.Checked) {
                     //Toast t = new Toast(Context);
                     print("Loading: " + movieTitles[moveSelectedID] + " | " + activeLinksNames[flink[position]]);
 
-                    ChangeBar(pbar.Progress);
-                    if (ax_Settings.SettingsGetChecked(4)) {
+                    rAct = 0;
+
+
+                    if (!overideSettings) {
+                        rAct = ax_Settings.SettingsGetDef(0, true);
+                    }
+
+                    if (ax_Settings.SettingsGetChecked(4) && (rAct == 0 || rAct == 5)) {
+                        //  DoLink(ax_Settings.SettingsGetDef(1), position);
                         DoLink(9, position);
                     }
-                    bool downloadFile = false;
-                    string link = activeLinks[flink[position]];
-                    if (!downloadFile) {
-                        DoLink(0, position);
-                    }
-                    else {
-                        // HistoryPressTitle("D___" + movieTitles[moveSelectedID] + "|" + activeLinksNames[flink[position]]);
-                        DoLink(2, position);
+                    ChangeBar(pbar.Progress);
 
-                    }
+
+                    //  bool downloadFile = false;
+                    //  string link = activeLinks[flink[position]];
+                    //  if (!downloadFile) {
+                    // }
+                    // else {
+                    // HistoryPressTitle("D___" + movieTitles[moveSelectedID] + "|" + activeLinksNames[flink[position]]);
+                    //      DoLink(2, position);
+
+                    // }
                 }
                 else {
-                    DoLink(1, position);
+                    //  DoLink(1, position);
 
+                    rAct = 1;
+                    if (!overideSettings) {
 
+                        rAct = ax_Settings.SettingsGetDef(1, true);
+                    }
 
                 }
+
+                DoLink(rAct, position);
 
 
             });
@@ -481,7 +501,7 @@ namespace CloudStream.Fragments
                         if (checks[i] == "Load Links") { add = false; }
                         if (checks[i] == "Copy Subtitle Link") { add = currentActiveSubtitle >= 0; }
                         if (checks[i] == "Play With Subtitles") { add = currentActiveSubtitle >= 0; }
-                      
+
                         if (add) {
                             //  menu.Menu.Add(i,pos,i, checks[i]);
                             menu.Menu.Add(checks[i]);
@@ -508,8 +528,11 @@ namespace CloudStream.Fragments
             }
 
         }
-        static string[] checks = { "Play", "Toggle Viewstate", "Download", "Remove Download", "Play Downloaded File", "Copy Link", "Chromecast", "Copy Browser Link (ADS)", "Load Links","Mark As Watched" ,"Copy Subtitle Link", "Play With Subtitles" };
-        static int TitleToInt(string title)
+        /// <summary>
+        /// { "Play", "Toggle Viewstate", "Download", "Remove Download", "Play Downloaded File", "Copy Link", "Chromecast", "Copy Browser Link (ADS)", "Load Links","Mark As Watched" ,"Copy Subtitle Link", "Play With Subtitles" };
+        /// </summary>
+        public static readonly string[] checks = { "Play", "Toggle Viewstate", "Download", "Remove Download", "Play Downloaded File", "Copy Link", "Chromecast", "Copy Browser Link (ADS)", "Load Links", "Mark As Watched", "Copy Subtitle Link", "Play With Subtitles" };
+        public static int TitleToInt(string title)
         {
             //string[] checks = { "Play", "Toggle Viewstate", "Download", "Remove Download", "Play Downloaded File", "Copy Link" };
             for (int i = 0; i < checks.Length; i++) {
@@ -591,7 +614,7 @@ namespace CloudStream.Fragments
                 catch (System.Exception) {
 
                 }
-          
+
                 intent.PutExtra(EXTRA_RETURN_RESULT, true);
                 StartActivityForResult(intent, REQUEST_CODE);
             }
@@ -682,7 +705,7 @@ namespace CloudStream.Fragments
                 StartNewDownload(activeSubtitles[currentActiveSubtitle], movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]] + " | " + activeSubtitlesNames[currentActiveSubtitle], "Subtitles");
 
             }
-            else if(id == 12) {
+            else if (id == 12) {
                 string subtitleURL = movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]] + " | " + activeSubtitlesNames[currentActiveSubtitle];
                 DoLink(0, pos, null, subtitleURL);
             }

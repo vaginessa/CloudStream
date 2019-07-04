@@ -4,21 +4,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ScrollView
-     
 
+    <ScrollView
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:id="@+id/scrollView" >
+        android:id="@+id/scrollView">
         <LinearLayout
-                        android:translationY="20dp"
-
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"       
+            android:layout_height="match_parent"
             android:id="@+id/s_Buttons">
 
-           
+            <TextView
+                android:text=""
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/down" />
+
             <TextView
                 android:text="Settings"
                 android:textAppearance="?android:attr/textAppearanceLarge"
@@ -56,7 +59,7 @@
                 android:layout_height="wrap_content"
                 android:translationX="20dp"
                 android:id="@+id/htvasearch" />
-             <CheckBox
+            <CheckBox
                 android:text="TV-Series Search"
                 android:checked="true"
                 android:layout_width="match_parent"
@@ -84,6 +87,42 @@
                 android:layout_height="wrap_content"
                 android:translationX="20dp"
                 android:id="@+id/basearch" />
+            <LinearLayout
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:orientation="vertical"
+                android:padding="10dip"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Default Action"
+                    android:id="@+id/txtDef"
+    />
+                <Spinner
+                    android:id="@+id/DefSpinner"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+    />
+            </LinearLayout>
+            <LinearLayout
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:orientation="vertical"
+                android:padding="10dip"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Secondary Action"
+                    android:id="@+id/txtSec"
+    />
+                <Spinner
+                    android:id="@+id/SecSpinner"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+    />
+            </LinearLayout>
             <TextView
                 android:text="History"
                 android:textAppearance="?android:attr/textAppearanceSmall"
@@ -91,6 +130,7 @@
                 android:layout_height="wrap_content"
                 android:translationX="20dp"
                 android:id="@+id/textView1" />
+
             <CheckBox
                 android:text="Save Titles"
                 android:checked="true"
@@ -98,7 +138,7 @@
                 android:layout_height="wrap_content"
                 android:translationX="20dp"
                 android:id="@+id/savetitles" />
-            
+
             <CheckBox
                 android:text="Save Links"
                 android:checked="true"
@@ -113,26 +153,28 @@
                 android:layout_height="wrap_content"
                 android:translationX="20dp"
                 android:id="@+id/textView2" />
+
+
+
+
             <Button
                 android:text="Clear History"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:textColor="@color/cardview_dark_background"
-
                 android:id="@+id/clearhistory" />
             <Button
                 android:text="Clear Bookmarks"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:textColor="@color/cardview_dark_background"
-
                 android:id="@+id/clearbookmarks" />
 
 
 
 
 
-            </LinearLayout>
+        </LinearLayout>
     </ScrollView>
 
 

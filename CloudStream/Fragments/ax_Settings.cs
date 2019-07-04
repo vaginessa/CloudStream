@@ -37,6 +37,15 @@ namespace CloudStream.Fragments
             edit.Commit();
         }
 
+        void SaveInt(string inp, int saveState)
+        {
+            print("________________ SaveInt" + inp + "|" + saveState + "___________");
+            var _set = Application.Context.GetSharedPreferences("Settings", FileCreationMode.Private);
+            var edit = _set.Edit();
+            edit.PutInt(inp, saveState);
+            edit.Commit();
+        }
+
         /// <summary>
         /// 0 = msearch 1 = hdasearch, 2 = asearch, 3 = basearch, 4 = savelinks, 5 = savetitles, 6 = tvasearch, 7 = bmsearch, 8 = htvasearch
         /// </summary>
@@ -53,7 +62,32 @@ namespace CloudStream.Fragments
                 return bools[i];
             }
         }
+        /// <summary>
+        /// 0 = def actions; 1 = sec action
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public static int SettingsGetDef(int i,bool axLinkSett = false)
+        {
 
+            int r = defActions[i];
+            if (r == -1) {
+                var set = Application.Context.GetSharedPreferences("Settings", FileCreationMode.Private);
+                string[] keys = { "defAct", "secAct" };
+                int[] ret = { 0, 1 };
+                r = set.GetInt(keys[i], ret[i]);
+                if(r == -1) {
+                    r = ret[i];
+                }
+            }
+            if(axLinkSett) {
+                r = CheckToReal(r, true);
+            }
+
+            return r;
+        }
+
+        public static int[] defActions = { -1, -1 };
         static CheckBox msearch, hdasearch, asearch, basearch, savelinks, savetitles, tvasearch, bmsearch, htvasearch;
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
@@ -74,6 +108,7 @@ namespace CloudStream.Fragments
 
             savelinks = view.FindViewById<CheckBox>(Resource.Id.savelinks);
             savetitles = view.FindViewById<CheckBox>(Resource.Id.savetitles);
+
 
             //  var sdownloads =  view.FindViewById(Resource.Id.showdownloads);
 
@@ -148,11 +183,49 @@ namespace CloudStream.Fragments
 
             };
 
+            var defAct = view.FindViewById<Spinner>(Resource.Id.DefSpinner);
+            var secAct = view.FindViewById<Spinner>(Resource.Id.SecSpinner);
+
+
+            var adapter = new ArrayAdapter<string>(Context, Android.Resource.Layout.SimpleSpinnerItem, defChecks);
+            defAct.Adapter = adapter;
+            secAct.Adapter = adapter;
+
+            defActions[0] = SettingsGetDef(0); // set.GetInt("defAct", 0);
+            defActions[1] = SettingsGetDef(1); // set.GetInt("secAct", 1);
+
+            defAct.SetSelection(defActions[0]);
+            secAct.SetSelection(defActions[1]);
+
+            defAct.ItemSelected += (o, e) => { SaveInt("defAct", e.Position); };
+            secAct.ItemSelected += (o, e) => { SaveInt("secAct", e.Position); };
 
             // fab.Visibility = ViewStates.Gone;
 
 
             return view;
+        }
+        static string[] defChecks = { ax_Links.checks[0], ax_Links.checks[1], ax_Links.checks[5], ax_Links.checks[2], ax_Links.checks[3], ax_Links.checks[4] };
+
+        static int CheckToReal(int c, bool return_q = false)
+        {
+            if(return_q) {
+                for (int q = 0; q < ax_Links.checks.Length; q++) {
+                    if (defChecks[c] == ax_Links.checks[q]) {
+                        return q;
+                    }
+                }
+            }
+            else {
+                for (int i = 0; i < defChecks.Length; i++) {
+                    if (defChecks[i] == ax_Links.checks[c]) {
+                        return i;
+                    }
+                }
+            }
+           
+
+            return -1;
         }
     }
 }

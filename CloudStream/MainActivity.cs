@@ -580,8 +580,16 @@ namespace CloudStream
             }
 
             //  request.SetDestinationInExternalPublicDir(Android.OS.Environment.DirectoryDownloads, path);
+            try {
+                await client.DownloadMediaStreamAsync(streamInfo, truePath);
 
-            await client.DownloadMediaStreamAsync(streamInfo, truePath);
+            }
+            catch (System.Exception) {
+                print("Download yt failed");
+                ShowSnackBar("Youtube Download Failed");
+
+                
+            }
 
             var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
             var edit = localC.Edit();
