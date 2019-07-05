@@ -420,7 +420,7 @@ namespace CloudStream.Fragments
                 var simpleHolder = holder as SimpleViewHolder;
 
                 simpleHolder.mBoundString = mValues[position];
-                simpleHolder.mTxtView.Text = mValues[position];
+                simpleHolder.mTxtView.Text = mValues[position].Replace("_", " ");
 
                 // simpleHolder.mImgBtt.SetImageResource(());
                 simpleHolder.mImgBtt.Background.SetVisible(false, true);
@@ -595,19 +595,31 @@ namespace CloudStream.Fragments
             }
             else if (id == 0) {
 
-                Intent intent = new Intent(Intent.ActionView);
+                // Intent intent = new Intent(Intent.ActionView);
 
                 Android.Net.Uri uri = Android.Net.Uri.Parse(link);
-                intent.SetData(uri);
-                intent.PutExtra(EXTRA_TITLE, movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
-                intent.PutExtra(EXTRA_FILENAME, movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
+                // intent.SetData(uri);
+                // intent.PutExtra("title", movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
+                //intent.PutExtra(EXTRA_FILENAME, movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
+
+
+                //   intent.PutExtra(EXTRA_RETURN_RESULT, true);
+                //  StartActivityForResult(intent, REQUEST_CODE);
+                Intent vlcIntent = new Intent(Intent.ActionView);
+                vlcIntent.SetPackage("org.videolan.vlc");
+
+                vlcIntent.SetDataAndType(uri, "video/*");
+
+                vlcIntent.PutExtra("title", movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
+                vlcIntent.AddFlags(ActivityFlags.GrantReadUriPermission);
+
 
                 try {
                     if (currentActiveSubtitle >= 0) {
-                        intent.PutExtra(EXTRA_ENABLED_SUBTITLES, true);
+                        //  intent.PutExtra(EXTRA_ENABLED_SUBTITLES, true);
 
-                        intent.PutExtra(EXTRA_SUBTITLES, activeSubtitles[currentActiveSubtitle]);
-                        intent.PutExtra(EXTRA_SUBTITLE_NAMES, activeSubtitlesNames[currentActiveSubtitle]);
+                        vlcIntent.PutExtra(EXTRA_SUBTITLES, activeSubtitles[currentActiveSubtitle]);
+                        // intent.PutExtra(EXTRA_SUBTITLE_NAMES, activeSubtitlesNames[currentActiveSubtitle]);
                         print("Loaded subtitles: " + activeSubtitlesNames[currentActiveSubtitle] + "||" + activeSubtitles[currentActiveSubtitle]);
                     }
                 }
@@ -615,8 +627,8 @@ namespace CloudStream.Fragments
 
                 }
 
-                intent.PutExtra(EXTRA_RETURN_RESULT, true);
-                StartActivityForResult(intent, REQUEST_CODE);
+
+                StartActivityForResult(vlcIntent, 42);
             }
             else if (id == 1) {
                 //HistoryPressTitle(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + activeLinksNames[flink[pos]], true);
@@ -645,21 +657,32 @@ namespace CloudStream.Fragments
                 RemoveDownload(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]], mainActivity, this.View);
             }
             else if (id == 4) {
-                string storage = movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]];
+                string storage = (movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]).Replace(" ","_").Replace(".mp4", "") + ".mp4";
+                print("STORAGE: " + storage);
+
                 var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
                 long getID = localC.GetLong(storage, -1);
-                if (getID != -1) {
-                    Intent intent = new Intent(Intent.ActionView);
+                int vlcRequestCode = 42;
 
-                    DownloadManager manager = (DownloadManager)Context.GetSystemService(Context.DownloadService);
-                    Android.Net.Uri uri = manager.GetUriForDownloadedFile(getID);
+                string path = localC.GetString("P___" + storage, "-1");
+                if (path != "-1") {
 
+                    string truePath = "file://" + Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/" + path.Replace(" ", "_").Replace(".mp4", "") + ".mp4";
+                    print(truePath);
 
-                    intent.SetData(uri);
+                    Android.Net.Uri uri = Android.Net.Uri.Parse(truePath);
 
-                    intent.PutExtra(EXTRA_TITLE, storage);
-                    intent.PutExtra(EXTRA_RETURN_RESULT, true);
-                    StartActivityForResult(intent, REQUEST_CODE);
+                   
+
+                    Intent vlcIntent = new Intent(Intent.ActionView);
+                    vlcIntent.SetPackage("org.videolan.vlc");
+
+                    vlcIntent.SetDataAndType(uri, "video/*");
+
+                    vlcIntent.PutExtra("title", storage.Replace("_", " "));
+                    vlcIntent.AddFlags(ActivityFlags.GrantReadUriPermission);
+
+                    StartActivityForResult(vlcIntent, vlcRequestCode); //IF GETTING ERROR DOWNGRADE TO API BELOW 24; HINT: https://stackoverflow.com/questions/38200282/android-os-fileuriexposedexception-file-storage-emulated-0-test-txt-exposed
                 }
             }
             else if (id == 5) {

@@ -111,15 +111,15 @@ namespace CloudStream.Fragments
 
             re.SetItemClickListener((rv, position, _view) =>
             {
-               // try {
+                // try {
 
-                    DoLink(0, position);
+                DoLink(0, position);
 
-               // }
-               // catch (System.Exception) {
+                // }
+                // catch (System.Exception) {
 
-               //     print("Error getting:" + position);
-               // }
+                //     print("Error getting:" + position);
+                // }
 
 
             });
@@ -220,7 +220,7 @@ namespace CloudStream.Fragments
                 var simpleHolder = holder as SimpleViewHolder;
 
                 simpleHolder.mBoundString = mValues[position];
-                simpleHolder.mTxtView.Text = mValues[position].Replace("B___", "").Replace(" (Bookmark)", "");
+                simpleHolder.mTxtView.Text = mValues[position].Replace("B___", "").Replace(" (Bookmark)", "").Replace("_", " ").Replace(".mp4", "");
 
                 simpleHolder.mTxtView.SetTextColor(Color.White);
 
@@ -307,65 +307,79 @@ namespace CloudStream.Fragments
                 string storage = allValues[pos];
                 var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
                 long getID = localC.GetLong(storage, -1);
+                print("STORAGE: " + storage);
+                int vlcRequestCode = 42;
+                /*
                 if (getID != -1) {
-                    Intent intent = new Intent(Intent.ActionView);
-
                     DownloadManager manager = (DownloadManager)Context.GetSystemService(Context.DownloadService);
                     Android.Net.Uri uri = manager.GetUriForDownloadedFile(getID);
 
+                    /*
                     intent.SetData(uri);
 
                     intent.PutExtra(EXTRA_TITLE, storage);
                     intent.PutExtra(EXTRA_RETURN_RESULT, true);
                     StartActivityForResult(intent, REQUEST_CODE);
-                }
-                else {
-                    string path = localC.GetString("P___" + storage, "-1");
-                    if (path != "-1") {
+                    
 
-                        string truePath = "file://" + Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/" + path;
-                        print(truePath);
+                    Intent vlcIntent = new Intent(Intent.ActionView);
+                    vlcIntent.SetPackage("org.videolan.vlc");
 
-                      //  Java.Net.URI url = new Java.Net.URI(truePath);
-                     //   Java.IO.File f = new Java.IO.File(url);
-                        Android.Net.Uri uri = Android.Net.Uri.Parse(truePath);
+                    vlcIntent.SetDataAndType(uri, "video/*");
 
-                        /*
-                        Intent intent = new Intent(Intent.ActionView);
-
-
-                        print(uri.EncodedPath);
-
-                        intent.SetData(uri);
-                        intent.PutExtra(EXTRA_TITLE, storage);
-                        intent.PutExtra(EXTRA_RETURN_RESULT, true);
-                        intent.PutExtra(EXTRA_VIDEO, true);
-
-                        print("Put extra");
-                        intent.SetType ("video/mp4");
-                        StartActivityForResult(intent, REQUEST_CODE);
-                        print("Started Activity Download file");
-                        */
-
-                        int vlcRequestCode = 42;
-                        Intent vlcIntent = new Intent(Intent.ActionView);
-                        vlcIntent.SetPackage("org.videolan.vlc");
-
-                        vlcIntent.SetDataAndType (uri, "video/*");
-
-                        vlcIntent.PutExtra("title", storage);
-                        vlcIntent.AddFlags(ActivityFlags.GrantReadUriPermission);
-                        StartActivityForResult(vlcIntent, vlcRequestCode); //IF GETTING ERROR DOWNGRADE TO API BELOW 24; HINT: https://stackoverflow.com/questions/38200282/android-os-fileuriexposedexception-file-storage-emulated-0-test-txt-exposed
-
-                        //vlcIntent.PutExtra("from_start", false);
-                        //vlcIntent.PutExtra("position", 90000l);
-                        //vlcIntent.PutExtra("subtitles_location", "/sdcard/Movies/Fifty-Fifty.srt");
-
-                        //StartActivity(intent);
-
-                    }
+                    vlcIntent.PutExtra("title", storage);
+                    vlcIntent.AddFlags(ActivityFlags.GrantReadUriPermission);
+                    StartActivityForResult(vlcIntent, vlcRequestCode); //IF GETTING ERROR DOWNGRADE TO API BELOW 24; HINT: https://stackoverflow.com/questions/38200282/android-os-fileuriexposedexception-file-storage-emulated-0-test-txt-exposed
 
                 }
+                else { */
+                string path = localC.GetString("P___" + storage, "-1");
+                if (path != "-1") {
+
+                    string truePath = "file://" + Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/" + path.Replace(" ", "_").Replace(".mp4", "") + ".mp4";
+                    print(truePath);
+
+                    Android.Net.Uri uri = Android.Net.Uri.Parse(truePath);
+
+
+
+                    Intent vlcIntent = new Intent(Intent.ActionView);
+                    vlcIntent.SetPackage("org.videolan.vlc");
+
+                    vlcIntent.SetDataAndType(uri, "video/*");
+
+                    vlcIntent.PutExtra("title", storage.Replace("_", " "));
+                    vlcIntent.AddFlags(ActivityFlags.GrantReadUriPermission);
+
+                    StartActivityForResult(vlcIntent, vlcRequestCode); //IF GETTING ERROR DOWNGRADE TO API BELOW 24; HINT: https://stackoverflow.com/questions/38200282/android-os-fileuriexposedexception-file-storage-emulated-0-test-txt-exposed
+
+                    //  Java.Net.URI url = new Java.Net.URI(truePath);
+                    //   Java.IO.File f = new Java.IO.File(url);
+                    /*
+       Intent intent = new Intent(Intent.ActionView);
+
+
+       print(uri.EncodedPath);
+
+       intent.SetData(uri);
+       intent.PutExtra(EXTRA_TITLE, storage);
+       intent.PutExtra(EXTRA_RETURN_RESULT, true);
+       intent.PutExtra(EXTRA_VIDEO, true);
+
+       print("Put extra");
+       intent.SetType ("video/mp4");
+       StartActivityForResult(intent, REQUEST_CODE);
+       print("Started Activity Download file");
+       */
+                    //vlcIntent.PutExtra("from_start", false);
+                    //vlcIntent.PutExtra("position", 90000l);
+                    //vlcIntent.PutExtra("subtitles_location", "/sdcard/Movies/Fifty-Fifty.srt");
+
+                    //StartActivity(intent);
+
+                }
+
+                //}
 
 
             }

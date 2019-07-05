@@ -424,6 +424,7 @@ namespace CloudStream
         }
         public void DownloadLink(string title, string link)
         {
+            title = title.Replace(" ", "_");
             if (link.ToLower().Contains("youtu")) {
                 SaveVideoToDisk(link, title);
                 ShowSnackBar("YouTube Download Started!");
@@ -436,7 +437,6 @@ namespace CloudStream
             else {
                 StartNewDownload(link, title, "Other", false);
                 ShowSnackBar("Download Started!");
-
             }
         }
 
@@ -620,6 +620,9 @@ namespace CloudStream
         }
         public static void StartNewDownload(string url, string title, string dir = "Movie", bool fromlinks = true, string dec = "")
         {
+
+            title = title.Replace(" ", "_") + ".mp4";
+
             DownloadManager.Request request = new DownloadManager.Request(Android.Net.Uri.Parse(url)); /*init a request*/
             request.SetDescription(title); //this description apears inthe android notification 
             request.SetTitle(title);//this description apears inthe android notification 
@@ -663,6 +666,7 @@ namespace CloudStream
 
         public static void RemoveDownload(string title, Context c, View v)
         {
+            title = title.Replace(" ", "_").Replace(".mp4","") + ".mp4";
             long longId = DownloadsGetLong(title);
             string pathId = DownloadGetPath(title);
             bool error = true;
@@ -705,29 +709,49 @@ namespace CloudStream
             }
 
 
-            Action rem = () =>
+            
+
+            Action<View> removeRef = (View) =>
             {
+                print("remove ref");
                 var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
 
                 var edit = localC.Edit();
                 edit.Remove(title);
                 edit.Remove("P___" + title);
-                edit.Commit();
-            };
+                edit.Remove("P___" + title.Replace(" ","_"));
+                edit.Remove(title.Replace(" ","_"));
 
-            Action<View> removeRef = (View) =>
-            {
-                Task.Factory.StartNew(rem);
+                edit.Commit();
+
+                try {
+                    ax_Downloads.ax_downloads.UpdateList();
+                    ax_Links.ax_links.UpdateList();
+                    ax_Links.ax_links_sub.UpdateList();
+
+                }
+                catch (System.Exception) {
+
+                }
             };
 
             if (error) {
                 ShowSnackBar("Error deleting file :(", v, "Remove Reference", removeRef);
             }
             else {
-                Task.Factory.StartNew(rem);
+                var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
+
+                var edit = localC.Edit();
+                edit.Remove(title);
+                edit.Remove("P___" + title);
+                edit.Remove("P___" + title.Replace(" ", "_"));
+                edit.Remove(title.Replace(" ", "_"));
+                edit.Commit();
             }
             try {
                 ax_Downloads.ax_downloads.UpdateList();
+                ax_Links.ax_links.UpdateList();
+                ax_Links.ax_links_sub.UpdateList();
             }
             catch (System.Exception) {
 
@@ -748,9 +772,9 @@ namespace CloudStream
             ICollection<string> allTitles = allData.Keys;
             string[] tempVal = new string[allData.Count];
             allTitles.CopyTo(tempVal, 0);
-            string lookfor = title.Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "");
+            string lookfor = title.Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "").Replace(" ","_").Replace(".mp4","");
             for (int i = 0; i < tempVal.Length; i++) {
-                if (tempVal[i].Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "") == lookfor) {
+                if (tempVal[i].Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "").Replace(" ", "_").Replace(".mp4", "") == lookfor) {
                     return true;
                 }
 
@@ -773,8 +797,8 @@ namespace CloudStream
 
             }
             return -1;
-
         }
+
         public static string DownloadGetPath(string title)
         {
             var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
