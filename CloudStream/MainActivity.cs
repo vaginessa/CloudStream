@@ -2446,7 +2446,8 @@ namespace CloudStream
 
                     }
                     if (d != "") {
-                        //  print(d);
+                        print("äää");
+                        print(d);
 
                         List<string> downloads = new List<string>();
                         List<string> names = new List<string>();
@@ -2459,12 +2460,18 @@ namespace CloudStream
                                 string name = FindHTML(d, "ep-anime-name-an\'>", "<");
 
                                 string ep = FindHTML(d, "text-right ep-num\'>", "<").Replace("Ep. ", "");
+                                if(ep == "") {
+                                    ep = "0";
+                                }
                                 int num = int.Parse(ep);
                                 bool dub = dstring.Contains("english-dub");
                                 int epNumPlace = d.IndexOf("text-right ep-num\'>") + 1; // to prevent while(true)
 
                                 d = d.Substring(epNumPlace, d.Length - epNumPlace);
                                 // if (dub == isDub) {
+
+                                print("NUM:" + num + " DUB:" + dub + " DSTRING: " + dstring);
+
                                 nums.Add(num);
                                 names.Add(name + (dub ? " (Dub)" : " (Sub)"));
                                 downloads.Add(dstring);
@@ -2578,7 +2585,6 @@ namespace CloudStream
                                         ax_Links.ax_links.ChangeBar(progress);
                                         try {
                                             ax_Links.ax_links_sub.ChangeBar(progress);
-
                                         }
                                         catch (System.Exception) {
                                         }

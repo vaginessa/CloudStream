@@ -111,7 +111,6 @@ namespace CloudStream.Fragments
         {
 
             View view = inflater.Inflate(Resource.Layout.ax_Links, container, false);
-
             // _w.RecyclerView rez = view as _w.RecyclerView;
             //  print(view.AccessibilityClassName);
             // System.Diagnostics.Debug.WriteLine("TTTTTTTTTTTTTTT" + view.);
@@ -239,6 +238,7 @@ namespace CloudStream.Fragments
                 sThred.Start();
             }
 
+            UpdateList();
 
 
             /*
