@@ -2503,7 +2503,6 @@ namespace CloudStream
                             for (int i = 0; i < newDownloads.Count; i++) {
                                 print("NEW DOWNLOAD: " + newDownloads[i]);
                                 d = client.DownloadString(newDownloads[i]);
-                                print(d);
 
                                 string mp4Find = "mp4upload\",\"id\":\"";
                                 string trollFind = "trollvid\",\"id\":\"";

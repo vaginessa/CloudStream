@@ -158,6 +158,8 @@ namespace CloudStream.Fragments
 
                     if (!overideSettings) {
                         rAct = ax_Settings.SettingsGetDef(0, true);
+                        print("PRIMARY: " + rAct);
+
                     }
 
                     if (ax_Settings.SettingsGetChecked(4) && (rAct == 0 || rAct == 5)) {
@@ -181,9 +183,10 @@ namespace CloudStream.Fragments
                     //  DoLink(1, position);
 
                     rAct = 1;
-                    if (!overideSettings) {
 
+                    if (!overideSettings) {
                         rAct = ax_Settings.SettingsGetDef(1, true);
+                        print("SECONDARY: " + rAct);
                     }
 
                 }

@@ -197,8 +197,8 @@ namespace CloudStream.Fragments
             defAct.SetSelection(defActions[0]);
             secAct.SetSelection(defActions[1]);
 
-            defAct.ItemSelected += (o, e) => { SaveInt("defAct", e.Position); };
-            secAct.ItemSelected += (o, e) => { SaveInt("secAct", e.Position); };
+            defAct.ItemSelected += (o, e) => { SaveInt("defAct", e.Position); defActions[0] = e.Position; };
+            secAct.ItemSelected += (o, e) => { SaveInt("secAct", e.Position); defActions[1] = e.Position; };
 
             // fab.Visibility = ViewStates.Gone;
 
