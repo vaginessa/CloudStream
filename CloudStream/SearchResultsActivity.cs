@@ -41,7 +41,13 @@ namespace CloudStream
         protected override void OnCreate(Bundle savedInstanceState)
         {
             if (ax_Settings.SettingsGetChecked(5)) {
-                HistoryPressTitle(movieTitles[moveSelectedID]);
+                try {
+                    HistoryPressTitle(movieTitles[moveSelectedID]);
+
+                }
+                catch (Exception) {
+
+                }
             }
             searchResultsActivity = this;
 

@@ -499,9 +499,14 @@ namespace CloudStream.Fragments
                         if (checks[i] == "Copy Browser Link (ADS)") { add = false; }
                         if (checks[i] == "Mark As Watched") { add = false; }
                         if (checks[i] == "Load Links") { add = false; }
-                        if (checks[i] == "Copy Subtitle Link") { add = currentActiveSubtitle >= 0; }
-                        if (checks[i] == "Play With Subtitles") { add = currentActiveSubtitle >= 0; }
-
+                        if (SHOW_INFO_SUBTITLES) {
+                            if (checks[i] == "Copy Subtitle Link") { add = currentActiveSubtitle >= 0; }
+                            if (checks[i] == "Play With Subtitles") { add = currentActiveSubtitle >= 0; }
+                        }
+                        else {
+                            if (checks[i] == "Copy Subtitle Link") { add = activeSubtitles.Count >= 0; }
+                            if (checks[i] == "Play With Subtitles") { add = activeSubtitles.Count >= 0; }
+                        }
                         if (add) {
                             //  menu.Menu.Add(i,pos,i, checks[i]);
                             menu.Menu.Add(checks[i]);
@@ -551,7 +556,7 @@ namespace CloudStream.Fragments
         /// <param name="id"></param>
         /// <param name="pos"></param>
         /// <param name="v"></param>
-        void DoLink(int id, int pos, View v = null, string extra = "")
+        void DoLink(int id, int pos, View v = null, string extra = "", bool useSub = false)
         {
             print("AAA" + id + "|||" + pos);
             string link = activeLinks[flink[pos]];
@@ -612,23 +617,55 @@ namespace CloudStream.Fragments
 
                 vlcIntent.PutExtra("title", movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
                 vlcIntent.AddFlags(ActivityFlags.GrantReadUriPermission);
+                vlcIntent.AddFlags(ActivityFlags.GrantWriteUriPermission);
+                vlcIntent.AddFlags(ActivityFlags.GrantPrefixUriPermission);
+                vlcIntent.AddFlags(ActivityFlags.GrantPersistableUriPermission);
 
 
-                try {
-                    if (currentActiveSubtitle >= 0) {
-                        //  intent.PutExtra(EXTRA_ENABLED_SUBTITLES, true);
+                if (useSub) {
+                    try {
+                        if (currentActiveSubtitle >= 0) {
+                            var localC = Application.Context.GetSharedPreferences("Subtitle", FileCreationMode.Private);
 
-                        vlcIntent.PutExtra(EXTRA_SUBTITLES, activeSubtitles[currentActiveSubtitle]);
-                        // intent.PutExtra(EXTRA_SUBTITLE_NAMES, activeSubtitlesNames[currentActiveSubtitle]);
-                        print("Loaded subtitles: " + activeSubtitlesNames[currentActiveSubtitle] + "||" + activeSubtitles[currentActiveSubtitle]);
+                            DownloadManager manager;
+                            manager = (DownloadManager)ax_Links.ax_links.Context.GetSystemService(Context.DownloadService);
+
+                            long subId = localC.GetLong("temp", -1);
+                            if (subId == -1) {
+                            }
+                            else {
+                                // for (int i = 0; i < 1000; i++) {
+                                //    Java.Lang.Thread.Sleep(10);
+                               Android.Net.Uri u = manager.GetUriForDownloadedFile(subId);
+
+                                string truePath = "file://" + Android.OS.Environment.ExternalStorageDirectory +  "/" + Android.OS.Environment.DirectoryDownloads + "/" + SUBTITLE_PATH;
+                                string _truePath = manager.GetUriForDownloadedFile(subId).Path;
+                                string __truePath = activeSubtitles[currentActiveSubtitle];
+
+                                string subtitlePath = __truePath;
+
+                              vlcIntent.PutExtra("subtitles_location", subtitlePath);
+                              // vlcIntent.PutExtra("item_location", truePath);
+
+                                // intent.PutExtra(EXTRA_SUBTITLE_NAMES, activeSubtitlesNames[currentActiveSubtitle]);
+                                print("Loaded subtitles: " + activeSubtitlesNames[currentActiveSubtitle] + "||" + activeSubtitles[currentActiveSubtitle]);
+                                print("FROM PATH: " + subtitlePath);
+                            }
+                            //  intent.PutExtra(EXTRA_ENABLED_SUBTITLES, true);
+
+
+                        }
+                    }
+                    catch (System.Exception) {
+
                     }
                 }
-                catch (System.Exception) {
 
-                }
-
-
+               
                 StartActivityForResult(vlcIntent, 42);
+
+
+
             }
             else if (id == 1) {
                 //HistoryPressTitle(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + activeLinksNames[flink[pos]], true);
@@ -657,7 +694,7 @@ namespace CloudStream.Fragments
                 RemoveDownload(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]], mainActivity, this.View);
             }
             else if (id == 4) {
-                string storage = (movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]).Replace(" ","_").Replace(".mp4", "") + ".mp4";
+                string storage = (movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]).Replace(" ", "_").Replace(".mp4", "") + ".mp4";
                 print("STORAGE: " + storage);
 
                 var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
@@ -672,7 +709,7 @@ namespace CloudStream.Fragments
 
                     Android.Net.Uri uri = Android.Net.Uri.Parse(truePath);
 
-                   
+
 
                     Intent vlcIntent = new Intent(Intent.ActionView);
                     vlcIntent.SetPackage("org.videolan.vlc");
@@ -719,13 +756,89 @@ namespace CloudStream.Fragments
                 _re.ScrollToPosition(pos);
             }
             else if (id == 10) {
-                ClipboardManager clip = (ClipboardManager)Context.GetSystemService(Context.ClipboardService);
-                clip.PrimaryClip = ClipData.NewPlainText("Link", activeSubtitles[currentActiveSubtitle]);
-                ShowSnackBar("Copied " + activeSubtitlesNames[currentActiveSubtitle] + " Subtitle Link To Clipboard!", ax_links.View);
+                if (SHOW_INFO_SUBTITLES) {
+                    ClipboardManager clip = (ClipboardManager)Context.GetSystemService(Context.ClipboardService);
+                    clip.PrimaryClip = ClipData.NewPlainText("Link", activeSubtitles[currentActiveSubtitle]);
+                    ShowSnackBar("Copied " + activeSubtitlesNames[currentActiveSubtitle] + " Subtitle Link To Clipboard!", ax_links.View);
+                }
+                else {
+                    PopupMenu menu = new PopupMenu(ax_links.Context, v);
+                    menu.MenuInflater.Inflate(Resource.Menu.menu1, menu.Menu);
+
+
+                    for (int i = 0; i < activeSubtitles.Count; i++) {
+                        menu.Menu.Add(activeSubtitlesNames[i]);
+                    }
+
+                    menu.MenuItemClick += (s, arg) =>
+                    {
+                        print("ITEMID:" + arg.Item.ItemId.ToString());
+                    // currentActiveSubtitle = -1;
+                    int _pos = -1;
+                        for (int i = 0; i < activeSubtitlesNames.Count; i++) {
+                            if (activeSubtitlesNames[i] == arg.Item.TitleFormatted.ToString()) {
+                                _pos = i;
+                            }
+                        }
+                        if (_pos != -1) {
+                            ClipboardManager clip = (ClipboardManager)Context.GetSystemService(Context.ClipboardService);
+                            clip.PrimaryClip = ClipData.NewPlainText("Link", activeSubtitles[_pos]);
+                            ShowSnackBar("Copied " + activeSubtitlesNames[_pos] + " Subtitle Link To Clipboard!", ax_links.View);
+                        }
+
+                    // Toast.MakeText(mainActivity, string.Format("Menu {0} clicked", arg.Item.TitleFormatted), ToastLength.Short).Show();
+                };
+
+                    menu.DismissEvent += (s, arg) =>
+                    {
+                    //Toast.MakeText(mainActivity, string.Format("Menu dissmissed"), ToastLength.Short).Show();
+
+                };
+
+                    menu.Show();
+                }
+
+
             }
             else if (id == 11) {
 
-                StartNewDownload(activeSubtitles[currentActiveSubtitle], movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]] + " | " + activeSubtitlesNames[currentActiveSubtitle], "Subtitles");
+                //StartNewDownload(activeSubtitles[currentActiveSubtitle], movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]] + " | " + activeSubtitlesNames[currentActiveSubtitle], "Subtitles");
+                if (SHOW_INFO_SUBTITLES) {
+                    DownloadSubtitle(true, pos);
+                }
+                else {
+                    PopupMenu menu = new PopupMenu(ax_links.Context, v);
+                    menu.MenuInflater.Inflate(Resource.Menu.menu1, menu.Menu);
+
+
+                    for (int i = 0; i < activeSubtitles.Count; i++) {
+                        menu.Menu.Add(activeSubtitlesNames[i]);
+                    }
+
+                    menu.MenuItemClick += (s, arg) =>
+                    {
+                        print("ITEMID:" + arg.Item.ItemId.ToString());
+                        currentActiveSubtitle = -1;
+                        for (int i = 0; i < activeSubtitlesNames.Count; i++) {
+                            if (activeSubtitlesNames[i] == arg.Item.TitleFormatted.ToString()) {
+                                currentActiveSubtitle = i;
+                            }
+                        }
+                        if (currentActiveSubtitle != -1) {
+                            DownloadSubtitle(true, pos);
+                        }
+
+                        // Toast.MakeText(mainActivity, string.Format("Menu {0} clicked", arg.Item.TitleFormatted), ToastLength.Short).Show();
+                    };
+
+                    menu.DismissEvent += (s, arg) =>
+                    {
+                        //Toast.MakeText(mainActivity, string.Format("Menu dissmissed"), ToastLength.Short).Show();
+
+                    };
+
+                    menu.Show();
+                }
 
             }
             else if (id == 12) {
@@ -733,6 +846,39 @@ namespace CloudStream.Fragments
                 DoLink(0, pos, null, subtitleURL);
             }
         }
+
+        public void DownloadSubtitle(bool autoPlay = false, int pos = 0)
+        {
+            DownloadTempSubtitles(activeSubtitles[currentActiveSubtitle]);
+
+            _tempThred = new Java.Lang.Thread(() =>
+            {
+                try {
+                    bool _done = false;
+
+                    for (int i = 0; i < 1000; i++) {
+                        if (!_done) {
+                            Java.Lang.Thread.Sleep(10);
+                            if (SubtitleDoneDownloading()) {
+                                _done = true;
+                                if (autoPlay) {
+                                    DoLink(0, pos, useSub: true);
+                                }
+                            }
+                        }
+                    }
+                }
+                finally {
+                    _tempThred.Join();
+                    //invoke(onCompleted);
+                }
+
+            });
+            _tempThred.Start();
+        }
+
+        static Java.Lang.Thread _tempThred;
+
         public class SimpleViewHolder : _w.RecyclerView.ViewHolder
         {
             public string mBoundString;

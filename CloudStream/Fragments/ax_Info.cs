@@ -76,7 +76,6 @@ namespace CloudStream.Fragments
 
         }
 
-
         public void _SetSpinner()
         {
             List<string> fill = new List<string>();
@@ -88,6 +87,11 @@ namespace CloudStream.Fragments
             }
             fill.Insert(0, "None");
             bool gone = fill.Count <= 1;
+
+            if (!SHOW_INFO_SUBTITLES) {
+                gone = true;
+            }
+
             subtitleSpinner.Visibility = gone ? ViewStates.Gone : ViewStates.Visible;
             subtitleText.Visibility = gone ? ViewStates.Gone : ViewStates.Visible;
             if (!gone) {

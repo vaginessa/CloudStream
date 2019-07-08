@@ -300,7 +300,9 @@ namespace CloudStream
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
+
             RequestPermission(this);
+
             if (useChromeCast) {
                 ChromeCreate();
             }
@@ -441,6 +443,79 @@ namespace CloudStream
         }
 
 
+        public static bool SubtitleDoneDownloading()
+        {
+            var localC = Application.Context.GetSharedPreferences("Subtitle", FileCreationMode.Private);
+
+            DownloadManager manager;
+            manager = (DownloadManager)ax_Links.ax_links.Context.GetSystemService(Context.DownloadService);
+
+            long id = localC.GetLong("temp", -1);
+            if(id == -1) {
+                return false;
+            }
+            else {
+               // for (int i = 0; i < 1000; i++) {
+                //    Java.Lang.Thread.Sleep(10);
+                    Android.Net.Uri u = manager.GetUriForDownloadedFile(id);
+                    if( (u + "") != "") {
+                        print("RETURN TRUE PATH SUBTITLE: " + u.Path);
+                        return true;
+                    }
+                  //  DownloadManager.StatusSuccessful
+               // }
+            }
+
+            return false;
+        }
+     
+        public const string SUBTITLE_PATH = "TempSubtitle.srt";
+        public const bool SHOW_INFO_SUBTITLES = false;
+       
+
+        public static void DownloadTempSubtitles(string url)
+        {
+
+          
+
+        
+
+
+                DownloadManager.Request request = new DownloadManager.Request(Android.Net.Uri.Parse(url)); /*init a request*/
+            request.SetTitle("Subtitles");//this description apears inthe android notification 
+                                    // request.SetDestinationInExternalFilesDir(ax_Links.ax_links.Context,
+                                    //        dir,
+                                    //       title); //set destination
+                                    //OR
+
+            request.SetDestinationInExternalPublicDir(Android.OS.Environment.DirectoryDownloads, SUBTITLE_PATH);
+            request.SetVisibleInDownloadsUi(false);
+           // request.SetNotificationVisibility(DownloadVisibility.Hidden);
+
+
+            DownloadManager manager;
+            manager = (DownloadManager)ax_Links.ax_links.Context.GetSystemService(Context.DownloadService);
+            ShowSnackBar("Subtitle Download Started!", ax_Links.ax_links.View);
+
+            var localC = Application.Context.GetSharedPreferences("Subtitle", FileCreationMode.Private);
+            long id = localC.GetLong("temp", -1);
+            if (id == -1) {
+            }
+            else {
+                string truePath = Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/" + SUBTITLE_PATH;
+                System.IO.File.Delete(truePath);
+                manager.Remove(id);
+            }
+
+            long downloadId = manager.Enqueue(request);
+
+
+            var edit = localC.Edit();
+            edit.PutLong("temp",downloadId);
+
+            edit.Commit();
+        }
+
         private void SetUpDrawerContent(NavigationView navigationView)
         {
             navigationView.NavigationItemSelected += (object sender, NavigationView.NavigationItemSelectedEventArgs e) =>
@@ -488,6 +563,7 @@ namespace CloudStream
         public static bool useSubtitles = false;
         public static MainActivity mainActivity;
         public MainActivity _mainActivity;
+
         public class Movie
         {
             public string title;
@@ -621,7 +697,6 @@ namespace CloudStream
         public static void StartNewDownload(string url, string title, string dir = "Movie", bool fromlinks = true, string dec = "")
         {
 
-            title = title.Replace(" ", "_") + ".mp4";
 
             DownloadManager.Request request = new DownloadManager.Request(Android.Net.Uri.Parse(url)); /*init a request*/
             request.SetDescription(title); //this description apears inthe android notification 
@@ -630,6 +705,9 @@ namespace CloudStream
                                     //        dir,
                                     //       title); //set destination
                                     //OR
+
+            title = title.Replace(" ", "_") + ".mp4";
+
             string path = dir + "/" + title;
 
             request.SetDestinationInExternalPublicDir(Android.OS.Environment.DirectoryDownloads, path);
@@ -1090,6 +1168,65 @@ namespace CloudStream
             webRequest.BeginGetResponse(new AsyncCallback(GetResponseStreamCallback), webRequest);
         }
 
+        static string HTMLGet(string uri, string referer, bool br = false)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
+            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+            request.Method = "GET";
+            request.ContentType = "text/html; charset=UTF-8";
+            // webRequest.Headers.Add("Host", "trollvid.net");
+            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Safari/537.36";
+            request.Headers.Add("Accept-Language", "en-US,en;q=0.5");
+            request.Headers.Add("Accept-Encoding", "gzip, deflate");
+            request.Referer = referer;
+
+            // webRequest.Headers.Add("Cookie", "__cfduid=dc6e854c3f07d2a427bca847e1ad5fa741562456483; _ga=GA1.2.742704858.1562456488; _gid=GA1.2.1493684150.1562456488; _maven_=popped; _pop_=popped");
+            request.Headers.Add("TE", "Trailers");
+
+            print("DA--");
+
+
+            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse()) {
+                //  print(response.GetResponseHeader("set-cookie").ToString());
+
+
+                // using (Stream stream = response.GetResponseStream())
+                if (br) {
+                    /*
+                    using (BrotliStream bs = new BrotliStream(response.GetResponseStream(), System.IO.Compression.CompressionMode.Decompress)) {
+                        using (System.IO.MemoryStream msOutput = new System.IO.MemoryStream()) {
+                            bs.CopyTo(msOutput);
+                            msOutput.Seek(0, System.IO.SeekOrigin.Begin);
+                            using (StreamReader reader = new StreamReader(msOutput)) {
+                                string result = reader.ReadToEnd();
+
+                                return result;
+
+                            }
+                        }
+                    }
+                    */
+                    return "";
+                }
+                else {
+                    using (Stream stream = response.GetResponseStream()) {
+                        print("res" + response.StatusCode);
+                        foreach (string e in response.Headers) {
+                            print("Head: " + e);
+                        }
+                        print("LINK:" + response.GetResponseHeader("Set-Cookie"));
+                        using (StreamReader reader = new StreamReader(stream)) {
+                            string result = reader.ReadToEnd();
+                            return result;
+                        }
+                    }
+                }
+            }
+
+        }
+
+
         static void GetResponseStreamCallback(IAsyncResult callbackResult)
         {
             HttpWebRequest request = (HttpWebRequest)callbackResult.AsyncState;
@@ -1388,11 +1525,17 @@ namespace CloudStream
             List<int> _movieProvider = new List<int>();
             for (int i = 0; i < movieTitles.Count; i++) {
                 if (!movieTitles[i].Contains("B___")) {
-                    _movieTitles.Add(movieTitles[i]);
-                    _moviesActive.Add(moviesActive[i]);
-                    _movieIsAnime.Add(movieIsAnime[i]);
-                    _movieProvider.Add(movieProvider[i]);
-                    _fwordLink.Add(fwordLink[i]);
+                    try {
+                        _movieTitles.Add(movieTitles[i]);
+                        _moviesActive.Add(moviesActive[i]);
+                        _movieIsAnime.Add(movieIsAnime[i]);
+                        _movieProvider.Add(movieProvider[i]);
+                        _fwordLink.Add(fwordLink[i]);
+                    }
+                    catch (System.Exception) {
+
+                    }
+                    
                 }
             }
             movieTitles = _movieTitles;
@@ -2358,27 +2501,65 @@ namespace CloudStream
                             }
 
                             for (int i = 0; i < newDownloads.Count; i++) {
-                                print(newDownloads[i]);
+                                print("NEW DOWNLOAD: " + newDownloads[i]);
                                 d = client.DownloadString(newDownloads[i]);
-                                string mp4Find = "mp4upload\",\"id\":\"";
-                                string mp4upload = FindHTML(d, mp4Find, "\"");
-                                string ttp = FindHTML(d, mp4upload + "\",\"type\":\"", "\"");
+                                print(d);
 
+                                string mp4Find = "mp4upload\",\"id\":\"";
+                                string trollFind = "trollvid\",\"id\":\"";
+
+
+                               // string ttp = FindHTML(d, mp4upload + "\",\"type\":\"", "\"");
+                                string mp4upload = ""; // FindHTML(d, mp4Find, "\""); 
+                                string trollvid = "";
                                 // TO get corrent
-                                int ccc = 0;
+                               // int ccc = 0;
+
+                                /*
                                 while (((ttp == "subbed" && newNames[i].Contains("(Dub)")) || (ttp == "dubbed" && newNames[i].Contains("(Sub)"))) && mp4upload != "" && ccc < 30) {
                                     ccc++;
+
                                     string _ttpFind = mp4upload + "\",\"type\":\"";
                                     int ttpFind = d.IndexOf(_ttpFind);
                                     print(ttpFind.ToString());
                                     d = d.Substring(ttpFind + 1, d.Length - ttpFind - 1);
+
                                     mp4upload = FindHTML(d, "mp4upload\",\"id\":\"", "\"");
+
                                     ttp = FindHTML(d, mp4upload + "\",\"type\":\"", "\"");
                                 }
                                 if (ccc == 30) {
                                     mp4upload = "";
+                                }*/
+
+
+                                while (d.Contains(mp4Find) || d.Contains(trollFind)) {
+                                    bool mp4First = d.IndexOf(mp4Find) < d.IndexOf(trollFind);
+                                    if(!d.Contains(trollFind)) { mp4First = true; }
+                                    if(!d.Contains(mp4Find)) { mp4First = false; }
+
+                                    string lookfor = mp4First ? mp4Find : trollFind;
+
+                                    int ttpFind = d.IndexOf(lookfor);
+
+                                    string id = FindHTML(d, lookfor, "\"");
+
+                                    string type = FindHTML(d,lookfor + id + "\",\"type\":\"", "\"");
+
+                                    if((type == "dubbed" && newNames[i].Contains("(Dub)")) || (type == "subbed" && newNames[i].Contains("(Sub)"))) { 
+                                        if (mp4First) {
+                                            mp4upload = id;
+                                        }
+                                        else {
+                                            trollvid = id;
+                                        }
+                                    }
+                                    d = d.Substring(ttpFind + 1, d.Length - ttpFind - 1);
                                 }
-                                print(ttp + "|" + newNames[i]);
+
+                                
+
+
                                 if (mp4upload != "") {
 
 
@@ -2403,6 +2584,52 @@ namespace CloudStream
                                         catch (System.Exception) {
                                         }
                                     }
+                                } else if(trollvid != "") {
+                                    string embeded = "https://trollvid.net/embed/" + trollvid;
+                                    string result = HTMLGet(embeded, newDownloads[i]);
+                                    string lookfor = "player.src(\"";
+                                    print(result);
+
+                                    string rLink = "";
+
+                                    while (result.Contains(lookfor)) {
+                                        string link = FindHTML(result, lookfor, "\"");
+                                        print("Direct Link: " + link);
+                                        rLink = link;
+                                        result = result.Substring(result.IndexOf(lookfor) + 1, result.Length - result.IndexOf(lookfor) - 1);
+                                    }
+
+                                    lookfor = "<source src=\"";
+
+                                    while (result.Contains(lookfor)) {
+                                        string link = FindHTML(result, lookfor, "\"");
+                                        print("Source: " + link);
+                                        rLink = link;
+                                        result = result.Substring(result.IndexOf(lookfor) + 1, result.Length - result.IndexOf(lookfor) - 1);
+                                        //string newD = HTMLGet(link, embeded, false);
+                                       // print(d);
+                                    }
+                                    if (!activeLinks.Contains(rLink) && rLink != "") {
+                                        print("GOT TROLLVID: " + rLink);
+
+                                        print("---------------------------------" + cThred + " | " + thredNumber + "--------------------------------------------");
+
+                                        if (cThred != thredNumber) return;
+
+                                        activeLinks.Add(rLink);
+                                        activeLinksNames.Add(newNames[i]);
+
+
+                                        progress = (int)System.Math.Round((100f * i) / newDownloads.Count);
+                                        ax_Links.ax_links.ChangeBar(progress);
+                                        try {
+                                            ax_Links.ax_links_sub.ChangeBar(progress);
+
+                                        }
+                                        catch (System.Exception) {
+                                        }
+                                    }
+
                                 }
 
                             }
@@ -3187,12 +3414,12 @@ namespace CloudStream
             int[] order = { -3, -1, -5, 4, 3, -2, 2, 0, 1 };
 
             for (int i = 0; i < movieTitles.Count; i++) {
-                if (!movieTitles[i].Contains(SortName(movieProvider[i]))) {
+                if (!movieTitles[i].EndsWith(SortName(movieProvider[i]))) {
                     movieTitles[i] += SortName(movieProvider[i]);
                 }
             }
 
-            /*
+            
             int[] newPos = new int[movieTitles.Count];
             int counter = 0;
 
@@ -3201,12 +3428,15 @@ namespace CloudStream
                     if (movieProvider[i] == order[j]) {
                         newPos[i] = counter;
                         counter++;
-
-                        _movieTitles.Add(movieTitles[i]);
-                        _moviesActive.Add(moviesActive[i]);
-                        _movieIsAnime.Add(movieIsAnime[i]);
-                        _movieProvider.Add(movieProvider[i]);
-                        _fwordLink.Add(fwordLink[i]);
+                        try {
+                            _movieTitles.Add(movieTitles[i]);
+                            _moviesActive.Add(moviesActive[i]);
+                            _movieIsAnime.Add(movieIsAnime[i]);
+                            _movieProvider.Add(movieProvider[i]);
+                            _fwordLink.Add(fwordLink[i]);
+                        }
+                        catch (System.Exception) {
+                        }
                     }
                 }
             }
@@ -3216,7 +3446,7 @@ namespace CloudStream
             moviesActive = _moviesActive;
             movieIsAnime = _movieIsAnime;
             movieProvider = _movieProvider;
-            */
+            
         }
 
 
