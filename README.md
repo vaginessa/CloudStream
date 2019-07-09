@@ -2,7 +2,6 @@
 
 CloudStream is an **Android Only** app created to make it easier to watch movies without ads or popups
 
-
 ***Features:***
 
 **AdFree**, No ads whatsoever
@@ -17,22 +16,24 @@ Bookmark TV-shows and movies for quick access
 
 Watch history that can easily be toggled and removed
 
+Examle: https://youtu.be/kkoTmyR3rNc
+
 ***How it works:***
 
 This app dosen't use a p2p connection or any private servers hosted by me. It takes all the links from established streaming sites by downloading the sites and extracting the useful information. 
 
 It takes the links from:
 
-https://movies123.pro/ (Movies)
+https://movies123.pro/ (Movie)
 
-https://zmovies.me/ (Movies)
+https://zmovies.me/ (Backup Movie)
 
-https://movies123.pro/ (Tv-Series)
+https://movies123.pro/ (HD TV-Series)
 
 https://grabthebeast.com/ (Tv-Series)
 
-https://www3.gogoanime.io/ (Anime)
+https://www3.gogoanime.io/ (HD Anime)
 
 https://ww1.kuroani.me/ (Anime)
 
-https://ww.9animes.net/ (Anime)
+https://ww.9animes.net/ (Backup Anime)
