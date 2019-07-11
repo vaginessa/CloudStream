@@ -619,7 +619,7 @@ namespace CloudStream
             if (!hasPermission) {
                 ActivityCompat.RequestPermissions(context,
                    new string[] { Manifest.Permission.WriteExternalStorage },
-                 REQUEST_WRITE_STORAGE);
+                 REQUEST_WRITE_STORAGE); 
             }
 
         }
@@ -744,7 +744,7 @@ namespace CloudStream
 
         public static void RemoveDownload(string title, Context c, View v)
         {
-            title = title.Replace(" ", "_").Replace(".mp4","") + ".mp4";
+            title = title.ToLower().Replace(" ", "_").Replace(".mp4","") + ".mp4";
             long longId = DownloadsGetLong(title);
             string pathId = DownloadGetPath(title);
             bool error = true;
@@ -845,17 +845,20 @@ namespace CloudStream
 
         public static bool DownloadsGetIfDownloaded(string title)
         {
+            title = title.ToLower().Replace(" ", "_").Replace("b___", "").Replace("d___", "").Replace("_(bookmark)", "").Replace(".mp4", ""); 
+          //  print(title);
             var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
             IDictionary<string, object> allData = localC.All;
             ICollection<string> allTitles = allData.Keys;
             string[] tempVal = new string[allData.Count];
             allTitles.CopyTo(tempVal, 0);
-            string lookfor = title.Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "").Replace(" ","_").Replace(".mp4","");
+            string lookfor = title;
             for (int i = 0; i < tempVal.Length; i++) {
-                if (tempVal[i].Replace("B___", "").Replace("D___", "").Replace(" (Bookmark)", "").Replace(" ", "_").Replace(".mp4", "") == lookfor) {
+                string match = tempVal[i].ToLower().Replace("b___", "").Replace("d___", "").Replace("p___", "").Replace(" ", "_").Replace("_(bookmark)", "").Replace(".mp4", "");
+              //  print("tempval:" + match + "|" + lookfor);
+                if (match == lookfor) {
                     return true;
                 }
-
             }
             return false;
 

@@ -329,7 +329,7 @@ namespace CloudStream.Fragments
                         if ((currentMain && activeLinksNames[i].StartsWith("Episode")) || (!currentMain && !activeLinksNames[i].StartsWith("Episode"))) {
                             values.Add(activeLinksNames[i]);
                             flink.Add(i);
-                            print(activeLinksNames[i] + " |||| >> " + i);
+                           // print(activeLinksNames[i] + " |||| >> " + i);
                         }
                     }
                     else {
@@ -451,7 +451,7 @@ namespace CloudStream.Fragments
                     };
                 }
 
-                if (DownloadsGetIfDownloaded(movieTitles[moveSelectedID] + " | " + mValues[position])) {
+                if (DownloadsGetIfDownloaded(movieTitles[moveSelectedID] + "_" + mValues[position])) {
                     simpleHolder.mTxtView.SetTextColor(Color.ParseColor("#fffcb4"));
                 }
                 else {
@@ -497,18 +497,18 @@ namespace CloudStream.Fragments
                 else {
                     for (int i = 0; i < checks.Length; i++) {
                         bool add = true;
-                        if ((checks[i] == "Remove Download" || checks[i] == "Play Downloaded File") && !DownloadsGetIfDownloaded(movieTitles[moveSelectedID] + " | " + mValues[pos])) { add = false; }
+                        if ((checks[i] == "Remove Download" || checks[i] == "Play Downloaded File") && !DownloadsGetIfDownloaded(movieTitles[moveSelectedID] + "_" + mValues[pos])) { add = false; }
                         if (checks[i] == "Chromecast" && !IsConnectedToChromecast()) { add = false; }
                         if (checks[i] == "Copy Browser Link (ADS)") { add = false; }
                         if (checks[i] == "Mark As Watched") { add = false; }
                         if (checks[i] == "Load Links") { add = false; }
                         if (SHOW_INFO_SUBTITLES) {
-                            if (checks[i] == "Copy Subtitle Link") { add = currentActiveSubtitle >= 0; }
-                            if (checks[i] == "Play With Subtitles") { add = currentActiveSubtitle >= 0; }
+                            if (checks[i] == "Copy Subtitle Link") { add = currentActiveSubtitle > 0; }
+                            if (checks[i] == "Play With Subtitles") { add = currentActiveSubtitle > 0; }
                         }
                         else {
-                            if (checks[i] == "Copy Subtitle Link") { add = activeSubtitles.Count >= 0; }
-                            if (checks[i] == "Play With Subtitles") { add = activeSubtitles.Count >= 0; }
+                            if (checks[i] == "Copy Subtitle Link") { add = activeSubtitles.Count > 0; }
+                            if (checks[i] == "Play With Subtitles") { add = activeSubtitles.Count > 0; }
                         }
                         if (add) {
                             //  menu.Menu.Add(i,pos,i, checks[i]);
@@ -570,6 +570,8 @@ namespace CloudStream.Fragments
                 print("Episode id:" + episode);
                 List<string> _activeLinks = new List<string>();
                 List<string> _activeLinksNames = new List<string>();
+                activeSubtitles = new List<string>();
+                activeSubtitlesNames = new List<string>();
 
                 for (int i = 0; i < activeLinks.Count; i++) {
                     if (activeLinksNames[i].StartsWith("Episode")) {
@@ -687,43 +689,17 @@ namespace CloudStream.Fragments
                 // string link = activeLinks[flink[pos]];
                 UpdateList();
                 _re.ScrollToPosition(pos);
-                StartNewDownload(link, movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]], (movieIsAnime[moveSelectedID] ? "Anime" : "Movie"));
+                StartNewDownload(link, (movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]]).ToLower().Replace(" ","_"), (movieIsAnime[moveSelectedID] ? "Anime" : "Movie"));
 
             }
             else if (id == 3) {
                 UpdateList();
                 _re.ScrollToPosition(pos);
 
-                RemoveDownload(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]], mainActivity, this.View);
+                RemoveDownload(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]], mainActivity, this.View);
             }
             else if (id == 4) {
-                string storage = (movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]).Replace(" ", "_").Replace(".mp4", "") + ".mp4";
-                print("STORAGE: " + storage);
-
-                var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
-                long getID = localC.GetLong(storage, -1);
-                int vlcRequestCode = 42;
-
-                string path = localC.GetString("P___" + storage, "-1");
-                if (path != "-1") {
-
-                    string truePath = "file://" + Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/" + path.Replace(" ", "_").Replace(".mp4", "") + ".mp4";
-                    print(truePath);
-
-                    Android.Net.Uri uri = Android.Net.Uri.Parse(truePath);
-
-
-
-                    Intent vlcIntent = new Intent(Intent.ActionView);
-                    vlcIntent.SetPackage("org.videolan.vlc");
-
-                    vlcIntent.SetDataAndType(uri, "video/*");
-
-                    vlcIntent.PutExtra("title", storage.Replace("_", " "));
-                    vlcIntent.AddFlags(ActivityFlags.GrantReadUriPermission);
-
-                    StartActivityForResult(vlcIntent, vlcRequestCode); //IF GETTING ERROR DOWNGRADE TO API BELOW 24; HINT: https://stackoverflow.com/questions/38200282/android-os-fileuriexposedexception-file-storage-emulated-0-test-txt-exposed
-                }
+                ax_Downloads.PlayDownloadFileFromTitle((movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]]).ToLower().Replace(" ","_"));
             }
             else if (id == 5) {
                 print("Loading: " + movieTitles[moveSelectedID] + " | " + activeLinksNames[flink[pos]]);
