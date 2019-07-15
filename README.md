@@ -2,6 +2,12 @@
 
 CloudStream is an **Android Only** app created to make it easier to watch movies without ads or popups
 
+***Info:***
+
+To play videos it is recomended to use VLC for Android, the app has no built in video player
+
+A console application of the app for Windows and Linux can be found at: https://github.com/LagradOst/CloudStreamConsole
+
 ***Features:***
 
 **AdFree**, No ads whatsoever
