@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using Android.App;
 using Android.Content;
@@ -89,11 +90,19 @@ namespace CloudStream.Fragments
 
         public static int[] defActions = { -1, -1 };
         static CheckBox msearch, hdasearch, asearch, basearch, savelinks, savetitles, tvasearch, bmsearch, htvasearch;
+        static string version = "";
+        Java.Lang.Thread sThred;
+
+        static string updateTo = "-1";
+        public static ax_Settings ax_settings;
+
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
             // Use this to return your custom view for this Fragment
             // return inflater.Inflate(Resource.Layout.YourFragment, container, false);
             View view = inflater.Inflate(Resource.Layout.ax_Settings, container, false);
+
+            ax_settings = this;
 
             var cbookmarks = view.FindViewById(Resource.Id.clearbookmarks);
             var chistory = view.FindViewById(Resource.Id.clearhistory);
@@ -109,6 +118,71 @@ namespace CloudStream.Fragments
             savelinks = view.FindViewById<CheckBox>(Resource.Id.savelinks);
             savetitles = view.FindViewById<CheckBox>(Resource.Id.savetitles);
 
+            Button updatebtt = view.FindViewById<Button>(Resource.Id.update);
+            updatebtt.Visibility = ViewStates.Gone;
+
+
+            version = Context.PackageManager.GetPackageInfo(Context.PackageName, 0).VersionName;
+            TextView versionTxt = view.FindViewById<TextView>(Resource.Id.versionTxt);
+            versionTxt.Text = "v" + version;
+            sThred = new Java.Lang.Thread(() =>
+            {
+                try {
+                    WebClient client = new WebClient();
+                    string d = client.DownloadString("https://github.com/LagradOst/CloudStream/releases");
+                    string look = "/LagradOst/CloudStream/releases/tag/";
+                    //   float bigf = -1;
+                    //     string bigUpdTxt = "";
+                    // while (d.Contains(look)) {
+                    string tag = FindHTML(d, look, "\"");
+                    string updText = FindHTML(d, look + tag + "\">", "<");
+                    /*
+                        try {
+                            float tagf = float.Parse(tag.Replace("v", ""));
+                            print("" + tagf);
+                            if(tagf > bigf) {
+                                bigf = tagf;
+                                bigUpdTxt = updText;
+                            }
+                        }
+                        catch (Exception) {
+
+                        }
+                        d = d.Substring(d.IndexOf(look) + 1, d.Length - d.IndexOf(look) - 1);
+                        */
+                    updatebtt.Click += (o, e) =>
+                    {
+                        if (version != updateTo && updateTo != "-1") {
+                            string downloadLink = "https://github.com/LagradOst/CloudStream/releases/download/" + updateTo + "/CloudStream.CloudStream.apk";
+                            DownloadFromLink(downloadLink, "CloudStream-" + updateTo, "Downloading APK", this, ".apk", true);
+                            updatebtt.Visibility = ViewStates.Gone;
+                        }
+                    };
+
+                    if (tag != "") {
+                        Activity.RunOnUiThread(new Action(() =>
+                        {
+                            updateTo = tag;
+                            if (tag == "v" + version) {
+                                versionTxt.Text = "v" + version + " (Up to date)";
+                                updatebtt.Visibility = ViewStates.Gone;
+
+                            }
+                            else {
+                                versionTxt.Text = "v" + version + " -> " + tag + " (" + updText + ")";
+                                updatebtt.Visibility = ViewStates.Visible;
+                                updatebtt.Text = "Update to " + tag;
+                            }
+
+                        }));
+                    }
+
+                }
+                finally {
+                    sThred.Join();
+                }
+            });
+            sThred.Start();
 
             //  var sdownloads =  view.FindViewById(Resource.Id.showdownloads);
 

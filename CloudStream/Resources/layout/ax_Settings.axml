@@ -15,6 +15,7 @@
             android:layout_height="match_parent"
             android:id="@+id/s_Buttons">
 
+
             <TextView
                 android:text=""
                 android:textAppearance="?android:attr/textAppearanceSmall"
@@ -31,6 +32,7 @@
                 android:minHeight="25px"
                 android:translationX="20dp"
                 android:id="@+id/settingstext" />
+
             <TextView
                 android:text="Search For"
                 android:textAppearance="?android:attr/textAppearanceSmall"
@@ -87,8 +89,19 @@
                 android:layout_height="wrap_content"
                 android:translationX="20dp"
                 android:id="@+id/basearch" />
+            <TextView
+                android:translationX="20dp"
+                android:text=""
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/versionTxt" />
+             <Button
+                android:text="Update"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:id="@+id/update" />
             <LinearLayout
-                xmlns:android="http://schemas.android.com/apk/res/android"
                 android:orientation="vertical"
                 android:padding="10dip"
                 android:layout_width="fill_parent"
@@ -106,7 +119,6 @@
     />
             </LinearLayout>
             <LinearLayout
-                xmlns:android="http://schemas.android.com/apk/res/android"
                 android:orientation="vertical"
                 android:padding="10dip"
                 android:layout_width="fill_parent"
@@ -173,9 +185,9 @@
 
 
 
-
         </LinearLayout>
     </ScrollView>
+
 
 
 </RelativeLayout>           

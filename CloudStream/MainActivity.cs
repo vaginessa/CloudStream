@@ -428,6 +428,7 @@ namespace CloudStream
         {
             title = title.Replace(" ", "_");
             if (link.ToLower().Contains("youtu")) {
+                print("TITLE: " + title + "|" + link);
                 SaveVideoToDisk(link, title);
                 ShowSnackBar("YouTube Download Started!");
             }
@@ -451,46 +452,46 @@ namespace CloudStream
             manager = (DownloadManager)ax_Links.ax_links.Context.GetSystemService(Context.DownloadService);
 
             long id = localC.GetLong("temp", -1);
-            if(id == -1) {
+            if (id == -1) {
                 return false;
             }
             else {
-               // for (int i = 0; i < 1000; i++) {
+                // for (int i = 0; i < 1000; i++) {
                 //    Java.Lang.Thread.Sleep(10);
-                    Android.Net.Uri u = manager.GetUriForDownloadedFile(id);
-                    if( (u + "") != "") {
-                        print("RETURN TRUE PATH SUBTITLE: " + u.Path);
-                        return true;
-                    }
-                  //  DownloadManager.StatusSuccessful
-               // }
+                Android.Net.Uri u = manager.GetUriForDownloadedFile(id);
+                if ((u + "") != "") {
+                    print("RETURN TRUE PATH SUBTITLE: " + u.Path);
+                    return true;
+                }
+                //  DownloadManager.StatusSuccessful
+                // }
             }
 
             return false;
         }
-     
+
         public const string SUBTITLE_PATH = "TempSubtitle.srt";
         public const bool SHOW_INFO_SUBTITLES = false;
-       
+
 
         public static void DownloadTempSubtitles(string url)
         {
 
-          
-
-        
 
 
-                DownloadManager.Request request = new DownloadManager.Request(Android.Net.Uri.Parse(url)); /*init a request*/
+
+
+
+            DownloadManager.Request request = new DownloadManager.Request(Android.Net.Uri.Parse(url)); /*init a request*/
             request.SetTitle("Subtitles");//this description apears inthe android notification 
-                                    // request.SetDestinationInExternalFilesDir(ax_Links.ax_links.Context,
-                                    //        dir,
-                                    //       title); //set destination
-                                    //OR
+                                          // request.SetDestinationInExternalFilesDir(ax_Links.ax_links.Context,
+                                          //        dir,
+                                          //       title); //set destination
+                                          //OR
 
             request.SetDestinationInExternalPublicDir(Android.OS.Environment.DirectoryDownloads, SUBTITLE_PATH);
             request.SetVisibleInDownloadsUi(false);
-           // request.SetNotificationVisibility(DownloadVisibility.Hidden);
+            // request.SetNotificationVisibility(DownloadVisibility.Hidden);
 
 
             DownloadManager manager;
@@ -511,7 +512,7 @@ namespace CloudStream
 
 
             var edit = localC.Edit();
-            edit.PutLong("temp",downloadId);
+            edit.PutLong("temp", downloadId);
 
             edit.Commit();
         }
@@ -619,10 +620,26 @@ namespace CloudStream
             if (!hasPermission) {
                 ActivityCompat.RequestPermissions(context,
                    new string[] { Manifest.Permission.WriteExternalStorage },
-                 REQUEST_WRITE_STORAGE); 
+                 REQUEST_WRITE_STORAGE);
             }
 
         }
+
+        public static async Task<string> GetYTVideo(string link)
+        {
+            if (link.ToLower().Contains("youtu")) {
+                var id = YoutubeClient.ParseVideoId(link);
+
+                var client = new YoutubeClient();
+
+                var video = await client.GetVideoAsync(id);
+
+                var _title = video.Title; // "Infected Mushroom - Spitfire [Monstercat Release]"
+                return _title;
+            }
+            return "";
+        }
+
         static async void SaveVideoToDisk(string link, string title)
         {
             var id = YoutubeClient.ParseVideoId(link);
@@ -657,8 +674,14 @@ namespace CloudStream
             //var ext = streamInfo.Container.GetFileExtension();
 
             // Download stream to file
+            Regex rgx = new Regex("[^a-zA-Z0-9 -]");
+            print("TITLE1: " + title);
 
-            string shortPath = "YouTube/" + title + ".mp4";
+            title = title.Replace("_", " ");
+            title = rgx.Replace(title, "").ToLower().Replace(" ", "_") + ".mp4";
+            print("TITLE2: " + title);
+
+            string shortPath = "YouTube/" + title;
             string path = Android.OS.Environment.DirectoryDownloads + "/" + shortPath;
             string truePath = Android.OS.Environment.ExternalStorageDirectory + "/" + path;
 
@@ -694,6 +717,68 @@ namespace CloudStream
             }
 
         }
+
+        public void OpenFile(string link)
+        {
+            Android.Net.Uri uri = Android.Net.Uri.Parse(link);
+            print("FILE: " + uri);
+
+            Intent promptInstall = new Intent(Intent.ActionView).SetDataAndType(uri, "application/vnd.android.package-archive");
+            promptInstall.AddFlags(ActivityFlags.NewTask);
+            Android.App.Application.Context.StartActivity(promptInstall);
+        }
+
+        static Java.Lang.Thread downloadThred;
+        public static void DownloadFromLink(string url, string title, string snackBar = "", SupportFragment v = null, string ending = "", bool openFile = false)
+        {
+            print("DOWNLOADING: " + url);
+            DownloadManager.Request request = new DownloadManager.Request(Android.Net.Uri.Parse(url));
+            request.SetDescription(title);
+            request.SetTitle(title);
+            string mainPath = Android.OS.Environment.DirectoryDownloads;
+            string subPath = title + ending;
+            string fullPath = mainPath + "/" + subPath;
+            print("PATH: " + fullPath);
+            request.SetDestinationInExternalPublicDir(mainPath, subPath);
+            request.SetVisibleInDownloadsUi(true);
+            request.SetNotificationVisibility(DownloadVisibility.VisibleNotifyCompleted);
+
+            DownloadManager manager;
+            manager = (DownloadManager)v.Context.GetSystemService(Context.DownloadService);
+            if (snackBar != "" && v != null) {
+                ShowSnackBar(snackBar, v.View);
+            }
+            long downloadId = manager.Enqueue(request);
+            if (openFile) {
+                downloadThred = new Java.Lang.Thread(() =>
+                {
+                    try {
+                        bool exists = false;
+                        while (!exists) {
+                            try {
+                                string p = manager.GetUriForDownloadedFile(downloadId).Path;
+                                exists = true;
+                            }
+                            catch (System.Exception) {
+                                Java.Lang.Thread.Sleep(100);
+                            }
+                            
+                        }
+                        Java.Lang.Thread.Sleep(500);
+                        print("OPEN FILE");
+                        //            
+                        string truePath = ("file://" + Android.OS.Environment.ExternalStorageDirectory + "/" + fullPath);
+
+                        mainActivity.OpenFile(truePath);
+                    }
+                    finally {
+                        downloadThred.Join();
+                    }
+                });
+                downloadThred.Start();
+            }
+        }
+
         public static void StartNewDownload(string url, string title, string dir = "Movie", bool fromlinks = true, string dec = "")
         {
 
@@ -744,7 +829,7 @@ namespace CloudStream
 
         public static void RemoveDownload(string title, Context c, View v)
         {
-            title = title.ToLower().Replace(" ", "_").Replace(".mp4","") + ".mp4";
+            title = title.ToLower().Replace(" ", "_").Replace(".mp4", "") + ".mp4";
             long longId = DownloadsGetLong(title);
             string pathId = DownloadGetPath(title);
             bool error = true;
@@ -787,7 +872,7 @@ namespace CloudStream
             }
 
 
-            
+
 
             Action<View> removeRef = (View) =>
             {
@@ -797,8 +882,8 @@ namespace CloudStream
                 var edit = localC.Edit();
                 edit.Remove(title);
                 edit.Remove("P___" + title);
-                edit.Remove("P___" + title.Replace(" ","_"));
-                edit.Remove(title.Replace(" ","_"));
+                edit.Remove("P___" + title.Replace(" ", "_"));
+                edit.Remove(title.Replace(" ", "_"));
 
                 edit.Commit();
 
@@ -845,8 +930,8 @@ namespace CloudStream
 
         public static bool DownloadsGetIfDownloaded(string title)
         {
-            title = title.ToLower().Replace(" ", "_").Replace("b___", "").Replace("d___", "").Replace("_(bookmark)", "").Replace(".mp4", ""); 
-          //  print(title);
+            title = title.ToLower().Replace(" ", "_").Replace("b___", "").Replace("d___", "").Replace("_(bookmark)", "").Replace(".mp4", "");
+            //  print(title);
             var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
             IDictionary<string, object> allData = localC.All;
             ICollection<string> allTitles = allData.Keys;
@@ -855,7 +940,7 @@ namespace CloudStream
             string lookfor = title;
             for (int i = 0; i < tempVal.Length; i++) {
                 string match = tempVal[i].ToLower().Replace("b___", "").Replace("d___", "").Replace("p___", "").Replace(" ", "_").Replace("_(bookmark)", "").Replace(".mp4", "");
-              //  print("tempval:" + match + "|" + lookfor);
+                //  print("tempval:" + match + "|" + lookfor);
                 if (match == lookfor) {
                     return true;
                 }
@@ -1538,7 +1623,7 @@ namespace CloudStream
                     catch (System.Exception) {
 
                     }
-                    
+
                 }
             }
             movieTitles = _movieTitles;
@@ -2463,7 +2548,7 @@ namespace CloudStream
                                 string name = FindHTML(d, "ep-anime-name-an\'>", "<");
 
                                 string ep = FindHTML(d, "text-right ep-num\'>", "<").Replace("Ep. ", "");
-                                if(ep == "") {
+                                if (ep == "") {
                                     ep = "0";
                                 }
                                 int num = int.Parse(ep);
@@ -2518,11 +2603,11 @@ namespace CloudStream
                                 string trollFind = "trollvid\",\"id\":\"";
 
 
-                               // string ttp = FindHTML(d, mp4upload + "\",\"type\":\"", "\"");
+                                // string ttp = FindHTML(d, mp4upload + "\",\"type\":\"", "\"");
                                 string mp4upload = ""; // FindHTML(d, mp4Find, "\""); 
                                 string trollvid = "";
                                 // TO get corrent
-                               // int ccc = 0;
+                                // int ccc = 0;
 
                                 /*
                                 while (((ttp == "subbed" && newNames[i].Contains("(Dub)")) || (ttp == "dubbed" && newNames[i].Contains("(Sub)"))) && mp4upload != "" && ccc < 30) {
@@ -2544,8 +2629,8 @@ namespace CloudStream
 
                                 while (d.Contains(mp4Find) || d.Contains(trollFind)) {
                                     bool mp4First = d.IndexOf(mp4Find) < d.IndexOf(trollFind);
-                                    if(!d.Contains(trollFind)) { mp4First = true; }
-                                    if(!d.Contains(mp4Find)) { mp4First = false; }
+                                    if (!d.Contains(trollFind)) { mp4First = true; }
+                                    if (!d.Contains(mp4Find)) { mp4First = false; }
 
                                     string lookfor = mp4First ? mp4Find : trollFind;
 
@@ -2553,9 +2638,9 @@ namespace CloudStream
 
                                     string id = FindHTML(d, lookfor, "\"");
 
-                                    string type = FindHTML(d,lookfor + id + "\",\"type\":\"", "\"");
+                                    string type = FindHTML(d, lookfor + id + "\",\"type\":\"", "\"");
 
-                                    if((type == "dubbed" && newNames[i].Contains("(Dub)")) || (type == "subbed" && newNames[i].Contains("(Sub)"))) { 
+                                    if ((type == "dubbed" && newNames[i].Contains("(Dub)")) || (type == "subbed" && newNames[i].Contains("(Sub)"))) {
                                         if (mp4First) {
                                             mp4upload = id;
                                         }
@@ -2566,7 +2651,7 @@ namespace CloudStream
                                     d = d.Substring(ttpFind + 1, d.Length - ttpFind - 1);
                                 }
 
-                                
+
 
 
                                 if (mp4upload != "") {
@@ -2592,7 +2677,8 @@ namespace CloudStream
                                         catch (System.Exception) {
                                         }
                                     }
-                                } else if(trollvid != "") {
+                                }
+                                else if (trollvid != "") {
                                     string embeded = "https://trollvid.net/embed/" + trollvid;
                                     string result = HTMLGet(embeded, newDownloads[i]);
                                     string lookfor = "player.src(\"";
@@ -2615,7 +2701,7 @@ namespace CloudStream
                                         rLink = link;
                                         result = result.Substring(result.IndexOf(lookfor) + 1, result.Length - result.IndexOf(lookfor) - 1);
                                         //string newD = HTMLGet(link, embeded, false);
-                                       // print(d);
+                                        // print(d);
                                     }
                                     if (!activeLinks.Contains(rLink) && rLink != "") {
                                         print("GOT TROLLVID: " + rLink);
@@ -2998,7 +3084,6 @@ namespace CloudStream
 
             }
         }
-
         static void Link2()
         {
             try {
@@ -3158,7 +3243,6 @@ namespace CloudStream
             }
 
         }
-
         static void Link6()
         {
             try {
@@ -3205,6 +3289,7 @@ namespace CloudStream
             }
 
         }
+
         static float totalLinks = 6f;
         static string rinput = "";
         static string _serchText;
@@ -3427,7 +3512,7 @@ namespace CloudStream
                 }
             }
 
-            
+
             int[] newPos = new int[movieTitles.Count];
             int counter = 0;
 
@@ -3454,7 +3539,7 @@ namespace CloudStream
             moviesActive = _moviesActive;
             movieIsAnime = _movieIsAnime;
             movieProvider = _movieProvider;
-            
+
         }
 
 
