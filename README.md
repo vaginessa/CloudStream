@@ -40,6 +40,8 @@ https://grabthebeast.com/ (Tv-Series)
 
 https://www3.gogoanime.io/ (HD Anime)
 
+https://gogoanime.cool (HD Backup Anime)
+
 https://ww1.kuroani.me/ (Anime)
 
 https://ww.9animes.net/ (Backup Anime)
