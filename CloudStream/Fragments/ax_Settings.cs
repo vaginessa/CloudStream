@@ -22,6 +22,8 @@ namespace CloudStream.Fragments
     {
 
         readonly static bool haveAnimeEnabled = true;
+        readonly static bool searchForUpdates = true;
+
         public override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -182,8 +184,9 @@ namespace CloudStream.Fragments
                     sThred.Join();
                 }
             });
-            sThred.Start();
-
+            if(searchForUpdates) { 
+                sThred.Start();
+            }
             //  var sdownloads =  view.FindViewById(Resource.Id.showdownloads);
 
             // sdownloads.Click += (o,e) => MainActivity.mainActivity.ShowDownloads();

@@ -99,8 +99,33 @@ namespace CloudStream.Fragments
                 subtitleSpinner.Adapter = adapter;
             }
         }
+        public void UpdateData()
+        {
+            string add = "";
 
+            if (currentMovie.year != null) {
+                add += currentMovie.year + "\n";
+            }
 
+            if (currentMovie.imdbRating != null) {
+                add += currentMovie.imdbRating + "\n";
+            }
+
+            if (currentMovie.runtime != null) {
+                add += currentMovie.runtime + "\n";
+            }
+            if (currentMovie.plot != null) {
+                add += currentMovie.plot + "\n";
+            }
+            if (currentMovie.genre != null) {
+                add += currentMovie.genre + "\n";
+            }
+            if (currentMovie.extra != null) {
+                add += currentMovie.extra + "\n";
+            }
+            m_dec.Text = add;
+        }
+        TextView m_dec;
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
             // Use this to return your custom view for this Fragment
@@ -119,21 +144,11 @@ namespace CloudStream.Fragments
             m_title.Text = movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "");
 
 
-            string add = "";
-            if (currentMovie.imdbRating != null) {
-                add += currentMovie.imdbRating + "\n";
-            }
-            if (currentMovie.year != null) {
-                add += currentMovie.year + "\n";
-            }
-            if (currentMovie.runtime != null) {
-                add += currentMovie.runtime + "\n";
-            }
-            if (currentMovie.plot != null) {
-                add += currentMovie.plot + "\n";
-            }
 
-            ImageButton castBtt = view.FindViewById<ImageButton>(Resource.Id.imageButton1);
+            m_dec = view.FindViewById<TextView>(Resource.Id.movieInfo);
+            UpdateData();
+
+              ImageButton castBtt = view.FindViewById<ImageButton>(Resource.Id.imageButton1);
             castBtt.Visibility = ChromechastExists() ? ViewStates.Visible : ViewStates.Invisible;
             if (!ChromechastExists()) {
                 m_title.TranslationX /= 4;
@@ -164,8 +179,6 @@ namespace CloudStream.Fragments
                 menu.Show();
             };
 
-            var m_dec = view.FindViewById<TextView>(Resource.Id.movieInfo);
-            m_dec.Text = add;
 
             if (movieProvider[moveSelectedID] == 3) {
                 m_dec.SetLines(2);

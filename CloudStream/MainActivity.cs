@@ -367,8 +367,6 @@ namespace CloudStream
                                     })
                                     .Show();
                         };*/
-
-
         }
         public static int CalculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight)
         {
@@ -577,6 +575,7 @@ namespace CloudStream
             public string posterID;
             public string imdbRating;
             public string type;
+            public string extra;
         }
 
         public static Movie currentMovie = new Movie();
@@ -762,7 +761,7 @@ namespace CloudStream
                             catch (System.Exception) {
                                 Java.Lang.Thread.Sleep(100);
                             }
-                            
+
                         }
                         Java.Lang.Thread.Sleep(500);
                         print("OPEN FILE");
@@ -983,7 +982,7 @@ namespace CloudStream
         }
 
 
-        public static string FindHTML(string all, string first, string end, int offset = 0)
+        public static string FindHTML(string all, string first, string end = "\"", int offset = 0)
         {
             if (all.IndexOf(first) == -1) {
                 return "";
@@ -2519,7 +2518,7 @@ namespace CloudStream
                     print(Getmp4uploadByID(mp4URL));
                     */
                 }
-                if (provider == 0) {
+                else if (provider == 0) {
                     // try {
 
 
@@ -2737,7 +2736,7 @@ namespace CloudStream
                     //   print("Error");
                     //}
                 }
-                if (provider == 2) {
+                else if (provider == 2) {
                     WebClient client = new WebClient();
                     string d = "";
                     try {
@@ -2819,6 +2818,67 @@ namespace CloudStream
                             }
                         }
                     }
+                }
+                else if (provider == 5) {
+                    try {
+                        string dlink = "https://gogoanime.cool/anime/" + fwordLink[titleID];
+                        WebClient client = new WebClient();
+                        string d = client.DownloadString(dlink);
+                        try {
+                            if (moviesActive[titleID].year == null || moviesActive[titleID].year == "") {
+                                /*
+                                string year = "2" + FindHTML(d, "rel=\"tag\">2", "<");
+                                moviesActive[titleID].year = year;
+
+                                d = RemoveOne(d, "Episodes");
+
+                                int totalEpCount = int.Parse(FindHTML(d, "<div class=\"summary-content\">", "<").Replace(" ", ""));
+                                moviesActive[titleID].extra = totalEpCount + " Total Episodes";
+                                ax_Info.ax_info.UpdateData(); */
+                            }
+                        }
+                        catch (System.Exception) {
+
+                        }
+
+                        int epCount = d.Split("<a href=\"https://gogoanime.cool/anime/" + fwordLink[titleID] + "episode-").Length - 1;
+
+
+                        if (onlyEps) {
+                            addToTitleEps = epCount;
+                        }
+                        else {
+                            for (int i = epCount; i >= 1; i--) {
+                                try {
+                                    d = client.DownloadString(dlink + "episode-" + i);
+                                    string frame = FindHTML(d, "<p><iframe src=\"");
+                                    d = client.DownloadString(frame);
+                                    string mp4Upload = FindHTML(d, "<li class=\"linkserver\" data-status=\"1\" data-video=\"https://www.mp4upload.com/embed-");
+                                    if (mp4Upload != "") {
+                                        d = client.DownloadString("https://www.mp4upload.com/embed-" + mp4Upload);
+                                        string url = Getmp4uploadByFile(d);
+
+                                        print("---------------------------------" + cThred + " | " + thredNumber + "--------------------------------------------");
+
+                                        if (cThred != thredNumber) return;
+
+                                        activeLinks.Add(url);
+                                        activeLinksNames.Add("Episode " + i);
+                                        progress = (int)System.Math.Round((100f * (epCount - i + 1)) / epCount);
+                                        ax_Links.ax_links.ChangeBar(progress);
+                                    }
+                                }
+                                catch (System.Exception) {
+
+                                }
+
+                            }
+                        }
+                    }
+                    catch (System.Exception) {
+
+                    }
+
                 }
             }
             while (!__done) {
@@ -3290,6 +3350,95 @@ namespace CloudStream
 
         }
 
+        static void Link7()
+        {
+            try {
+                WebClient client = new WebClient();
+
+                string dsite = "https://gogoanime.cool/?s=" + rinput + "&post_type=wp-manga&m_orderby";
+                print("Downloading: " + dsite);
+                string d = client.DownloadString(dsite);
+                string lookfor = "               <a href=\"https://gogoanime.cool/anime/";
+                while (d.Contains(lookfor)) {
+
+                    Movie m = new Movie();
+
+
+
+                    string url = FindHTML(d, lookfor, "\"");
+                    string title = FindHTML(d, url + "\" title=\"", "\"");
+                    print("TITLE: " + title);
+                    d = RemoveOne(d, url);
+                    string posterId = FindHTML(d, "data-src=\"", "\"");
+                    string latest = FindHTML(d, ">Episode ", "<");
+                    string year = "2" + FindHTML(d, "/\">2", "<");
+                    string expectedDate = "2" + FindHTML(d, "<span class=\"font-meta\">2", "<");
+                    DateTime date = System.DateTime.Parse(expectedDate);
+                    TimeSpan now = DateTime.Now.Subtract(date);
+                    expectedDate = "Updated " + MathF.Floor(Convert.ToSingle(now.TotalDays)) + "d " + now.Hours + "h " + now.Minutes + "m ago";
+                    string score = "Rated " + FindHTML(d, "class=\"score font-meta total_votes\">", "<") + "/5";
+                    string allGenres = "";
+                    int totalG = 0;
+
+
+                    string genreLook = "<a href=\"https://gogoanime.cool/anime-genre/";
+                    bool done = false;
+                    while (!done) {
+                        if (d.IndexOf("post-content_item mg_status") > d.IndexOf(genreLook)) {
+                            string genre = FindHTML(d, genreLook, "/a>");
+                            genre = FindHTML(genre, ">", "<");
+                            if (genre == "") {
+                                done = true;
+                            }
+                            else {
+                                if (totalG == 0) {
+                                    allGenres = "Genres: " + genre;
+                                }
+                                else {
+
+                                    allGenres += (", " + genre);
+                                }
+                                totalG++;
+                            }
+                            d = RemoveOne(d, genreLook);
+
+                        }
+                        else {
+                            done = true;
+                        }
+                    }
+
+                    m.genre = allGenres;
+                    m.posterID = posterId;
+                    m.released = year;
+                    m.title = title;
+                    m.type = "anime";
+                    m.imdbRating = score;
+                    m.extra = "\n" + latest + " Total Episodes \n" + expectedDate;
+                    m.year = year;
+
+                    moviesActive.Add(m);
+                    movieIsAnime.Add(true);
+                    movieTitles.Add(m.title);
+                    movieProvider.Add(5);
+                    fwordLink.Add(url);
+
+
+                }
+                linksDone++;
+                // SortMovies();
+                ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
+            }
+            catch (System.Exception) {
+
+            }
+        }
+
+        static string RemoveOne(string d, string rem, int offset = 1)
+        {
+            return d.Substring(d.IndexOf(rem) + offset, d.Length - d.IndexOf(rem) - offset);
+        }
+
         static float totalLinks = 6f;
         static string rinput = "";
         static string _serchText;
@@ -3367,6 +3516,13 @@ namespace CloudStream
                 simpleDelegate = new MethodInvoker(Link6);
                 simpleDelegate.BeginInvoke(null, null);
             }
+            if (true) {
+                tLinks++;
+                simpleDelegate = new MethodInvoker(Link7);
+                simpleDelegate.BeginInvoke(null, null);
+            }
+
+
             totalLinks = tLinks;
 
             GetBookMarks();
@@ -3443,7 +3599,6 @@ namespace CloudStream
             }
             return "";
         }
-        readonly static string[] allProviderNames = { "HD Movie", "TV-Series", "Movie", "HD Anime", "Anime Backup", "Anime", "TV-Series", "Movie Backup", "HD Tv-Series" };
         readonly static string[] allQualityNames = { "sd", "cam", "720p", "1080p", "360p", "480p", "hd" };
 
         static string RemoveBloatTitle(string title)
@@ -3460,6 +3615,7 @@ namespace CloudStream
             return title;
         }
 
+        readonly static string[] allProviderNames = { "HD Movie", "TV-Series", "Movie", "HD Anime", "Anime Backup", "Anime", "TV-Series", "Movie Backup", "HD Tv-Series", "HD Anime Backup" };
         static string SortName(int lastP)
         {
             string add = " (";
@@ -3491,6 +3647,9 @@ namespace CloudStream
             else if (lastP == 4) {
                 add += allProviderNames[8];
             }
+            else if (lastP == 5) {
+                add += allProviderNames[9];
+            }
             add += ")";
             return add;
         }
@@ -3504,7 +3663,7 @@ namespace CloudStream
             List<bool> _movieIsAnime = new List<bool>();
             List<int> _movieProvider = new List<int>();
 
-            int[] order = { -3, -1, -5, 4, 3, -2, 2, 0, 1 };
+            int[] order = { -3, -1, -5, 4, 3, -2, 2, 5, 0, 1 };
 
             for (int i = 0; i < movieTitles.Count; i++) {
                 if (!movieTitles[i].EndsWith(SortName(movieProvider[i]))) {
