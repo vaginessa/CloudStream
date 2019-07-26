@@ -21,8 +21,8 @@ namespace CloudStream.Fragments
     public class ax_Settings : SupportFragment
     {
 
-        readonly static bool haveAnimeEnabled = true;
-        readonly static bool searchForUpdates = true;
+        const bool haveAnimeEnabled = true;
+        const bool searchForUpdates = true;
 
         public override void OnCreate(Bundle savedInstanceState)
         {
@@ -60,8 +60,9 @@ namespace CloudStream.Fragments
             }
             catch (Exception) {
                 var set = Application.Context.GetSharedPreferences("Settings", FileCreationMode.Private);
-                bool[] bools = { set.GetBoolean("msearch", true), set.GetBoolean("hdasearch", haveAnimeEnabled), set.GetBoolean("asearch", false), set.GetBoolean("basearch", false), set.GetBoolean("savelinks", true), set.GetBoolean("savetitles", true), set.GetBoolean("tvasearch", true), set.GetBoolean("bmsearch", false), set.GetBoolean("htvasearch", false),set.GetBoolean("hdbasearch",false) };
-                return bools[i];
+                string[] boolset = { "msearch", "hdasearch", "asearch", "basearch", "savelinks", "savetitles", "tvasearch", "bmsearch", "htvasearch", "hdbasearch" };
+                bool[] defVal = { true, haveAnimeEnabled, false, false, true, true, false, false, true, false };
+                return set.GetBoolean(boolset[i], defVal[i]);
             }
         }
 
@@ -91,11 +92,39 @@ namespace CloudStream.Fragments
 
         public static int[] defActions = { -1, -1 };
         static CheckBox msearch, hdasearch, asearch, basearch, savelinks, savetitles, tvasearch, bmsearch, htvasearch, hdbasearch;
+        static string[] pingLinks = { "movies123.pro", "www3.gogoanime.io", "ww1.kuroani.me", "ww.9animes.net", "grabthebeast.com", "zmovies.me", "movies123.pro", "gogoanime.cool" };
+        const int providersCount = 8;
+        static string[] searchTxts = new string[providersCount];
+        static List<CheckBox> seachBoxes = new List<CheckBox>();
+        static bool showSites = false;
+
         static string version = "";
         Java.Lang.Thread sThred;
 
         static string updateTo = "-1";
         public static ax_Settings ax_settings;
+
+        static void Ping(int providerID)
+        {
+            WebClient client = new WebClient();
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+            bool error = false;
+            try {
+                string d = client.DownloadString("https://" + pingLinks[providerID]);
+
+            }
+            catch (Exception) {
+                error = true;
+                seachBoxes[providerID].Text = searchTxts[providerID] + (showSites ? (" (" + pingLinks[providerID] + ")") : "") + " (ERROR)";
+            }
+            if (!error) {
+                long elapsedMilliseconds = sw.ElapsedMilliseconds;
+                seachBoxes[providerID].Text = searchTxts[providerID] + (showSites ? (" (" + pingLinks[providerID] + ")") : "") + " (" + elapsedMilliseconds + "ms)";
+            }
+
+        }
+
 
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
@@ -124,6 +153,37 @@ namespace CloudStream.Fragments
 
             Button updatebtt = view.FindViewById<Button>(Resource.Id.update);
             updatebtt.Visibility = ViewStates.Gone;
+
+
+            // --------- PING DATA ---------
+
+            seachBoxes = new List<CheckBox> { msearch, hdasearch, asearch, basearch, tvasearch, bmsearch, htvasearch, hdbasearch };
+            for (int i = 0; i < seachBoxes.Count; i++) {
+                searchTxts[i] = seachBoxes[i].Text;
+            }
+
+            Button pingBtt = view.FindViewById<Button>(Resource.Id.pingProviders);
+            pingBtt.Click += (o, e) =>
+            {
+                for (int i = 0; i < providersCount; i++) {
+                    DelegateWithParameters_int ping =
+         new DelegateWithParameters_int(Ping);
+
+                    IAsyncResult tag =
+                        ping.BeginInvoke(i, null, null);
+
+                }
+            };
+
+            Button showBtt = view.FindViewById<Button>(Resource.Id.showProviders);
+            showBtt.Click += (o, e) =>
+            {
+                showSites = !showSites;
+                for (int i = 0; i < providersCount; i++) {
+                    seachBoxes[i].Text = searchTxts[i] + (showSites ? (" (" + pingLinks[i] + ")") : "");
+
+                }
+            };
 
             // --------- AUTO UPDATE ---------
 
@@ -171,7 +231,6 @@ namespace CloudStream.Fragments
                             if (tag == "v" + version) {
                                 versionTxt.Text = "v" + version + " (Up to date)";
                                 updatebtt.Visibility = ViewStates.Gone;
-
                             }
                             else {
                                 versionTxt.Text = "v" + version + " -> " + tag + " (" + updText + ")";
@@ -187,7 +246,7 @@ namespace CloudStream.Fragments
                     sThred.Join();
                 }
             });
-            if(searchForUpdates) { 
+            if (searchForUpdates) {
                 sThred.Start();
             }
             //  var sdownloads =  view.FindViewById(Resource.Id.showdownloads);
@@ -206,7 +265,7 @@ namespace CloudStream.Fragments
             basearch.Checked = set.GetBoolean("basearch", false);
             tvasearch.Checked = set.GetBoolean("tvasearch", false);
             bmsearch.Checked = set.GetBoolean("bmsearch", false);
-            htvasearch.Checked = set.GetBoolean("bmsearch", true);
+            htvasearch.Checked = set.GetBoolean("htvasearch", true);
             hdbasearch.Checked = set.GetBoolean("hdbasearch", false);
 
             if (!haveAnimeEnabled) {

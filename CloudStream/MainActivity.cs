@@ -3225,7 +3225,7 @@ namespace CloudStream
                 string d = client.DownloadString(dsite);
                 string lookfor = "               <a href=\"https://gogoanime.cool/anime/";
                 while (d.Contains(lookfor)) {
-
+                    print("---");
                     Movie m = new Movie();
 
 
@@ -3234,24 +3234,32 @@ namespace CloudStream
                     string title = FindHTML(d, url + "\" title=\"", "\"");
                     print("TITLE: " + title);
                     d = RemoveOne(d, url);
+                    print("DAAA");
                     string posterId = FindHTML(d, "data-src=\"", "\"");
                     string latest = FindHTML(d, ">Episode ", "<");
                     string year = "2" + FindHTML(d, "/\">2", "<");
                     string expectedDate = "2" + FindHTML(d, "<span class=\"font-meta\">2", "<");
-                    DateTime date = System.DateTime.Parse(expectedDate);
-                    TimeSpan now = DateTime.Now.Subtract(date);
-                    expectedDate = "Updated " + MathF.Floor(Convert.ToSingle(now.TotalDays)) + "d " + now.Hours + "h " + now.Minutes + "m ago";
+                    try {
+                        DateTime date = System.DateTime.Parse(expectedDate);
+                        TimeSpan now = DateTime.Now.Subtract(date);
+                        expectedDate = "Updated " + MathF.Floor(Convert.ToSingle(now.TotalDays)) + "d " + now.Hours + "h " + now.Minutes + "m ago";
+                    }
+                    catch (System.Exception) {
+                        expectedDate = "UPDATED NOW!";
+                    }
+
                     string score = "Rated " + FindHTML(d, "class=\"score font-meta total_votes\">", "<") + "/5";
                     string allGenres = "";
                     int totalG = 0;
 
-
+                    print("START GE");
                     string genreLook = "<a href=\"https://gogoanime.cool/anime-genre/";
                     bool done = false;
                     while (!done) {
                         if (d.IndexOf("post-content_item mg_status") > d.IndexOf(genreLook)) {
                             string genre = FindHTML(d, genreLook, "/a>");
                             genre = FindHTML(genre, ">", "<");
+                            print("GG: " + genre);
                             if (genre == "") {
                                 done = true;
                             }
@@ -3272,6 +3280,8 @@ namespace CloudStream
                             done = true;
                         }
                     }
+                    print("END GE");
+
 
                     m.genre = allGenres;
                     m.posterID = posterId;
@@ -3287,16 +3297,19 @@ namespace CloudStream
                     movieTitles.Add(m.title);
                     movieProvider.Add(5);
                     fwordLink.Add(url);
-
-
                 }
+
+            }
+            catch (System.Exception) {
+                print("ERRRRRRRRROR");
+            }
+            finally {
+                print("DONE!");
                 linksDone++;
                 // SortMovies();
                 ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
             }
-            catch (System.Exception) {
 
-            }
         }
 
         static string RemoveOne(string d, string rem, int offset = 1)
@@ -3401,6 +3414,10 @@ namespace CloudStream
 
             while (linksDone < tLinks) {
                 Java.Lang.Thread.Sleep(10);
+            }
+
+            for (int i = 0; i < movieTitles.Count; i++) {
+                print(movieTitles[i] + "|" + movieProvider[i]);
             }
 
             SortMovies();

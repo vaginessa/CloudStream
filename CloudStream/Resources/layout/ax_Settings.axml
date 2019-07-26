@@ -96,6 +96,16 @@
                 android:layout_height="wrap_content"
                 android:translationX="20dp"
                 android:id="@+id/basearch" />
+            <Button
+                android:text="Ping All Providers"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:id="@+id/pingProviders" />
+            <Button
+                android:text="Show sites"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:id="@+id/showProviders" />
             <TextView
                 android:translationX="20dp"
                 android:text=""
@@ -103,7 +113,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/versionTxt" />
-             <Button
+            <Button
                 android:text="Update"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
