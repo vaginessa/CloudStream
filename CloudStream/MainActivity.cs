@@ -1906,15 +1906,18 @@ namespace CloudStream
         {
             //Console.Clear();
         }
-        public static void print(string s)
+
+        public static void print(object s)
         {
+#if DEBUG 
             if (clearNext) {
                 clearNext = false;
                 Clear();
             }
             // Console.WriteLine(s);
 
-            System.Diagnostics.Debug.WriteLine(s);
+            System.Diagnostics.Debug.WriteLine(s.ToString());
+#endif
         }
 
         public static void Search(string inp)
@@ -2892,145 +2895,8 @@ namespace CloudStream
             //  }
             progress = 100;
         }
-        static async Task GetLowLink(string serchText)
-        {
-            print("LOW LINK: " + serchText);
-
-            bool mx = debug;
-            string rinput = serchText.ToLower().Replace(" ", "+");
-
-            string f6utl = "https://www6.fmovie.cc/?s=" + rinput;
-            WebClient client = new WebClient();
-            print("AAAAAAAA1");
-            WebRequest request = WebRequest.Create(
-           f6utl);
-            request.Credentials = CredentialCache.DefaultCredentials;
-            WebResponse response = request.GetResponse();
-            using (Stream dataStream = response.GetResponseStream()) {
-                // Open the stream using a StreamReader for easy access.  
-                StreamReader reader = new StreamReader(dataStream);
-                // Read the content.  
-                string responseFromServer = reader.ReadToEnd().ToLower();
-                print("AAAAAAAA2");
-                // Display the content.  
-                if (responseFromServer.Contains(serchText)) {
-                    print("AAAAAAAA3");
-                    print(responseFromServer);
-                    int endID = responseFromServer.IndexOf(">" + serchText + "</a>");
-                    string startFind = "alt=\"" + serchText + "\"><a class=\"titlecover\" style=\"\" href=\"";
-                    int startID = responseFromServer.IndexOf(startFind);
-                    string movieUrl = responseFromServer.Substring(startID + startFind.Length, endID - startID - startFind.Length - 1);
-                    string firstUrl = "https://www6.fmovie.cc/movies/";
-                    string inUrl = movieUrl.Substring(firstUrl.Length, movieUrl.Length - firstUrl.Length - 1);
-                    string rUrl = "https://api.123movie.cc/search.php?ep=" + inUrl + "&server_name=serverf4";
-                    print("AAAAAAAA4");
-                    if (!mx) {
-                        print("Taken from");
-                        print(movieUrl);
-                        print("");
-
-                        print("Servers: ");
-                        print("");
-
-                        string rUrl2 = "https://api.123movie.cc/search.php?ep=" + inUrl + "&server_name=openload";
-
-                        print(rUrl + " (ADS)");
-                        print(rUrl2 + " (ADS)");
-
-                        print("");
-                        print("Raw Server4");
-                        print("");
-
-                    }
-                    string realURLDownload = client.DownloadString(rUrl);
-                    string start = "https://serverf4.org/";
-                    string end = "#poster=&caption=";
-                    int indexStart = realURLDownload.IndexOf(start);
-                    print("AAAAAAAA5");
-                    if (indexStart != -1) {
-                        string raw = realURLDownload.Substring(indexStart, -indexStart + realURLDownload.IndexOf(end));
-                        if (!mx) {
-
-                            print(raw + " (ADS)");
-                        }
-
-                        /*
-                        string _realURLDownload = client.DownloadString(raw);
-                        print(_realURLDownload);
-                        string _start = "https://serverf4.org/";
-                        string _end = "#poster=&caption=";
-                        int _indexStart = realURLDownload.IndexOf(start);
-                        if (_indexStart != -1) {
-                            print(_realURLDownload.Substring(_indexStart, -_indexStart + _realURLDownload.IndexOf(end)));
-                        }*/
 
 
-
-                        var _values = new Dictionary<string, string>
-                                   {
-                                   { "Host", "serverf4.org" },
-                                  // { "Accept-Language", "en-US,en;q=0.5" },
-                                   { "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" },
-                                   { "X-Requested-With", "XMLHttpRequest" },
-                                   { "Referer", raw },
-                                  // { "Content-Length", "17" },
-                                 //  { "Cache-Control", "max-age=0, no-cache" },
-                                  // { "TE", "Trailers" },
-                                   };
-
-                        var _content = new FormUrlEncodedContent(_values);
-
-                        var _response = await _client.PostAsync("https://serverf4.org/api/source/" + raw.Replace("https://serverf4.org/v/", ""), _content);//   "7zo-n7-jm2v", _content);
-
-                        var _responseString = await _response.Content.ReadAsStringAsync();
-
-                        string _all = _responseString.ToString();
-                        print("AAAAAAAA6");
-
-                        int mxStart = _all.IndexOf("\"data\":[{\"file\":") + 17;
-                        int mxEnd = _all.IndexOf("label") - 3;
-                        string mxURL = _all.Substring(mxStart, mxEnd - mxStart).Replace("\\", "/").Replace("//", "/");
-                        string quality = _all.Substring(mxEnd, _all.Length - mxEnd);
-                        int qEnd = quality.IndexOf("p");
-                        string rq = quality.Substring(11, qEnd - 10);
-                        print("AAAAAAAA7");
-
-                        if (!mx) {
-                            print("");
-                            print("MX-URL (" + rq + ")");
-                            print("");
-                        }
-                        print("------------------- " + rq + " -------------------");
-                        print(mxURL);
-                        print("--------------------------------------------");
-                        print("");
-                        if (!activeLinks.Contains(mxURL)) {
-                            activeLinks.Add(mxURL);
-
-                            activeLinksNames.Add("Backup Link (" + rq + ")");
-
-                            movieIsAnime.Add(false);
-                            movieProvider.Add(-1);
-                        }
-                        print("Low Link 3");
-
-                        haveLowLink = true;
-
-                    }
-                    else {
-                        print("Low Link Error 2");
-                        haveLowLink = true;
-                    }
-                }
-                else {
-                    print("Low link error 1");
-                    haveLowLink = true;
-
-                }
-            }
-            print("Low link error 5");
-
-        }
         static string ReadDataMovie(string all, string inp)
         {
             string newS = all.Substring(all.IndexOf(inp) + (inp.Length + 2), all.Length - all.IndexOf(inp) - (inp.Length + 2));
@@ -3060,7 +2926,6 @@ namespace CloudStream
 
                 while (mD.Contains("/movie/") || mD.Contains("/tv-series/")) {
                     /*
-
                     data - filmName = "Iron Man"
                 data - year = "2008"
                 data - imdb = "IMDb: 7.9"
@@ -3450,17 +3315,21 @@ namespace CloudStream
 
 
             rinput = serchText.ToLower().Replace(" ", "+");
-            string fmovesUrl = "https://www7.fmovies.to/search?keyword=" + rinput;
-            string f8url = "http://www8.fmovies.ag/search/" + rinput + ".html";
-            string f6utl = "https://www6.fmovie.cc/?s=" + rinput;
-            string ksiUrl = "https://kissanime.si/Search/?s=" + (rinput.Replace("+", "%"));
-            string k9Url = "https://ww.9animes.net/?s=" + rinput;
-            string k8Url = "http://www8.watchanimeonline.cc/?s=" + rinput;
-            string an9Url = "https://9anime.fun/search?term=" + rinput;
-            string movies123 = "https://movies123.pro/search/" + rinput.Replace("+", " ");
-            string aniM = "https://aniwatcher.com/search?q=" + rinput;
-            string kuroani = "https://ww1.kuroani.me/search?term=" + rinput;
-            string gogoAnime = "https://www3.gogoanime.io//search.html?keyword=" + rinput.Replace("+", "%");
+
+            // ------------ USED SITES ------------
+
+            //string fmovesUrl = "https://www7.fmovies.to/search?keyword=" + rinput;
+            //string f8url = "http://www8.fmovies.ag/search/" + rinput + ".html";
+            //string f6utl = "https://www6.fmovie.cc/?s=" + rinput;
+            //string ksiUrl = "https://kissanime.si/Search/?s=" + (rinput.Replace("+", "%"));
+            //string k9Url = "https://ww.9animes.net/?s=" + rinput;
+            //string k8Url = "http://www8.watchanimeonline.cc/?s=" + rinput;
+            //string an9Url = "https://9anime.fun/search?term=" + rinput;
+            //string movies123 = "https://movies123.pro/search/" + rinput.Replace("+", " ");
+            //string aniM = "https://aniwatcher.com/search?q=" + rinput;
+            //string kuroani = "https://ww1.kuroani.me/search?term=" + rinput;
+            //string gogoAnime = "https://www3.gogoanime.io//search.html?keyword=" + rinput.Replace("+", "%");
+            //string coolGogoAnime = "https://gogoanime.cool/?s=" + rinput + "&post_type=wp-manga&m_orderby";
 
 
 
@@ -3483,10 +3352,12 @@ namespace CloudStream
                 ReadFile(false, serchText);
             }
             */
+
+
             linksDone = 0;
             int tLinks = 0;
             MethodInvoker simpleDelegate;
-            if (ax_Settings.SettingsGetChecked(0) || ax_Settings.SettingsGetChecked(8)) {
+            if (ax_Settings.SettingsGetChecked(0) || ax_Settings.SettingsGetChecked(8)) { // BOTH MOVIES AND TV-SERIS USE THE SAME SITE
                 tLinks++;
                 simpleDelegate = new MethodInvoker(Link1);
                 simpleDelegate.BeginInvoke(null, null);
@@ -3516,7 +3387,7 @@ namespace CloudStream
                 simpleDelegate = new MethodInvoker(Link6);
                 simpleDelegate.BeginInvoke(null, null);
             }
-            if (true) {
+            if (ax_Settings.SettingsGetChecked(9)) {
                 tLinks++;
                 simpleDelegate = new MethodInvoker(Link7);
                 simpleDelegate.BeginInvoke(null, null);
@@ -3534,7 +3405,6 @@ namespace CloudStream
 
             SortMovies();
 
-
             // string d = client.DownloadString("https://ww.9animes.net/Ueno-san-wa-Bukiyou");
             //print(d);
             //if(provider == 1) {
@@ -3544,26 +3414,6 @@ namespace CloudStream
             //ax_Search.ax_search.FinishedSearch();
         }
 
-        public static string ToRoman(int number) // not used
-        {
-            // if ((number < 0) || (number > 3999)) throw new System. .ArgumentOutOfRangeSystem.Exception("insert value betwheen 1 and 3999");
-            if (number < 1) return string.Empty;
-            if (number >= 1000) return "M" + ToRoman(number - 1000);
-            if (number >= 900) return "CM" + ToRoman(number - 900);
-            if (number >= 500) return "D" + ToRoman(number - 500);
-            if (number >= 400) return "CD" + ToRoman(number - 400);
-            if (number >= 100) return "C" + ToRoman(number - 100);
-            if (number >= 90) return "XC" + ToRoman(number - 90);
-            if (number >= 50) return "L" + ToRoman(number - 50);
-            if (number >= 40) return "XL" + ToRoman(number - 40);
-            if (number >= 10) return "X" + ToRoman(number - 10);
-            if (number >= 9) return "IX" + ToRoman(number - 9);
-            if (number >= 5) return "V" + ToRoman(number - 5);
-            if (number >= 4) return "IV" + ToRoman(number - 4);
-            if (number >= 1) return "I" + ToRoman(number - 1);
-            return "";
-            //throw new System.ArgumentOutOfRangeSystem.Exception("something bad happened");
-        }
 
         public static string Find(string all, string first, string end, int offF = 0, int offE = 0)
         {
@@ -3572,8 +3422,6 @@ namespace CloudStream
             //  print(x + "|" + y);
             return all.Substring(x, y - x);
         }
-
-
 
         private static string _WebRequest(string url)
         {
@@ -3599,23 +3447,10 @@ namespace CloudStream
             }
             return "";
         }
+
         readonly static string[] allQualityNames = { "sd", "cam", "720p", "1080p", "360p", "480p", "hd" };
-
-        static string RemoveBloatTitle(string title)
-        {
-            for (int i = 0; i < allProviderNames.Length; i++) {
-                title = title.Replace(" (" + allProviderNames[i] + ")", "");
-            }
-            title = title.Replace("B___", "").Replace(" (Bookmark)", "");
-            title = title.ToLower();
-            for (int i = 0; i < allQualityNames.Length; i++) {
-                title = title.Replace(" (" + allQualityNames[i] + ")", "");
-            }
-
-            return title;
-        }
-
         readonly static string[] allProviderNames = { "HD Movie", "TV-Series", "Movie", "HD Anime", "Anime Backup", "Anime", "TV-Series", "Movie Backup", "HD Tv-Series", "HD Anime Backup" };
+
         static string SortName(int lastP)
         {
             string add = " (";
@@ -3701,6 +3536,7 @@ namespace CloudStream
 
         }
 
+        // ------------ HDTV SERIES ------------
 
         static string __series = "1399";
         static string __season = "1";
@@ -3711,7 +3547,6 @@ namespace CloudStream
         static int __linksDone = 0;
         static int __cThred = 0;
         public static int __selSeason = 0; //0 == all, other = season
-
 
         static int GetTotalEps()
         {
@@ -4088,6 +3923,164 @@ namespace CloudStream
             outScore = score;
             return patternIdx == patternLength;
         }
+
+        //NOT USED
+        static async Task GetLowLink(string serchText)
+        {
+            print("LOW LINK: " + serchText);
+
+            bool mx = debug;
+            string rinput = serchText.ToLower().Replace(" ", "+");
+
+            string f6utl = "https://www6.fmovie.cc/?s=" + rinput;
+            WebClient client = new WebClient();
+            print("AAAAAAAA1");
+            WebRequest request = WebRequest.Create(
+           f6utl);
+            request.Credentials = CredentialCache.DefaultCredentials;
+            WebResponse response = request.GetResponse();
+            using (Stream dataStream = response.GetResponseStream()) {
+                // Open the stream using a StreamReader for easy access.  
+                StreamReader reader = new StreamReader(dataStream);
+                // Read the content.  
+                string responseFromServer = reader.ReadToEnd().ToLower();
+                print("AAAAAAAA2");
+                // Display the content.  
+                if (responseFromServer.Contains(serchText)) {
+                    print("AAAAAAAA3");
+                    print(responseFromServer);
+                    int endID = responseFromServer.IndexOf(">" + serchText + "</a>");
+                    string startFind = "alt=\"" + serchText + "\"><a class=\"titlecover\" style=\"\" href=\"";
+                    int startID = responseFromServer.IndexOf(startFind);
+                    string movieUrl = responseFromServer.Substring(startID + startFind.Length, endID - startID - startFind.Length - 1);
+                    string firstUrl = "https://www6.fmovie.cc/movies/";
+                    string inUrl = movieUrl.Substring(firstUrl.Length, movieUrl.Length - firstUrl.Length - 1);
+                    string rUrl = "https://api.123movie.cc/search.php?ep=" + inUrl + "&server_name=serverf4";
+                    print("AAAAAAAA4");
+                    if (!mx) {
+                        print("Taken from");
+                        print(movieUrl);
+                        print("");
+
+                        print("Servers: ");
+                        print("");
+
+                        string rUrl2 = "https://api.123movie.cc/search.php?ep=" + inUrl + "&server_name=openload";
+
+                        print(rUrl + " (ADS)");
+                        print(rUrl2 + " (ADS)");
+
+                        print("");
+                        print("Raw Server4");
+                        print("");
+
+                    }
+                    string realURLDownload = client.DownloadString(rUrl);
+                    string start = "https://serverf4.org/";
+                    string end = "#poster=&caption=";
+                    int indexStart = realURLDownload.IndexOf(start);
+                    print("AAAAAAAA5");
+                    if (indexStart != -1) {
+                        string raw = realURLDownload.Substring(indexStart, -indexStart + realURLDownload.IndexOf(end));
+                        if (!mx) {
+
+                            print(raw + " (ADS)");
+                        }
+
+                        /*
+                        string _realURLDownload = client.DownloadString(raw);
+                        print(_realURLDownload);
+                        string _start = "https://serverf4.org/";
+                        string _end = "#poster=&caption=";
+                        int _indexStart = realURLDownload.IndexOf(start);
+                        if (_indexStart != -1) {
+                            print(_realURLDownload.Substring(_indexStart, -_indexStart + _realURLDownload.IndexOf(end)));
+                        }*/
+
+
+
+                        var _values = new Dictionary<string, string>
+                                   {
+                                   { "Host", "serverf4.org" },
+                                  // { "Accept-Language", "en-US,en;q=0.5" },
+                                   { "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" },
+                                   { "X-Requested-With", "XMLHttpRequest" },
+                                   { "Referer", raw },
+                                  // { "Content-Length", "17" },
+                                 //  { "Cache-Control", "max-age=0, no-cache" },
+                                  // { "TE", "Trailers" },
+                                   };
+
+                        var _content = new FormUrlEncodedContent(_values);
+
+                        var _response = await _client.PostAsync("https://serverf4.org/api/source/" + raw.Replace("https://serverf4.org/v/", ""), _content);//   "7zo-n7-jm2v", _content);
+
+                        var _responseString = await _response.Content.ReadAsStringAsync();
+
+                        string _all = _responseString.ToString();
+                        print("AAAAAAAA6");
+
+                        int mxStart = _all.IndexOf("\"data\":[{\"file\":") + 17;
+                        int mxEnd = _all.IndexOf("label") - 3;
+                        string mxURL = _all.Substring(mxStart, mxEnd - mxStart).Replace("\\", "/").Replace("//", "/");
+                        string quality = _all.Substring(mxEnd, _all.Length - mxEnd);
+                        int qEnd = quality.IndexOf("p");
+                        string rq = quality.Substring(11, qEnd - 10);
+                        print("AAAAAAAA7");
+
+                        if (!mx) {
+                            print("");
+                            print("MX-URL (" + rq + ")");
+                            print("");
+                        }
+                        print("------------------- " + rq + " -------------------");
+                        print(mxURL);
+                        print("--------------------------------------------");
+                        print("");
+                        if (!activeLinks.Contains(mxURL)) {
+                            activeLinks.Add(mxURL);
+
+                            activeLinksNames.Add("Backup Link (" + rq + ")");
+
+                            movieIsAnime.Add(false);
+                            movieProvider.Add(-1);
+                        }
+                        print("Low Link 3");
+
+                        haveLowLink = true;
+
+                    }
+                    else {
+                        print("Low Link Error 2");
+                        haveLowLink = true;
+                    }
+                }
+                else {
+                    print("Low link error 1");
+                    haveLowLink = true;
+
+                }
+            }
+            print("Low link error 5");
+
+        }
+
+
+        //NOT USED
+        static string RemoveBloatTitle(string title)
+        {
+            for (int i = 0; i < allProviderNames.Length; i++) {
+                title = title.Replace(" (" + allProviderNames[i] + ")", "");
+            }
+            title = title.Replace("B___", "").Replace(" (Bookmark)", "");
+            title = title.ToLower();
+            for (int i = 0; i < allQualityNames.Length; i++) {
+                title = title.Replace(" (" + allQualityNames[i] + ")", "");
+            }
+
+            return title;
+        }
     }
+
 }
 

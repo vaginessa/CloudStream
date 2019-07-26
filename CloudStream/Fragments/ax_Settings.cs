@@ -49,18 +49,18 @@ namespace CloudStream.Fragments
         }
 
         /// <summary>
-        /// 0 = msearch 1 = hdasearch, 2 = asearch, 3 = basearch, 4 = savelinks, 5 = savetitles, 6 = tvasearch, 7 = bmsearch, 8 = htvasearch
+        /// 0 = msearch 1 = hdasearch, 2 = asearch, 3 = basearch, 4 = savelinks, 5 = savetitles, 6 = tvasearch, 7 = bmsearch, 8 = htvasearch, 9 = hdbasearch
         /// </summary>
         /// <returns></returns>
         public static bool SettingsGetChecked(int i)
         {
             try {
-                bool[] bools = { msearch.Checked, hdasearch.Checked, asearch.Checked, basearch.Checked, savelinks.Checked, savetitles.Checked, tvasearch.Checked, bmsearch.Checked, htvasearch.Checked };
+                bool[] bools = { msearch.Checked, hdasearch.Checked, asearch.Checked, basearch.Checked, savelinks.Checked, savetitles.Checked, tvasearch.Checked, bmsearch.Checked, htvasearch.Checked, hdbasearch.Checked };
                 return bools[i];
             }
             catch (Exception) {
                 var set = Application.Context.GetSharedPreferences("Settings", FileCreationMode.Private);
-                bool[] bools = { set.GetBoolean("msearch", true), set.GetBoolean("hdasearch", haveAnimeEnabled), set.GetBoolean("asearch", false), set.GetBoolean("basearch", false), set.GetBoolean("savelinks", true), set.GetBoolean("savetitles", true), set.GetBoolean("tvasearch", true), set.GetBoolean("bmsearch", false), set.GetBoolean("htvasearch", false) };
+                bool[] bools = { set.GetBoolean("msearch", true), set.GetBoolean("hdasearch", haveAnimeEnabled), set.GetBoolean("asearch", false), set.GetBoolean("basearch", false), set.GetBoolean("savelinks", true), set.GetBoolean("savetitles", true), set.GetBoolean("tvasearch", true), set.GetBoolean("bmsearch", false), set.GetBoolean("htvasearch", false),set.GetBoolean("hdbasearch",false) };
                 return bools[i];
             }
         }
@@ -72,7 +72,6 @@ namespace CloudStream.Fragments
         /// <returns></returns>
         public static int SettingsGetDef(int i, bool axLinkSett = false)
         {
-
             int r = defActions[i];
             if (r == -1) {
                 var set = Application.Context.GetSharedPreferences("Settings", FileCreationMode.Private);
@@ -91,7 +90,7 @@ namespace CloudStream.Fragments
         }
 
         public static int[] defActions = { -1, -1 };
-        static CheckBox msearch, hdasearch, asearch, basearch, savelinks, savetitles, tvasearch, bmsearch, htvasearch;
+        static CheckBox msearch, hdasearch, asearch, basearch, savelinks, savetitles, tvasearch, bmsearch, htvasearch, hdbasearch;
         static string version = "";
         Java.Lang.Thread sThred;
 
@@ -106,6 +105,8 @@ namespace CloudStream.Fragments
 
             ax_settings = this;
 
+            // --------- SET VARS ---------
+
             var cbookmarks = view.FindViewById(Resource.Id.clearbookmarks);
             var chistory = view.FindViewById(Resource.Id.clearhistory);
 
@@ -116,6 +117,7 @@ namespace CloudStream.Fragments
             tvasearch = view.FindViewById<CheckBox>(Resource.Id.tvasearch);
             htvasearch = view.FindViewById<CheckBox>(Resource.Id.htvasearch);
             bmsearch = view.FindViewById<CheckBox>(Resource.Id.bmsearch);
+            hdbasearch = view.FindViewById<CheckBox>(Resource.Id.hdbasearch);
 
             savelinks = view.FindViewById<CheckBox>(Resource.Id.savelinks);
             savetitles = view.FindViewById<CheckBox>(Resource.Id.savetitles);
@@ -123,6 +125,7 @@ namespace CloudStream.Fragments
             Button updatebtt = view.FindViewById<Button>(Resource.Id.update);
             updatebtt.Visibility = ViewStates.Gone;
 
+            // --------- AUTO UPDATE ---------
 
             version = Context.PackageManager.GetPackageInfo(Context.PackageName, 0).VersionName;
             TextView versionTxt = view.FindViewById<TextView>(Resource.Id.versionTxt);
@@ -192,6 +195,9 @@ namespace CloudStream.Fragments
             // sdownloads.Click += (o,e) => MainActivity.mainActivity.ShowDownloads();
 
 
+
+            // --------- DEF DATA ---------
+
             var set = Application.Context.GetSharedPreferences("Settings", FileCreationMode.Private);
 
             msearch.Checked = set.GetBoolean("msearch", true);
@@ -201,15 +207,17 @@ namespace CloudStream.Fragments
             tvasearch.Checked = set.GetBoolean("tvasearch", false);
             bmsearch.Checked = set.GetBoolean("bmsearch", false);
             htvasearch.Checked = set.GetBoolean("bmsearch", true);
+            hdbasearch.Checked = set.GetBoolean("hdbasearch", false);
 
             if (!haveAnimeEnabled) {
                 hdasearch.Visibility = ViewStates.Gone;
                 asearch.Visibility = ViewStates.Gone;
                 basearch.Visibility = ViewStates.Gone;
+                hdbasearch.Visibility = ViewStates.Gone;
             }
 
 
-
+            // --------- SAVE DATA ---------
 
             savelinks.Checked = set.GetBoolean("savelinks", true);
             savetitles.Checked = set.GetBoolean("savetitles", true);
@@ -221,10 +229,12 @@ namespace CloudStream.Fragments
             tvasearch.Click += (o, e) => SaveBool("tvasearch", tvasearch.Checked);
             bmsearch.Click += (o, e) => SaveBool("bmsearch", bmsearch.Checked);
             htvasearch.Click += (o, e) => SaveBool("htvasearch", htvasearch.Checked);
+            hdbasearch.Click += (o, e) => SaveBool("hdbasearch", hdbasearch.Checked);
 
             savelinks.Click += (o, e) => SaveBool("savelinks", savelinks.Checked);
             savetitles.Click += (o, e) => SaveBool("savetitles", savetitles.Checked);
 
+            // --------- HISTORY --------- 
 
             chistory.SetBackgroundColor(Color.AliceBlue);
             cbookmarks.SetBackgroundColor(Color.AliceBlue);
@@ -260,6 +270,8 @@ namespace CloudStream.Fragments
 
             };
 
+            // --------- ACTIONS --------- 
+
             var defAct = view.FindViewById<Spinner>(Resource.Id.DefSpinner);
             var secAct = view.FindViewById<Spinner>(Resource.Id.SecSpinner);
 
@@ -276,9 +288,6 @@ namespace CloudStream.Fragments
 
             defAct.ItemSelected += (o, e) => { SaveInt("defAct", e.Position); defActions[0] = e.Position; };
             secAct.ItemSelected += (o, e) => { SaveInt("secAct", e.Position); defActions[1] = e.Position; };
-
-            // fab.Visibility = ViewStates.Gone;
-
 
             return view;
         }

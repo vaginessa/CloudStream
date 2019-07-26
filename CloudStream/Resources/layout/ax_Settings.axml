@@ -76,6 +76,13 @@
                 android:translationX="20dp"
                 android:id="@+id/hdasearch" />
             <CheckBox
+                android:text="HD Backup Anime Search"
+                android:checked="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:id="@+id/hdbasearch" />
+            <CheckBox
                 android:text="Anime Search"
                 android:checked="true"
                 android:layout_width="match_parent"
