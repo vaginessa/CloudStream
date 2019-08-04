@@ -300,7 +300,6 @@ namespace CloudStream
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
-
             RequestPermission(this);
 
             if (useChromeCast) {
@@ -309,6 +308,12 @@ namespace CloudStream
 
             mainActivity = this;
             _mainActivity = this;
+            System.Net.ServicePointManager.SecurityProtocol |=
+    SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+            System.Net.ServicePointManager.SecurityProtocol &= ~SecurityProtocolType.Ssl3;
+
+            print("----------------------- " + ServicePointManager.SecurityProtocol + " ----------------------------" );
+
             // SaveVideoToDisk("https://youtu.be/dQw4w9WgXcQ","mp4NeverGonaGiveYouUp");
 
             //RequestWindowFeature(Android.Views.WindowFeatures.ActionBar);
