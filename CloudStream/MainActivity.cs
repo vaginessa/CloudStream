@@ -39,14 +39,11 @@ using Android;
 using Android.Content.PM;
 using YoutubeExplode;
 using YoutubeExplode.Models.MediaStreams;
-using SharpCaster.Models;
 using System.Collections.ObjectModel;
-using SharpCaster.Services;
-using SharpCaster.Controllers;
-using SharpCaster.Models.MediaStatus;
-using SharpCaster.Extensions;
-using SharpCaster.Models.ChromecastStatus;
 using Jint;
+using GoogleCast;
+using GoogleCast.Models.Media;
+using GoogleCast.Channels;
 
 namespace CloudStream
 {
@@ -55,7 +52,7 @@ namespace CloudStream
     [Activity(Icon = "@drawable/BlueIcon", MainLauncher = true, Theme = "@style/Theme.Design.NoActionBar", ConfigurationChanges = ConfigChanges.KeyboardHidden | ConfigChanges.LayoutDirection | ConfigChanges.Orientation | ConfigChanges.ScreenSize)]
     public class MainActivity : AppCompatActivity
     {
-        public const bool useChromeCast = false;
+        public const bool useChromeCast = true;
 
         public static string searchFor = "";
 
@@ -93,218 +90,100 @@ namespace CloudStream
         }
 
 
-        static View anchor;
+        // --------------------------------------- CHROME CAST ---------------------------------------
 
-        public static List<Chromecast> allChromeCasts = new List<Chromecast>();
-
-        public static void PlayLink(string link)
+        public static async void GetAllChromeDevices()
         {
-            castLink = link;
-            _PlayLink();
-            // MethodInvoker simpleDelegate;
-            // simpleDelegate = new MethodInvoker(_PlayLink);
-            //  simpleDelegate.BeginInvoke(null, null);
-
+            chromeRecivers = await new DeviceLocator().FindReceiversAsync();
         }
 
         public static bool IsConnectedToChromecast()
         {
-            return useChromeCast ? ChromecastService.ChromeCastClient.Connected : false;
+            return isConnectedToChromeCast;
         }
 
-        public static void SetCaster(string cast)
-        {
-            castTo = cast;
-            _SetCaster();
-        }
+        public static IEnumerable<IReceiver> chromeRecivers;
+        public static MediaStatus chromeMedia;
+        public static IMediaChannel chromeChannel;
+        public static Sender chromeSender;
+        public static bool isConnectedToChromeCast;
 
-        static async void _SetCaster()
+        public static List<string> GetChromeDevicesNames()
         {
-            print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADDDDDDDDDDDDDVVVVVVVVVVVVVVVVVVV");
-            bool done = false;
-            // try {
-            ObservableCollection<Chromecast> chromecasts = await ChromecastService.Current.StartLocatingDevices();
-
-            allChromeCasts = new List<Chromecast>();
-            if (chromecasts.Count > 0) {
-                for (int i = 0; i < chromecasts.Count; i++) {
-                    bool passes = true;
-                    for (int f = 0; f < allChromeCasts.Count; f++) {
-                        if (allChromeCasts[f].DeviceUri == chromecasts[i].DeviceUri) {
-                            passes = false;
-                        }
-                    }
-                    if (!allChromeCasts.Contains(chromecasts[i]) && passes) {
-                        allChromeCasts.Add(chromecasts[i]);
-                    }
-                }
+            if(chromeRecivers == null) {
+                return new List<string>();
             }
-
-            for (int i = 0; i < allChromeCasts.Count; i++) {
-                if (allChromeCasts[i].FriendlyName == castTo && !done) {
-                    done = true;
-                    print("_________________ Playing Chromecast ON " + castTo + " __________________________");
-                    if (ChromecastService.Current.ChromeCastClient.Connected) {
-                        //await _controller.StopApplication();
-                        //   da.url = new Uri("https://i.redd.it/c29bxq0xu2431.jpg");
-                        print("DD1");
-                        await ChromecastService.ChromeCastClient.DisconnectChromecast();
-                        print("DD2");
-                        //  await ChromecastService.ChromeCastClient.DisconnectChromecast();
-                        // print("DD3");
-
-
-                    }
-                    else {
-                        print("DD4");
-                    }
-                    print("AA1");
-                    // var devices = await ChromecastService.StartLocatingDevices();
-                    print("AA2");
-                    ChromecastService.ConnectToChromecast(allChromeCasts[i]);
-                    print("AA3");
-
-                    //if (_controller == null) {
-                    //   await Task.Delay(5000);
-
-                    print("AA22");
-
-                    // _controller = await ChromecastService.Current.ChromeCastClient.LaunchSharpCaster();
-                    // }
-                    print("AA33");
-
-
-
-                    /*
-               var track = new Track
-               {
-                   Name = "English Subtitle",
-                   TrackId = 100,
-                   Type = "TEXT",
-                   SubType = "captions",
-                   Language = "en-US",
-                   TrackContentId =
-"https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/tracks/DesigningForGoogleCast-en.vtt"
-               };
-               print("AA3.5");
-             
-               print("AA4");
-               print("AA5");
-
-               */
-                    //  }
-                }
+            List<string> allNames = new List<string>();
+            foreach (IReceiver r in chromeRecivers) {
+                allNames.Add(r.FriendlyName);
             }
-            //catch (System.Exception) {
-
-            //    print("!!!Error!!!");
-            //    ShowSnackBar("Error casting, bad link?",ax_Links.ax_links.View);
-            //}
+            return allNames;
         }
 
-
-        static string castTo;
-        static string castLink;
-
-        static async void _PlayLink(object sender = null, SharpCaster.Models.ChromecastStatus.ChromecastApplication e = null)
+        public static bool HaveChromeDevices()
         {
-            print("AA333");
-            await _controller.LoadMedia(castLink, "video/mp4", null, "BUFFERED");
-            print("AA444");
-            await _controller.Play();
-            print("AA555555");
-
+            if(chromeRecivers == null) { return false; }
+            foreach (IReceiver r in chromeRecivers) {
+                return true;
+            }
+            return false;
+            //IReceiver[] allReceivers = (IReceiver[])chromeRecivers;
+            //return allReceivers.Length > 0;
         }
-        static readonly ChromecastService ChromecastService = ChromecastService.Current;
 
-
-        public static void GetAllChromeDevices()
+        public static async void StopCast()
         {
-            MethodInvoker simpleDelegate;
-
-            simpleDelegate = new MethodInvoker(_GetAllChromeDevices);
-            simpleDelegate.BeginInvoke(null, null);
+            await chromeChannel.StopAsync();
+            chromeSender.Disconnect();
+            Console.WriteLine("STOP CASTING!");
         }
-        static async void _GetAllChromeDevices()
+
+        public static async void CastVideo(string url)
         {
+            chromeMedia = await chromeChannel.LoadAsync(
+                     new MediaInformation() { ContentId = url });
+        }
 
-            ObservableCollection<Chromecast> chromecasts = await ChromecastService.Current.StartLocatingDevices();
+        public static async void ConnectToChromeDevice(string name)
+        {
+            foreach (IReceiver r in chromeRecivers) {
+                if (r.FriendlyName == name) {
+                    chromeSender = new Sender();
 
-            allChromeCasts = new List<Chromecast>();
-            if (chromecasts.Count > 0) {
-                for (int i = 0; i < chromecasts.Count; i++) {
-                    bool passes = true;
-                    for (int f = 0; f < allChromeCasts.Count; f++) {
-                        if (allChromeCasts[f].DeviceUri == chromecasts[i].DeviceUri) {
-                            passes = false;
-                        }
-                    }
-                    if (!allChromeCasts.Contains(chromecasts[i]) && passes) {
-                        allChromeCasts.Add(chromecasts[i]);
-                    }
+                    // Connect to the Chromecast
+                    await chromeSender.ConnectAsync(r);
+                    Console.WriteLine("CONNECTED");
+                    chromeChannel = chromeSender.GetChannel<IMediaChannel>();
+                    await chromeSender.LaunchAsync(chromeChannel);
+                    isConnectedToChromeCast = true;
+
+
+                    return;
                 }
             }
         }
 
-
-        public static bool ChromechastExists()
+        private void ChromeSender_Disconnected(object sender, EventArgs e)
         {
-            if (allChromeCasts == null) return false;
-            print("Chromecasts = " + allChromeCasts.Count);
-
-            return useChromeCast ? allChromeCasts.Count > 0 : false;
+            isConnectedToChromeCast = false;
         }
 
+        // ---------------------------------------------------------------------------------------------
 
-        public static SharpCasterDemoController _controller;
 
-        private async void ChromeCastClient_ApplicationStarted(object sender, SharpCaster.Models.ChromecastStatus.ChromecastApplication e)
-        {
-            print("DA1");
-        }
 
-        private async void ChromeCastClient_ConnectedChanged(object sender, EventArgs e)
-        {
-            print("da2");
 
-            if (_controller == null) {
-                _controller = await ChromecastService.ChromeCastClient.LaunchSharpCaster();
-            }
-            print("AA4");
+        static View anchor;
 
-            /*
-            ChromecastService.ChromeCastClient.RunningApplication.DisplayName = "DA";
-            ChromecastService.ChromeCastClient.RunningApplication.StatusText = "DA2";
-            print("AA4");
-            */
-            // _controller = await ChromecastService.ChromeCastClient.LaunchSharpCaster();
-
-        }
-        void ChromeCastClient_MediaStatusChanged(object sender, MediaStatus s)
-        {
-            print("da6");
-        }
-        void ChromeCastClient_StatusChanged(object sender, ChromecastStatus s)
-        {
-            print("Da5");
-        }
-        async void ChromeCreate()
-        {
-            print("Created");
-            ChromecastService.ChromeCastClient.ConnectedChanged += ChromeCastClient_ConnectedChanged;
-            ChromecastService.ChromeCastClient.ApplicationStarted += ChromeCastClient_ApplicationStarted;
-            ChromecastService.ChromeCastClient.ChromecastStatusChanged += ChromeCastClient_StatusChanged;
-            ChromecastService.ChromeCastClient.MediaStatusChanged += ChromeCastClient_MediaStatusChanged;
-            //ChromecastService.ChromeCastClient.ApplicationStarted += _PlayLink;
-
-        }
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
             RequestPermission(this);
 
             if (useChromeCast) {
-                ChromeCreate();
+              
+                chromeSender = new Sender();
+                chromeSender.Disconnected += ChromeSender_Disconnected;
             }
 
             mainActivity = this;
@@ -374,6 +253,9 @@ namespace CloudStream
                                     .Show();
                         };*/
         }
+
+
+
         public static int CalculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight)
         {
             // Raw height and width of image
@@ -671,7 +553,7 @@ namespace CloudStream
                     allRez.Add("#EXTINF:" + i + "," + activeLinksNames[i] + "\n" + activeLinks[i] + "\n");
                 }
             }
-            if(allRez.Count == 0) {
+            if (allRez.Count == 0) {
                 return "error";
             }
             if (reverse) {
@@ -687,7 +569,7 @@ namespace CloudStream
         public static string GenerateM3UFileFromLoadedLinks(string name = null, bool justHeaderFileName = false, List<int> flinks = null, bool reverse = false)
         {
             string writeData = GetM3UFileFromLoadedLinks(flinks, reverse);
-            if(writeData == "error") {
+            if (writeData == "error") {
                 return "error";
             }
             if (name == null) {

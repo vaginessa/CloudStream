@@ -767,10 +767,10 @@ namespace CloudStream.Fragments
                 clip.PrimaryClip = ClipData.NewPlainText("Link", activeLinks[flink[pos]]);
                 ShowSnackBar("Copied " + activeLinksNames[flink[pos]] + " Link To Clipboard!", ax_links.View);
             }
-            else if (id == 6) {
+            else if (id == 6) { // CHOMECAST
                 //string link = activeLinks[flink[pos]];
-
-                PlayLink(link);
+                CastVideo(link);
+               // PlayLink(link);
 
             }
             else if (id == 7) {

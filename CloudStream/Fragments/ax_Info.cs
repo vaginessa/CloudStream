@@ -148,18 +148,21 @@ namespace CloudStream.Fragments
             m_dec = view.FindViewById<TextView>(Resource.Id.movieInfo);
             UpdateData();
 
-              ImageButton castBtt = view.FindViewById<ImageButton>(Resource.Id.imageButton1);
-            castBtt.Visibility = ChromechastExists() ? ViewStates.Visible : ViewStates.Invisible;
-            if (!ChromechastExists()) {
+
+            GetAllChromeDevices();
+
+            ImageButton castBtt = view.FindViewById<ImageButton>(Resource.Id.imageButton1);
+            castBtt.Visibility = HaveChromeDevices() ? ViewStates.Visible : ViewStates.Invisible;
+            if (!HaveChromeDevices()) {
                 m_title.TranslationX /= 4;
             }
             castBtt.Click += (o, e) =>
             {
                 PopupMenu menu = new PopupMenu(ax_Info.ax_info.Context, view);
                 menu.MenuInflater.Inflate(Resource.Menu.menu1, menu.Menu);
-
+                var allChromeCasts = GetChromeDevicesNames();
                 for (int i = 0; i < allChromeCasts.Count; i++) {
-                    menu.Menu.Add(allChromeCasts[i].FriendlyName);
+                    menu.Menu.Add(allChromeCasts[i]);
                 }
 
                 menu.MenuItemClick += (s, arg) =>
@@ -167,7 +170,7 @@ namespace CloudStream.Fragments
                     // Toast.MakeText(mainActivity, string.Format("Menu {0} clicked", arg.Item.TitleFormatted), ToastLength.Short).Show();
                     print("DA: " + arg.Item.TitleFormatted);
                     print("Pressed cast:");
-                    SetCaster(arg.Item.TitleFormatted.ToString());
+                    ConnectToChromeDevice(arg.Item.TitleFormatted.ToString());
                 };
 
                 menu.DismissEvent += (s, arg) =>
