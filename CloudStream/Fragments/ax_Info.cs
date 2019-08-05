@@ -126,6 +126,7 @@ namespace CloudStream.Fragments
             m_dec.Text = add;
         }
         TextView m_dec;
+        public ImageButton castBtt;
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
             // Use this to return your custom view for this Fragment
@@ -150,12 +151,14 @@ namespace CloudStream.Fragments
 
 
             GetAllChromeDevices();
-
-            ImageButton castBtt = view.FindViewById<ImageButton>(Resource.Id.imageButton1);
+            print("CAST 2");
+            castBtt = view.FindViewById<ImageButton>(Resource.Id.imageButton1);
             castBtt.Visibility = HaveChromeDevices() ? ViewStates.Visible : ViewStates.Invisible;
+
             if (!HaveChromeDevices()) {
                 m_title.TranslationX /= 4;
             }
+
             castBtt.Click += (o, e) =>
             {
                 PopupMenu menu = new PopupMenu(ax_Info.ax_info.Context, view);
@@ -164,13 +167,16 @@ namespace CloudStream.Fragments
                 for (int i = 0; i < allChromeCasts.Count; i++) {
                     menu.Menu.Add(allChromeCasts[i]);
                 }
+                if(isConnectedToChromeCast) { 
+                    menu.Menu.Add("Disconnect");
+                }
 
                 menu.MenuItemClick += (s, arg) =>
                 {
                     // Toast.MakeText(mainActivity, string.Format("Menu {0} clicked", arg.Item.TitleFormatted), ToastLength.Short).Show();
                     print("DA: " + arg.Item.TitleFormatted);
                     print("Pressed cast:");
-                    ConnectToChromeDevice(arg.Item.TitleFormatted.ToString());
+                    mainActivity.ConnectToChromeDevice(arg.Item.TitleFormatted.ToString());
                 };
 
                 menu.DismissEvent += (s, arg) =>

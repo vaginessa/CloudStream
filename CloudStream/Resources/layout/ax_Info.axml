@@ -6,11 +6,11 @@
     android:layout_height="match_parent">
 
     <ImageButton
-        android:background="@drawable/cast"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:translationX="25dp"
-        android:translationY="15dp"
+        android:background="@drawable/ic_media_route_connected_dark_00_mtrl"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:translationX="17dp"
+        android:translationY="17.5dp"
         android:id="@+id/imageButton1" />
     <TextView
         android:translationY="-14dp"

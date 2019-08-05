@@ -95,6 +95,7 @@ namespace CloudStream
         public static async void GetAllChromeDevices()
         {
             chromeRecivers = await new DeviceLocator().FindReceiversAsync();
+            print(" CAST : 1");
         }
 
         public static bool IsConnectedToChromecast()
@@ -110,7 +111,7 @@ namespace CloudStream
 
         public static List<string> GetChromeDevicesNames()
         {
-            if(chromeRecivers == null) {
+            if (chromeRecivers == null) {
                 return new List<string>();
             }
             List<string> allNames = new List<string>();
@@ -122,7 +123,7 @@ namespace CloudStream
 
         public static bool HaveChromeDevices()
         {
-            if(chromeRecivers == null) { return false; }
+            if (chromeRecivers == null) { return false; }
             foreach (IReceiver r in chromeRecivers) {
                 return true;
             }
@@ -131,21 +132,164 @@ namespace CloudStream
             //return allReceivers.Length > 0;
         }
 
-        public static async void StopCast()
+
+        static int GetChromeCastImage(int id)
         {
-            await chromeChannel.StopAsync();
-            chromeSender.Disconnect();
+            // ALL CHROMECAST IMAGES FOR ANIMATION
+            switch (id) {
+                case 0:
+                    return Resource.Drawable.ic_media_route_connected_dark_00_mtrl;
+                case 1:
+                    return Resource.Drawable.ic_media_route_connected_dark_01_mtrl;
+                case 2:
+                    return Resource.Drawable.ic_media_route_connected_dark_02_mtrl;
+                case 3:
+                    return Resource.Drawable.ic_media_route_connected_dark_03_mtrl;
+                case 4:
+                    return Resource.Drawable.ic_media_route_connected_dark_04_mtrl;
+                case 5:
+                    return Resource.Drawable.ic_media_route_connected_dark_05_mtrl;
+                case 6:
+                    return Resource.Drawable.ic_media_route_connected_dark_06_mtrl;
+                case 7:
+                    return Resource.Drawable.ic_media_route_connected_dark_07_mtrl;
+                case 8:
+                    return Resource.Drawable.ic_media_route_connected_dark_08_mtrl;
+                case 9:
+                    return Resource.Drawable.ic_media_route_connected_dark_09_mtrl;
+                case 10:
+                    return Resource.Drawable.ic_media_route_connected_dark_10_mtrl;
+                case 11:
+                    return Resource.Drawable.ic_media_route_connected_dark_11_mtrl;
+                case 12:
+                    return Resource.Drawable.ic_media_route_connected_dark_12_mtrl;
+                case 13:
+                    return Resource.Drawable.ic_media_route_connected_dark_13_mtrl;
+                case 14:
+                    return Resource.Drawable.ic_media_route_connected_dark_14_mtrl;
+                case 15:
+                    return Resource.Drawable.ic_media_route_connected_dark_15_mtrl;
+                case 16:
+                    return Resource.Drawable.ic_media_route_connected_dark_16_mtrl;
+                case 17:
+                    return Resource.Drawable.ic_media_route_connected_dark_17_mtrl;
+                case 18:
+                    return Resource.Drawable.ic_media_route_connected_dark_18_mtrl;
+                case 19:
+                    return Resource.Drawable.ic_media_route_connected_dark_19_mtrl;
+                case 20:
+                    return Resource.Drawable.ic_media_route_connected_dark_20_mtrl;
+                case 21:
+                    return Resource.Drawable.ic_media_route_connected_dark_21_mtrl;
+                case 22:
+                    return Resource.Drawable.ic_media_route_connected_dark_22_mtrl;
+                case 23:
+                    return Resource.Drawable.ic_media_route_connected_dark_23_mtrl;
+                case 24:
+                    return Resource.Drawable.ic_media_route_connected_dark_24_mtrl;
+                case 25:
+                    return Resource.Drawable.ic_media_route_connected_dark_25_mtrl;
+                case 26:
+                    return Resource.Drawable.ic_media_route_connected_dark_26_mtrl;
+                case 27:
+                    return Resource.Drawable.ic_media_route_connected_dark_27_mtrl;
+                case 28:
+                    return Resource.Drawable.ic_media_route_connected_dark_28_mtrl;
+                case 29:
+                    return Resource.Drawable.ic_media_route_connected_dark_29_mtrl;
+                case 30:
+                    return Resource.Drawable.ic_media_route_connected_dark_30_mtrl;
+
+                default:
+                    return Resource.Drawable.ic_media_route_connected_dark_00_mtrl;
+
+            }
+        }
+
+        static int castAnimation = 0;
+
+        void ChromeOnConnect()
+        {
+            for (int i = 0; i <= 30; i++) {
+                Java.Lang.Thread.Sleep(20);
+                castAnimation = i;
+                Runnable m = new Runnable(SetCastAinmation);
+                RunOnUiThread(m);
+            }
+        }
+
+        void SetCastAinmation()
+        {
+            try {
+
+                ax_Info.ax_info.castBtt.SetBackgroundResource(GetChromeCastImage(castAnimation));
+            }
+            catch (System.Exception) {
+
+            }
+
+        }
+
+
+        void ChromeOnDisconnect()
+        {
+            for (int i = 0; i <= 30; i++) {
+                Java.Lang.Thread.Sleep(20);
+                castAnimation = (30 - i);
+                Runnable m = new Runnable(SetCastAinmation);
+                RunOnUiThread(m);
+            }
+        }
+
+        public async void StopCast()
+        {
+            try {
+                await chromeChannel.StopAsync();
+
+            }
+            catch (System.Exception) {
+
+            }
+            try {
+                chromeSender.Disconnect();
+
+            }
+            catch (System.Exception) {
+
+            }
             Console.WriteLine("STOP CASTING!");
+            isConnectedToChromeCast = false;
+            chromeStart.Visibility = ViewStates.Gone;
+            chromeThread = new Java.Lang.Thread(() =>
+            {
+                try {
+
+                    ChromeOnDisconnect();
+                }
+                finally {
+                    chromeThread.Join();
+                }
+
+            });
+            chromeThread.Start();
         }
 
         public static async void CastVideo(string url)
         {
+           // chromeStart.Visibility = ViewStates.Visible;
+
             chromeMedia = await chromeChannel.LoadAsync(
                      new MediaInformation() { ContentId = url });
         }
+        Java.Lang.Thread chromeThread;
 
-        public static async void ConnectToChromeDevice(string name)
+        public async void ConnectToChromeDevice(string name)
         {
+            if (name == "Disconnect") {
+                StopCast();
+                return;
+            }
+
             foreach (IReceiver r in chromeRecivers) {
                 if (r.FriendlyName == name) {
                     chromeSender = new Sender();
@@ -156,7 +300,17 @@ namespace CloudStream
                     chromeChannel = chromeSender.GetChannel<IMediaChannel>();
                     await chromeSender.LaunchAsync(chromeChannel);
                     isConnectedToChromeCast = true;
+                    chromeThread = new Java.Lang.Thread(() =>
+                    {
+                        try {
+                            ChromeOnConnect();
+                        }
+                        finally {
+                            chromeThread.Join();
+                        }
 
+                    });
+                    chromeThread.Start();
 
                     return;
                 }
@@ -166,7 +320,10 @@ namespace CloudStream
         private void ChromeSender_Disconnected(object sender, EventArgs e)
         {
             isConnectedToChromeCast = false;
+            chromeStart.Visibility = ViewStates.Gone;
         }
+
+        static FloatingActionButton chromeStart;
 
         // ---------------------------------------------------------------------------------------------
 
@@ -180,10 +337,12 @@ namespace CloudStream
             base.OnCreate(bundle);
             RequestPermission(this);
 
+            print("START PROGRAM");
             if (useChromeCast) {
-              
+
                 chromeSender = new Sender();
                 chromeSender.Disconnected += ChromeSender_Disconnected;
+                GetAllChromeDevices();
             }
 
             mainActivity = this;
@@ -220,12 +379,11 @@ namespace CloudStream
 
             mDrawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout);
             mDrawerLayout.SetWillNotDraw(false); //.Visibility = ViewStates.Gone;
-                                                 //NavigationView navigationView = FindViewById<NavigationView>(Resource.Id.nav_view);
-                                                 //  navigationView.Visibility = ViewStates.Gone;
-                                                 // if (navigationView != null)
-                                                 //  {
-                                                 //      SetUpDrawerContent(navigationView);
-                                                 //  }
+
+            // if (navigationView != null)
+            //  {
+            //      SetUpDrawerContent(navigationView);
+            //  }
 
             TabLayout tabs = FindViewById<TabLayout>(Resource.Id.tabs);
 
@@ -235,9 +393,19 @@ namespace CloudStream
 
             tabs.SetupWithViewPager(viewPager);
 
-            FloatingActionButton fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
+            //FloatingActionButton fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
+            chromeStart = FindViewById<FloatingActionButton>(Resource.Id.fab);
+            // chromeStart.Visibility = isConnectedToChromeCast ? ViewStates.Visible : ViewStates.Gone;
+            chromeStart.SetImageResource(Resource.Drawable.ic_media_route_connected_dark_30_mtrl);
+            chromeStart.Click += (o, e) =>
+            {
+                anchor = o as View;
+                Intent intent = new Intent(chromeStart.Context, typeof(ChromeCastActivity));
+                StartActivity(intent);
+            };
+
             //fab.SetImageResource( Resource.Drawable.settings_white_192x192);
-            fab.Visibility = ViewStates.Gone;
+            // fab.Visibility = ViewStates.Gone;
             /*            
                         fab.Click += (o, e) =>
                         {
@@ -1903,7 +2071,9 @@ namespace CloudStream
 
         public static void Search(string inp)
         {
-
+            if (useChromeCast) {
+                GetAllChromeDevices();
+            }
             movieTitles = new List<string>();
             fwordLink = new List<string>();
             activeLinks = new List<string>();
