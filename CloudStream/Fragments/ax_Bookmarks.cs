@@ -133,7 +133,7 @@ namespace CloudStream.Fragments
                 print(wlink.Count.ToString());
                 print(position.ToString());
 
-                moveSelectedID = wlink[position];
+                movieSelectedID = wlink[position];
                 Context context = _view.Context;
                 Intent intent = new Intent(context, typeof(SearchResultsActivity));
                 // intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, values[position]);

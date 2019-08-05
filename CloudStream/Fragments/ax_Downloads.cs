@@ -171,7 +171,7 @@ namespace CloudStream.Fragments
 
             void MAdapter_ItemLongClick(object sender, int e)
             {
-                HistoryPressTitle(movieTitles[moveSelectedID] + "|" + activeLinksNames[e], true);
+                HistoryPressTitle(movieTitles[movieSelectedID] + "|" + activeLinksNames[e], true);
                 //UpdateList();
             }
             // System.Diagnostics.Debug.WriteLine("QQQ:" + movieTitles.Count.ToString());

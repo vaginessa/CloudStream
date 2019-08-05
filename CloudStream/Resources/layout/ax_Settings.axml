@@ -175,6 +175,14 @@
                 android:layout_height="wrap_content"
                 android:translationX="20dp"
                 android:id="@+id/savelinks" />
+             <CheckBox
+                android:text="Show Playlist Button"
+                android:checked="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:translationX="20dp"
+                android:visibility="gone"
+                android:id="@+id/savem3u" />
             <TextView
                 android:text="Clear History"
                 android:textAppearance="?android:attr/textAppearanceSmall"
@@ -182,10 +190,6 @@
                 android:layout_height="wrap_content"
                 android:translationX="20dp"
                 android:id="@+id/textView2" />
-
-
-
-
             <Button
                 android:text="Clear History"
                 android:layout_width="match_parent"

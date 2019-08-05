@@ -4,22 +4,52 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="1dp">
-    
 
 
+    <Button
+        android:text="Generate m3u File"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:id="@+id/generatem3u" />
+    <Button
+        android:text="Copy m3u File"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/generatem3u"
+        android:visibility="gone"
+        android:id="@+id/copym3u" />
     <ProgressBar
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/checkBox1"
         android:translationY="7.5dp"
-        android:layout_marginEnd="7.5dp"
+        android:layout_marginEnd="40.5dp"
+        android:layout_below="@+id/copym3u"
         android:id="@+id/progressBarLinks" />
     <CheckBox
         android:text=""
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/copym3u"
         android:id="@+id/checkBox1" />
+    <ImageButton
+        android:visibility="invisible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/progressBarLinks"
+        android:rotation="0"
+        android:id="@+id/none" />
+    <ImageButton
+        android:background="@drawable/PlayList"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:translationY="4dp"
+        android:translationX="-5dp"
+        android:layout_toLeftOf="@+id/none"
+        android:rotation="0"
+        android:id="@+id/playList" />
 
     <android.support.v7.widget.RecyclerView
         android:layout_width="fill_parent"
@@ -27,6 +57,7 @@
         android:scrollbars="vertical"
         android:layout_below="@+id/checkBox1"
         android:id="@+id/recyclerView_links" />
+
 
 
     <!--

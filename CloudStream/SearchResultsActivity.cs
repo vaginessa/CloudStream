@@ -33,7 +33,7 @@ namespace CloudStream
         {
             bool get = (over == 1);
             if (over == -1) {
-                get = GetIfBookmarked(moveSelectedID);
+                get = GetIfBookmarked(movieSelectedID);
             }
             fab.SetImageResource((get ? Resource.Drawable.abc_btn_rating_star_on_mtrl_alpha : Resource.Drawable.abc_btn_rating_star_off_mtrl_alpha));
 
@@ -42,7 +42,7 @@ namespace CloudStream
         {
             if (ax_Settings.SettingsGetChecked(5)) {
                 try {
-                    HistoryPressTitle(movieTitles[moveSelectedID]);
+                    HistoryPressTitle(movieTitles[movieSelectedID]);
 
                 }
                 catch (Exception) {
@@ -82,16 +82,16 @@ namespace CloudStream
             fab.Click += (o, e) =>
             {
                 View anchor = o as View;
-                bool savedIn = GetIfBookmarked(moveSelectedID);
+                bool savedIn = GetIfBookmarked(movieSelectedID);
                 if (!savedIn) {
-                    AddBookMark(moveSelectedID);
+                    AddBookMark(movieSelectedID);
                 }
                 else {
 
-                    if (movieTitles[moveSelectedID].Contains("B___")) {
+                    if (movieTitles[movieSelectedID].Contains("B___")) {
                         Finish();
                     }
-                    RemoveBookMark(moveSelectedID);
+                    RemoveBookMark(movieSelectedID);
                 }
                 CheckBookmark((savedIn ? 0 : 1));
                 Snackbar.Make(anchor, (savedIn ? "Removed From Bookmarks" : "Saved In Bookmarks"), Snackbar.LengthLong).Show();
@@ -100,10 +100,10 @@ namespace CloudStream
                         .SetAction("Undo", v =>
                         {
                             if (savedIn) {
-                                AddBookMark(moveSelectedID);
+                                AddBookMark(movieSelectedID);
                             }
                             else {
-                                RemoveBookMark(moveSelectedID);
+                                RemoveBookMark(movieSelectedID);
                             }
                             //Do something here
                             //Intent intent = new Intent(fab.Context, typeof(SearchResultsActivity));
@@ -150,7 +150,7 @@ namespace CloudStream
 
             veiws = 0;
             adapter.AddFragment(new ax_Info(), "Info");
-            if (movieProvider[moveSelectedID] == 3) {
+            if (movieProvider[movieSelectedID] == 3) {
                 if (!done) {
                     adapter.AddFragment(new ax_Links(), "Links");
                 }
@@ -165,12 +165,12 @@ namespace CloudStream
             else {
 
 
-                if (movieProvider[moveSelectedID] == 0) {
+                if (movieProvider[movieSelectedID] == 0) {
                     adapter.AddFragment(new ax_Links(), "Dub");
                     adapter.AddFragment(new ax_Links(), "Sub");
                 }
                 else {
-                    if (movieProvider[moveSelectedID] == 4) {
+                    if (movieProvider[movieSelectedID] == 4) {
                         adapter.AddFragment(new ax_Links(), "Episodes");
                         adapter.AddFragment(new ax_Links(), "Links");
                     }

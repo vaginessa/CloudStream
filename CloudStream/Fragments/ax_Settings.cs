@@ -41,7 +41,7 @@ namespace CloudStream.Fragments
 
         void SaveInt(string inp, int saveState)
         {
-            print("________________ SaveInt" + inp + "|" + saveState + "___________");
+           // print("________________ SaveInt" + inp + "|" + saveState + "___________");
             var _set = Application.Context.GetSharedPreferences("Settings", FileCreationMode.Private);
             var edit = _set.Edit();
             edit.PutInt(inp, saveState);
@@ -49,19 +49,19 @@ namespace CloudStream.Fragments
         }
 
         /// <summary>
-        /// 0 = msearch 1 = hdasearch, 2 = asearch, 3 = basearch, 4 = savelinks, 5 = savetitles, 6 = tvasearch, 7 = bmsearch, 8 = htvasearch, 9 = hdbasearch
+        /// 0 = msearch 1 = hdasearch, 2 = asearch, 3 = basearch, 4 = savelinks, 5 = savetitles, 6 = tvasearch, 7 = bmsearch, 8 = htvasearch, 9 = hdbasearch, 10 = savem3u
         /// </summary>
         /// <returns></returns>
         public static bool SettingsGetChecked(int i)
         {
             try {
-                bool[] bools = { msearch.Checked, hdasearch.Checked, asearch.Checked, basearch.Checked, savelinks.Checked, savetitles.Checked, tvasearch.Checked, bmsearch.Checked, htvasearch.Checked, hdbasearch.Checked };
+                bool[] bools = { msearch.Checked, hdasearch.Checked, asearch.Checked, basearch.Checked, savelinks.Checked, savetitles.Checked, tvasearch.Checked, bmsearch.Checked, htvasearch.Checked, hdbasearch.Checked, savem3u.Checked };
                 return bools[i];
             }
             catch (Exception) {
                 var set = Application.Context.GetSharedPreferences("Settings", FileCreationMode.Private);
-                string[] boolset = { "msearch", "hdasearch", "asearch", "basearch", "savelinks", "savetitles", "tvasearch", "bmsearch", "htvasearch", "hdbasearch" };
-                bool[] defVal = { true, haveAnimeEnabled, false, false, true, true, false, false, true, false };
+                string[] boolset = { "msearch", "hdasearch", "asearch", "basearch", "savelinks", "savetitles", "tvasearch", "bmsearch", "htvasearch", "hdbasearch", "savem3u" };
+                bool[] defVal = { true, haveAnimeEnabled, false, false, true, true, false, false, true, false, false };
                 return set.GetBoolean(boolset[i], defVal[i]);
             }
         }
@@ -91,7 +91,7 @@ namespace CloudStream.Fragments
         }
 
         public static int[] defActions = { -1, -1 };
-        static CheckBox msearch, hdasearch, asearch, basearch, savelinks, savetitles, tvasearch, bmsearch, htvasearch, hdbasearch;
+        static CheckBox msearch, hdasearch, asearch, basearch, savelinks, savetitles, tvasearch, bmsearch, htvasearch, hdbasearch, savem3u;
         static string[] pingLinks = { "movies123.pro", "www3.gogoanime.io", "ww1.kuroani.me", "ww.9animes.net", "grabthebeast.com", "zmovies.me", "movies123.pro", "gogoanime.cool" };
         const int providersCount = 8;
         static string[] searchTxts = new string[providersCount];
@@ -150,6 +150,7 @@ namespace CloudStream.Fragments
 
             savelinks = view.FindViewById<CheckBox>(Resource.Id.savelinks);
             savetitles = view.FindViewById<CheckBox>(Resource.Id.savetitles);
+            savem3u = view.FindViewById<CheckBox>(Resource.Id.savem3u);
 
             Button updatebtt = view.FindViewById<Button>(Resource.Id.update);
             updatebtt.Visibility = ViewStates.Gone;
@@ -267,6 +268,7 @@ namespace CloudStream.Fragments
             bmsearch.Checked = set.GetBoolean("bmsearch", false);
             htvasearch.Checked = set.GetBoolean("htvasearch", true);
             hdbasearch.Checked = set.GetBoolean("hdbasearch", false);
+            savem3u.Checked = set.GetBoolean("savem3u", false);
 
             if (!haveAnimeEnabled) {
                 hdasearch.Visibility = ViewStates.Gone;
@@ -292,6 +294,7 @@ namespace CloudStream.Fragments
 
             savelinks.Click += (o, e) => SaveBool("savelinks", savelinks.Checked);
             savetitles.Click += (o, e) => SaveBool("savetitles", savetitles.Checked);
+            savem3u.Click += (o, e) => SaveBool("savem3u", savem3u.Checked); // M3U FILE
 
             // --------- HISTORY --------- 
 

@@ -1926,23 +1926,26 @@ namespace CloudStream
 			// aapt resource value: 0x7f020054
 			public const int ic_menu = 2130837588;
 			
-			// aapt resource value: 0x7f02005a
-			public const int notification_template_icon_bg = 2130837594;
+			// aapt resource value: 0x7f02005b
+			public const int notification_template_icon_bg = 2130837595;
 			
 			// aapt resource value: 0x7f020055
-			public const int reload = 2130837589;
+			public const int PlayList = 2130837589;
 			
 			// aapt resource value: 0x7f020056
-			public const int settings_white_192x192 = 2130837590;
+			public const int reload = 2130837590;
 			
 			// aapt resource value: 0x7f020057
-			public const int track_right = 2130837591;
+			public const int settings_white_192x192 = 2130837591;
 			
 			// aapt resource value: 0x7f020058
-			public const int warrow = 2130837592;
+			public const int track_right = 2130837592;
 			
 			// aapt resource value: 0x7f020059
-			public const int warrow2 = 2130837593;
+			public const int warrow = 2130837593;
+			
+			// aapt resource value: 0x7f02005a
+			public const int warrow2 = 2130837594;
 			
 			static Drawable()
 			{
@@ -1960,17 +1963,17 @@ namespace CloudStream
 			// aapt resource value: 0x7f06007a
 			public const int Buttons = 2131099770;
 			
-			// aapt resource value: 0x7f060090
-			public const int DefSpinner = 2131099792;
+			// aapt resource value: 0x7f060093
+			public const int DefSpinner = 2131099795;
 			
-			// aapt resource value: 0x7f060092
-			public const int SecSpinner = 2131099794;
+			// aapt resource value: 0x7f060095
+			public const int SecSpinner = 2131099797;
 			
 			// aapt resource value: 0x7f06006f
 			public const int _drawer_layout = 2131099759;
 			
-			// aapt resource value: 0x7f0600a9
-			public const int action0 = 2131099817;
+			// aapt resource value: 0x7f0600ad
+			public const int action0 = 2131099821;
 			
 			// aapt resource value: 0x7f06005a
 			public const int action_bar = 2131099738;
@@ -1996,8 +1999,8 @@ namespace CloudStream
 			// aapt resource value: 0x7f06005b
 			public const int action_context_bar = 2131099739;
 			
-			// aapt resource value: 0x7f0600ad
-			public const int action_divider = 2131099821;
+			// aapt resource value: 0x7f0600b1
+			public const int action_divider = 2131099825;
 			
 			// aapt resource value: 0x7f060003
 			public const int action_menu_divider = 2131099651;
@@ -2014,8 +2017,8 @@ namespace CloudStream
 			// aapt resource value: 0x7f06003c
 			public const int action_mode_close_button = 2131099708;
 			
-			// aapt resource value: 0x7f0600bc
-			public const int action_settings = 2131099836;
+			// aapt resource value: 0x7f0600c0
+			public const int action_settings = 2131099840;
 			
 			// aapt resource value: 0x7f06003d
 			public const int activity_chooser_view_content = 2131099709;
@@ -2026,20 +2029,20 @@ namespace CloudStream
 			// aapt resource value: 0x7f06001e
 			public const int always = 2131099678;
 			
-			// aapt resource value: 0x7f0600a1
-			public const int appbar = 2131099809;
+			// aapt resource value: 0x7f0600a5
+			public const int appbar = 2131099813;
 			
-			// aapt resource value: 0x7f060089
-			public const int asearch = 2131099785;
+			// aapt resource value: 0x7f06008c
+			public const int asearch = 2131099788;
 			
-			// aapt resource value: 0x7f06008a
-			public const int basearch = 2131099786;
+			// aapt resource value: 0x7f06008d
+			public const int basearch = 2131099789;
 			
 			// aapt resource value: 0x7f06001b
 			public const int beginning = 2131099675;
 			
-			// aapt resource value: 0x7f060084
-			public const int bmsearch = 2131099780;
+			// aapt resource value: 0x7f060087
+			public const int bmsearch = 2131099783;
 			
 			// aapt resource value: 0x7f06002a
 			public const int bottom = 2131099690;
@@ -2050,8 +2053,8 @@ namespace CloudStream
 			// aapt resource value: 0x7f060044
 			public const int buttonPanel = 2131099716;
 			
-			// aapt resource value: 0x7f0600aa
-			public const int cancel_action = 2131099818;
+			// aapt resource value: 0x7f0600ae
+			public const int cancel_action = 2131099822;
 			
 			// aapt resource value: 0x7f06002b
 			public const int center = 2131099691;
@@ -2062,20 +2065,20 @@ namespace CloudStream
 			// aapt resource value: 0x7f06002d
 			public const int center_vertical = 2131099693;
 			
-			// aapt resource value: 0x7f06007b
-			public const int checkBox1 = 2131099771;
+			// aapt resource value: 0x7f06007d
+			public const int checkBox1 = 2131099773;
 			
 			// aapt resource value: 0x7f060052
 			public const int checkbox = 2131099730;
 			
-			// aapt resource value: 0x7f0600b0
-			public const int chronometer = 2131099824;
+			// aapt resource value: 0x7f0600b4
+			public const int chronometer = 2131099828;
 			
-			// aapt resource value: 0x7f060097
-			public const int clearbookmarks = 2131099799;
+			// aapt resource value: 0x7f06009b
+			public const int clearbookmarks = 2131099803;
 			
-			// aapt resource value: 0x7f060096
-			public const int clearhistory = 2131099798;
+			// aapt resource value: 0x7f06009a
+			public const int clearhistory = 2131099802;
 			
 			// aapt resource value: 0x7f060033
 			public const int clip_horizontal = 2131099699;
@@ -2089,6 +2092,9 @@ namespace CloudStream
 			// aapt resource value: 0x7f06004a
 			public const int contentPanel = 2131099722;
 			
+			// aapt resource value: 0x7f06007c
+			public const int copym3u = 2131099772;
+			
 			// aapt resource value: 0x7f060050
 			public const int custom = 2131099728;
 			
@@ -2101,29 +2107,29 @@ namespace CloudStream
 			// aapt resource value: 0x7f060040
 			public const int default_activity_button = 2131099712;
 			
-			// aapt resource value: 0x7f060099
-			public const int design_bottom_sheet = 2131099801;
-			
-			// aapt resource value: 0x7f0600a0
-			public const int design_menu_item_action_area = 2131099808;
-			
-			// aapt resource value: 0x7f06009f
-			public const int design_menu_item_action_area_stub = 2131099807;
-			
-			// aapt resource value: 0x7f06009e
-			public const int design_menu_item_text = 2131099806;
-			
 			// aapt resource value: 0x7f06009d
-			public const int design_navigation_view = 2131099805;
+			public const int design_bottom_sheet = 2131099805;
+			
+			// aapt resource value: 0x7f0600a4
+			public const int design_menu_item_action_area = 2131099812;
+			
+			// aapt resource value: 0x7f0600a3
+			public const int design_menu_item_action_area_stub = 2131099811;
+			
+			// aapt resource value: 0x7f0600a2
+			public const int design_menu_item_text = 2131099810;
+			
+			// aapt resource value: 0x7f0600a1
+			public const int design_navigation_view = 2131099809;
 			
 			// aapt resource value: 0x7f06000e
 			public const int disableHome = 2131099662;
 			
-			// aapt resource value: 0x7f060080
-			public const int down = 2131099776;
+			// aapt resource value: 0x7f060083
+			public const int down = 2131099779;
 			
-			// aapt resource value: 0x7f0600a7
-			public const int drawer_layout = 2131099815;
+			// aapt resource value: 0x7f0600ab
+			public const int drawer_layout = 2131099819;
 			
 			// aapt resource value: 0x7f06005c
 			public const int edit_query = 2131099740;
@@ -2131,8 +2137,8 @@ namespace CloudStream
 			// aapt resource value: 0x7f06001c
 			public const int end = 2131099676;
 			
-			// aapt resource value: 0x7f0600b5
-			public const int end_padder = 2131099829;
+			// aapt resource value: 0x7f0600b9
+			public const int end_padder = 2131099833;
 			
 			// aapt resource value: 0x7f060023
 			public const int enterAlways = 2131099683;
@@ -2149,8 +2155,8 @@ namespace CloudStream
 			// aapt resource value: 0x7f060051
 			public const int expanded_menu = 2131099729;
 			
-			// aapt resource value: 0x7f0600a5
-			public const int fab = 2131099813;
+			// aapt resource value: 0x7f0600a9
+			public const int fab = 2131099817;
 			
 			// aapt resource value: 0x7f060035
 			public const int fill = 2131099701;
@@ -2164,11 +2170,14 @@ namespace CloudStream
 			// aapt resource value: 0x7f060038
 			public const int @fixed = 2131099704;
 			
-			// aapt resource value: 0x7f060087
-			public const int hdasearch = 2131099783;
+			// aapt resource value: 0x7f06007b
+			public const int generatem3u = 2131099771;
 			
-			// aapt resource value: 0x7f060088
-			public const int hdbasearch = 2131099784;
+			// aapt resource value: 0x7f06008a
+			public const int hdasearch = 2131099786;
+			
+			// aapt resource value: 0x7f06008b
+			public const int hdbasearch = 2131099787;
 			
 			// aapt resource value: 0x7f060005
 			public const int home = 2131099653;
@@ -2176,8 +2185,8 @@ namespace CloudStream
 			// aapt resource value: 0x7f06000f
 			public const int homeAsUp = 2131099663;
 			
-			// aapt resource value: 0x7f060085
-			public const int htvasearch = 2131099781;
+			// aapt resource value: 0x7f060088
+			public const int htvasearch = 2131099784;
 			
 			// aapt resource value: 0x7f060042
 			public const int icon = 2131099714;
@@ -2191,17 +2200,17 @@ namespace CloudStream
 			// aapt resource value: 0x7f060075
 			public const int imageButton1 = 2131099765;
 			
-			// aapt resource value: 0x7f0600a8
-			public const int imgViewHeader = 2131099816;
+			// aapt resource value: 0x7f0600ac
+			public const int imgViewHeader = 2131099820;
 			
-			// aapt resource value: 0x7f0600b4
-			public const int info = 2131099828;
+			// aapt resource value: 0x7f0600b8
+			public const int info = 2131099832;
 			
-			// aapt resource value: 0x7f0600ba
-			public const int item1 = 2131099834;
+			// aapt resource value: 0x7f0600be
+			public const int item1 = 2131099838;
 			
-			// aapt resource value: 0x7f0600bb
-			public const int item2 = 2131099835;
+			// aapt resource value: 0x7f0600bf
+			public const int item2 = 2131099839;
 			
 			// aapt resource value: 0x7f060000
 			public const int item_touch_helper_previous_elevation = 2131099648;
@@ -2209,11 +2218,11 @@ namespace CloudStream
 			// aapt resource value: 0x7f06002f
 			public const int left = 2131099695;
 			
-			// aapt resource value: 0x7f0600ae
-			public const int line1 = 2131099822;
-			
 			// aapt resource value: 0x7f0600b2
-			public const int line3 = 2131099826;
+			public const int line1 = 2131099826;
+			
+			// aapt resource value: 0x7f0600b6
+			public const int line3 = 2131099830;
 			
 			// aapt resource value: 0x7f06000b
 			public const int listMode = 2131099659;
@@ -2221,8 +2230,8 @@ namespace CloudStream
 			// aapt resource value: 0x7f060041
 			public const int list_item = 2131099713;
 			
-			// aapt resource value: 0x7f0600ac
-			public const int media_actions = 2131099820;
+			// aapt resource value: 0x7f0600b0
+			public const int media_actions = 2131099824;
 			
 			// aapt resource value: 0x7f06001d
 			public const int middle = 2131099677;
@@ -2236,29 +2245,29 @@ namespace CloudStream
 			// aapt resource value: 0x7f060079
 			public const int movieInfo = 2131099769;
 			
-			// aapt resource value: 0x7f06007d
-			public const int movie_seach = 2131099773;
+			// aapt resource value: 0x7f060080
+			public const int movie_seach = 2131099776;
 			
-			// aapt resource value: 0x7f060083
-			public const int msearch = 2131099779;
+			// aapt resource value: 0x7f060086
+			public const int msearch = 2131099782;
 			
 			// aapt resource value: 0x7f060016
 			public const int multiply = 2131099670;
 			
-			// aapt resource value: 0x7f0600b9
-			public const int nav_discussion = 2131099833;
+			// aapt resource value: 0x7f0600bd
+			public const int nav_discussion = 2131099837;
 			
-			// aapt resource value: 0x7f0600b8
-			public const int nav_friends = 2131099832;
+			// aapt resource value: 0x7f0600bc
+			public const int nav_friends = 2131099836;
 			
-			// aapt resource value: 0x7f0600b6
-			public const int nav_home = 2131099830;
+			// aapt resource value: 0x7f0600ba
+			public const int nav_home = 2131099834;
 			
-			// aapt resource value: 0x7f0600b7
-			public const int nav_messages = 2131099831;
+			// aapt resource value: 0x7f0600bb
+			public const int nav_messages = 2131099835;
 			
-			// aapt resource value: 0x7f06009c
-			public const int navigation_header_container = 2131099804;
+			// aapt resource value: 0x7f0600a0
+			public const int navigation_header_container = 2131099808;
 			
 			// aapt resource value: 0x7f060021
 			public const int never = 2131099681;
@@ -2284,14 +2293,17 @@ namespace CloudStream
 			// aapt resource value: 0x7f060029
 			public const int pin = 2131099689;
 			
-			// aapt resource value: 0x7f06008b
-			public const int pingProviders = 2131099787;
+			// aapt resource value: 0x7f06008e
+			public const int pingProviders = 2131099790;
+			
+			// aapt resource value: 0x7f06007f
+			public const int playList = 2131099775;
+			
+			// aapt resource value: 0x7f060081
+			public const int progressBar1 = 2131099777;
 			
 			// aapt resource value: 0x7f06007e
-			public const int progressBar1 = 2131099774;
-			
-			// aapt resource value: 0x7f06007c
-			public const int progressBarLinks = 2131099772;
+			public const int progressBarLinks = 2131099774;
 			
 			// aapt resource value: 0x7f060006
 			public const int progress_circular = 2131099654;
@@ -2317,14 +2329,17 @@ namespace CloudStream
 			// aapt resource value: 0x7f060030
 			public const int right = 2131099696;
 			
-			// aapt resource value: 0x7f06007f
-			public const int s_Buttons = 2131099775;
+			// aapt resource value: 0x7f060082
+			public const int s_Buttons = 2131099778;
 			
-			// aapt resource value: 0x7f060094
-			public const int savelinks = 2131099796;
+			// aapt resource value: 0x7f060097
+			public const int savelinks = 2131099799;
 			
-			// aapt resource value: 0x7f060093
-			public const int savetitles = 2131099795;
+			// aapt resource value: 0x7f060098
+			public const int savem3u = 2131099800;
+			
+			// aapt resource value: 0x7f060096
+			public const int savetitles = 2131099798;
 			
 			// aapt resource value: 0x7f060017
 			public const int screen = 2131099671;
@@ -2377,8 +2392,8 @@ namespace CloudStream
 			// aapt resource value: 0x7f060068
 			public const int select_dialog_listview = 2131099752;
 			
-			// aapt resource value: 0x7f060081
-			public const int settingstext = 2131099777;
+			// aapt resource value: 0x7f060084
+			public const int settingstext = 2131099780;
 			
 			// aapt resource value: 0x7f060053
 			public const int shortcut = 2131099731;
@@ -2389,17 +2404,17 @@ namespace CloudStream
 			// aapt resource value: 0x7f060012
 			public const int showHome = 2131099666;
 			
-			// aapt resource value: 0x7f06008c
-			public const int showProviders = 2131099788;
+			// aapt resource value: 0x7f06008f
+			public const int showProviders = 2131099791;
 			
 			// aapt resource value: 0x7f060013
 			public const int showTitle = 2131099667;
 			
-			// aapt resource value: 0x7f06009b
-			public const int snackbar_action = 2131099803;
+			// aapt resource value: 0x7f06009f
+			public const int snackbar_action = 2131099807;
 			
-			// aapt resource value: 0x7f06009a
-			public const int snackbar_text = 2131099802;
+			// aapt resource value: 0x7f06009e
+			public const int snackbar_text = 2131099806;
 			
 			// aapt resource value: 0x7f060027
 			public const int snap = 2131099687;
@@ -2422,8 +2437,8 @@ namespace CloudStream
 			// aapt resource value: 0x7f060031
 			public const int start = 2131099697;
 			
-			// aapt resource value: 0x7f0600ab
-			public const int status_bar_latest_event_content = 2131099819;
+			// aapt resource value: 0x7f0600af
+			public const int status_bar_latest_event_content = 2131099823;
 			
 			// aapt resource value: 0x7f060065
 			public const int submit_area = 2131099749;
@@ -2437,17 +2452,17 @@ namespace CloudStream
 			// aapt resource value: 0x7f06000d
 			public const int tabMode = 2131099661;
 			
-			// aapt resource value: 0x7f0600a3
-			public const int tabs = 2131099811;
+			// aapt resource value: 0x7f0600a7
+			public const int tabs = 2131099815;
 			
-			// aapt resource value: 0x7f0600b3
-			public const int text = 2131099827;
+			// aapt resource value: 0x7f0600b7
+			public const int text = 2131099831;
 			
-			// aapt resource value: 0x7f0600a6
-			public const int text1 = 2131099814;
+			// aapt resource value: 0x7f0600aa
+			public const int text1 = 2131099818;
 			
-			// aapt resource value: 0x7f0600b1
-			public const int text2 = 2131099825;
+			// aapt resource value: 0x7f0600b5
+			public const int text2 = 2131099829;
 			
 			// aapt resource value: 0x7f06004d
 			public const int textSpacerNoButtons = 2131099725;
@@ -2455,14 +2470,14 @@ namespace CloudStream
 			// aapt resource value: 0x7f060069
 			public const int textView1 = 2131099753;
 			
-			// aapt resource value: 0x7f060095
-			public const int textView2 = 2131099797;
+			// aapt resource value: 0x7f060099
+			public const int textView2 = 2131099801;
 			
-			// aapt resource value: 0x7f060082
-			public const int textView3 = 2131099778;
+			// aapt resource value: 0x7f060085
+			public const int textView3 = 2131099781;
 			
-			// aapt resource value: 0x7f0600af
-			public const int time = 2131099823;
+			// aapt resource value: 0x7f0600b3
+			public const int time = 2131099827;
 			
 			// aapt resource value: 0x7f060043
 			public const int title = 2131099715;
@@ -2470,8 +2485,8 @@ namespace CloudStream
 			// aapt resource value: 0x7f060048
 			public const int title_template = 2131099720;
 			
-			// aapt resource value: 0x7f0600a2
-			public const int toolBar = 2131099810;
+			// aapt resource value: 0x7f0600a6
+			public const int toolBar = 2131099814;
 			
 			// aapt resource value: 0x7f060032
 			public const int top = 2131099698;
@@ -2479,14 +2494,14 @@ namespace CloudStream
 			// aapt resource value: 0x7f060047
 			public const int topPanel = 2131099719;
 			
-			// aapt resource value: 0x7f060098
-			public const int touch_outside = 2131099800;
+			// aapt resource value: 0x7f06009c
+			public const int touch_outside = 2131099804;
 			
-			// aapt resource value: 0x7f060086
-			public const int tvasearch = 2131099782;
+			// aapt resource value: 0x7f060089
+			public const int tvasearch = 2131099785;
 			
-			// aapt resource value: 0x7f06008f
-			public const int txtDef = 2131099791;
+			// aapt resource value: 0x7f060092
+			public const int txtDef = 2131099794;
 			
 			// aapt resource value: 0x7f06006b
 			public const int txtInputLayoutTitle = 2131099755;
@@ -2494,8 +2509,8 @@ namespace CloudStream
 			// aapt resource value: 0x7f06006a
 			public const int txtLink = 2131099754;
 			
-			// aapt resource value: 0x7f060091
-			public const int txtSec = 2131099793;
+			// aapt resource value: 0x7f060094
+			public const int txtSec = 2131099796;
 			
 			// aapt resource value: 0x7f06006c
 			public const int txtTitle = 2131099756;
@@ -2503,20 +2518,20 @@ namespace CloudStream
 			// aapt resource value: 0x7f060009
 			public const int up = 2131099657;
 			
-			// aapt resource value: 0x7f06008e
-			public const int update = 2131099790;
+			// aapt resource value: 0x7f060091
+			public const int update = 2131099793;
 			
 			// aapt resource value: 0x7f060014
 			public const int useLogo = 2131099668;
 			
-			// aapt resource value: 0x7f06008d
-			public const int versionTxt = 2131099789;
+			// aapt resource value: 0x7f060090
+			public const int versionTxt = 2131099792;
 			
 			// aapt resource value: 0x7f06000a
 			public const int view_offset_helper = 2131099658;
 			
-			// aapt resource value: 0x7f0600a4
-			public const int viewpager = 2131099812;
+			// aapt resource value: 0x7f0600a8
+			public const int viewpager = 2131099816;
 			
 			// aapt resource value: 0x7f060022
 			public const int withText = 2131099682;

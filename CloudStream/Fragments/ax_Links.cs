@@ -107,6 +107,12 @@ namespace CloudStream.Fragments
         public static List<ax_Links> ax_Links_all = new List<ax_Links>();
         int currnView = 0;
 
+        List<string> currentActiveLinksNames = new List<string>();
+        List<string> currentActiveLinks = new List<string>();
+
+        const bool showExtraListButtons = false;
+
+
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
 
@@ -115,6 +121,49 @@ namespace CloudStream.Fragments
             //  print(view.AccessibilityClassName);
             // System.Diagnostics.Debug.WriteLine("TTTTTTTTTTTTTTT" + view.);
             var bar = view.FindViewById<ProgressBar>(Resource.Id.progressBarLinks);
+            ImageButton playListBtt = view.FindViewById<ImageButton>(Resource.Id.playList);
+            playListBtt.Click += (o, e) =>
+            {
+                string path = MainActivity.GenerateM3UFileFromLoadedLinks("TempList", flinks: flink, reverse: movieIsAnime[movieSelectedID]);
+                if (path != "error") {
+                    OpenPathAsVieo(path);
+                }
+            };
+            if (currentMain && movieProvider[movieSelectedID] == 4) {
+                playListBtt.Visibility = ViewStates.Gone;
+            }
+
+            bool m3uEnabled = true;// ax_Settings.SettingsGetChecked(10);
+                                   // bar.layout
+
+            if (showExtraListButtons) {
+                Button copyM3U = view.FindViewById<Button>(Resource.Id.copym3u);
+                Button generateM3U = view.FindViewById<Button>(Resource.Id.generatem3u);
+
+                copyM3U.Visibility = ViewStates.Gone;
+                generateM3U.Visibility = ViewStates.Gone;
+
+                copyM3U.Visibility = m3uEnabled ? ViewStates.Visible : ViewStates.Gone;
+                generateM3U.Visibility = m3uEnabled ? ViewStates.Visible : ViewStates.Gone;
+                copyM3U.Click += (o, e) =>
+            {
+                string m3uCopy = MainActivity.GetM3UFileFromLoadedLinks();
+                ClipboardManager clip = (ClipboardManager)Context.GetSystemService(Context.ClipboardService);
+                clip.PrimaryClip = ClipData.NewPlainText("m3u", m3uCopy);
+                ShowSnackBar("Copied m3u To Clipboard!", ax_links.View);
+            };
+
+                generateM3U.Click += (o, e) =>
+                {
+                    string path = MainActivity.GenerateM3UFileFromLoadedLinks();
+                    Action<View> action = new Action<View>((View v) =>
+                    {
+                        OpenPathAsVieo(path);
+                    });
+                    ShowSnackBar("Download m3u to " + path, ax_links.View, "Play list", action);
+                };
+
+            }
 
             //bar.Visibility = ViewStates.Gone;
             pbar = bar;
@@ -138,19 +187,23 @@ namespace CloudStream.Fragments
             _w.RecyclerView re = view.FindViewById<_w.RecyclerView>(Resource.Id.recyclerView_links);
             _re = re;
             __view = view;
+
+
+            // ---------- ON LINK CLICKED ----------
+
             re.SetItemClickListener((rv, position, _view) =>
             {
                 var check = view.FindViewById<CheckBox>(Resource.Id.checkBox1);
 
                 string linkName = activeLinksNames[flink[position]];
 
-                bool overideSettings = (movieProvider[moveSelectedID] == 4 && linkName.StartsWith("Episode") && currentMain);
+                bool overideSettings = (movieProvider[movieSelectedID] == 4 && linkName.StartsWith("Episode") && currentMain);
 
                 int rAct = 0;
 
                 if (!check.Checked) {
                     //Toast t = new Toast(Context);
-                    print("Loading: " + movieTitles[moveSelectedID] + " | " + activeLinksNames[flink[position]]);
+                    print("Loading: " + movieTitles[movieSelectedID] + " | " + activeLinksNames[flink[position]]);
 
                     rAct = 0;
 
@@ -173,7 +226,7 @@ namespace CloudStream.Fragments
                     //  if (!downloadFile) {
                     // }
                     // else {
-                    // HistoryPressTitle("D___" + movieTitles[moveSelectedID] + "|" + activeLinksNames[flink[position]]);
+                    // HistoryPressTitle("D___" + movieTitles[movieSelectedID] + "|" + activeLinksNames[flink[position]]);
                     //      DoLink(2, position);
 
                     // }
@@ -195,28 +248,29 @@ namespace CloudStream.Fragments
 
             });
 
+            // ---------- LOADED ALL LINKS ----------
+
             Action onCompleted = () =>
             {
                 //print("daaaaaaaaaaaaaaaa")
                 // UpdateList();
                 // ChangeBar(100);
-                if (moveSelectedID >= movieTitles.Count || moveSelectedID < 0) {
+                if (movieSelectedID >= movieTitles.Count || movieSelectedID < 0) {
                 }
                 else {
                     ChangeBar(100);
                     if (ax_links_sub != null) {
-                        if (movieProvider[moveSelectedID] == 0) {
+                        if (movieProvider[movieSelectedID] == 0) {
                             ax_links_sub.ChangeBar(100);
                         }
                     }
-                    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-                    System.Diagnostics.Debug.WriteLine("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
-                    print(movieProvider[moveSelectedID].ToString());
+                    print(movieProvider[movieSelectedID].ToString());
                     linksDone = true;
                 }
                 // 
             };
 
+            // ---------- LOAD LINKS ----------
 
             if (currentMain) {  // not request twice
                 thredNumber++;
@@ -226,7 +280,7 @@ namespace CloudStream.Fragments
                     try {
                         ChangeBar(0);
 
-                        GetURLFromTitle(moveSelectedID);
+                        GetURLFromTitle(movieSelectedID);
                         //Thread.Sleep(1000);
                     }
                     finally {
@@ -306,34 +360,39 @@ namespace CloudStream.Fragments
         void SetUpRecyclerView(_w.RecyclerView recyclerView)
         {
             //var values = GetRandomSubList(Cheeses.CheeseStrings, 30);
-            var values = new List<string>();
+            currentActiveLinksNames = new List<string>();
+            currentActiveLinks = new List<string>();
             flink = new List<int>();
             for (int i = 0; i < activeLinksNames.Count; i++) {
                 try {
-
-
-                    if (movieProvider[moveSelectedID] == 0) {
+                    if (movieProvider[movieSelectedID] == 0) {
                         if ((activeLinksNames[i].Contains("(Dub)") && currentMain) || (activeLinksNames[i].Contains("(Sub)") && !currentMain)) {
-                            values.Add(activeLinksNames[i]);
+                            currentActiveLinksNames.Add(activeLinksNames[i]);
+                            currentActiveLinks.Add(activeLinks[i]);
                             flink.Add(i);
                         }
-
                     }
-                    else if (movieProvider[moveSelectedID] == 3 && __selSeason != 0) {
+                    else if (movieProvider[movieSelectedID] == 3 && __selSeason != 0) {
                         if (activeLinksNames[i].Contains("Season " + __selSeason + " ")) {
-                            values.Add(activeLinksNames[i]);
+                            currentActiveLinksNames.Add(activeLinksNames[i]);
                             flink.Add(i);
+                            currentActiveLinks.Add(activeLinks[i]);
+
                         }
                     }
-                    else if (movieProvider[moveSelectedID] == 4) {
+                    else if (movieProvider[movieSelectedID] == 4) {
                         if ((currentMain && activeLinksNames[i].StartsWith("Episode")) || (!currentMain && !activeLinksNames[i].StartsWith("Episode"))) {
-                            values.Add(activeLinksNames[i]);
+                            currentActiveLinksNames.Add(activeLinksNames[i]);
                             flink.Add(i);
-                           // print(activeLinksNames[i] + " |||| >> " + i);
+                            currentActiveLinks.Add(activeLinks[i]);
+
+                            // print(activeLinksNames[i] + " |||| >> " + i);
                         }
                     }
                     else {
-                        values.Add(activeLinksNames[i]);
+                        currentActiveLinksNames.Add(activeLinksNames[i]);
+                        currentActiveLinks.Add(activeLinks[i]);
+
                         flink.Add(i);
                     }
                 }
@@ -345,7 +404,7 @@ namespace CloudStream.Fragments
 
             recyclerView.SetLayoutManager(new _w.LinearLayoutManager(recyclerView.Context));
             try {
-                var adapter = new SimpleStringRecyclerViewAdapter(recyclerView.Context, values, Activity.Resources, this);
+                var adapter = new SimpleStringRecyclerViewAdapter(recyclerView.Context, currentActiveLinksNames, Activity.Resources, this);
                 adapter.ItemClick += MAdapter_ItemLongClick;
                 recyclerView.SetAdapter(adapter);
 
@@ -357,7 +416,7 @@ namespace CloudStream.Fragments
             {
 
 
-                // HistoryPressTitle(movieTitles[moveSelectedID] + "|" + activeLinksNames[flink[e]], true);
+                // HistoryPressTitle(movieTitles[movieSelectedID] + "|" + activeLinksNames[flink[e]], true);
                 //UpdateList();
             }
             // System.Diagnostics.Debug.WriteLine("QQQ:" + movieTitles.Count.ToString());
@@ -431,7 +490,7 @@ namespace CloudStream.Fragments
                 simpleHolder.mImgBtt.SetImageResource(Resource.Drawable.warrow2);
 
                 /*
-                if(movieProvider[moveSelectedID] == 4 && mValues[position].StartsWith("Episode")) {
+                if(movieProvider[movieSelectedID] == 4 && mValues[position].StartsWith("Episode")) {
                     simpleHolder.mImgBtt.Visibility = ViewStates.Gone;
                 }
                 else {
@@ -451,12 +510,12 @@ namespace CloudStream.Fragments
                     };
                 }
 
-                if (DownloadsGetIfDownloaded(movieTitles[moveSelectedID] + "_" + mValues[position])) {
+                if (DownloadsGetIfDownloaded(movieTitles[movieSelectedID] + "_" + mValues[position])) {
                     simpleHolder.mTxtView.SetTextColor(Color.ParseColor("#fffcb4"));
                 }
                 else {
-                    if (!tt.currentMain && movieProvider[moveSelectedID] == 4) {
-                        if (HistoryGetTitlePressed(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + currentEpisodeName + "|" + mValues[position])) {
+                    if (!tt.currentMain && movieProvider[movieSelectedID] == 4) {
+                        if (HistoryGetTitlePressed(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + currentEpisodeName + "|" + mValues[position])) {
                             simpleHolder.mTxtView.SetTextColor(Color.ParseColor("#b5fff8"));
                         }
                         else {
@@ -464,7 +523,7 @@ namespace CloudStream.Fragments
                         }
                     }
                     else {
-                        if (HistoryGetTitlePressed(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + mValues[position])) {
+                        if (HistoryGetTitlePressed(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + mValues[position])) {
                             simpleHolder.mTxtView.SetTextColor(Color.ParseColor("#b5fff8"));
                         }
                         else {
@@ -489,7 +548,7 @@ namespace CloudStream.Fragments
                 PopupMenu menu = new PopupMenu(ax_links.Context, v);
                 menu.MenuInflater.Inflate(Resource.Menu.menu1, menu.Menu);
 
-                if (tt.currentMain && movieProvider[moveSelectedID] == 4) {
+                if (tt.currentMain && movieProvider[movieSelectedID] == 4) {
                     menu.Menu.Add(checks[8]);
                     menu.Menu.Add(checks[1]);
                     menu.Menu.Add(checks[7]);
@@ -497,7 +556,7 @@ namespace CloudStream.Fragments
                 else {
                     for (int i = 0; i < checks.Length; i++) {
                         bool add = true;
-                        if ((checks[i] == "Remove Download" || checks[i] == "Play Downloaded File") && !DownloadsGetIfDownloaded(movieTitles[moveSelectedID] + "_" + mValues[pos])) { add = false; }
+                        if ((checks[i] == "Remove Download" || checks[i] == "Play Downloaded File") && !DownloadsGetIfDownloaded(movieTitles[movieSelectedID] + "_" + mValues[pos])) { add = false; }
                         if (checks[i] == "Chromecast" && !IsConnectedToChromecast()) { add = false; }
                         if (checks[i] == "Copy Browser Link (ADS)") { add = false; }
                         if (checks[i] == "Mark As Watched") { add = false; }
@@ -565,7 +624,7 @@ namespace CloudStream.Fragments
             string link = activeLinks[flink[pos]];
             string linkName = activeLinksNames[flink[pos]];
             print("AAA" + link + ":::" + linkName);
-            if (movieProvider[moveSelectedID] == 4 && linkName.StartsWith("Episode") && currentMain && (id == 0 || id == 8)) {
+            if (movieProvider[movieSelectedID] == 4 && linkName.StartsWith("Episode") && currentMain && (id == 0 || id == 8)) {
                 string episode = FindHTML(linkName, "Episode ", ":");
                 print("Episode id:" + episode);
                 List<string> _activeLinks = new List<string>();
@@ -588,7 +647,7 @@ namespace CloudStream.Fragments
                      () =>
                      {
                          try {
-                             GetUrlFromMovie123(moveSelectedID, thredNumber, "https://movies123.pro" + link, false, episode);
+                             GetUrlFromMovie123(movieSelectedID, thredNumber, "https://movies123.pro" + link, false, episode);
 
                              //Thread.Sleep(1000);
                          }
@@ -609,8 +668,8 @@ namespace CloudStream.Fragments
 
                 Android.Net.Uri uri = Android.Net.Uri.Parse(link);
                 // intent.SetData(uri);
-                // intent.PutExtra("title", movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
-                //intent.PutExtra(EXTRA_FILENAME, movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
+                // intent.PutExtra("title", movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
+                //intent.PutExtra(EXTRA_FILENAME, movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
 
 
                 //   intent.PutExtra(EXTRA_RETURN_RESULT, true);
@@ -620,7 +679,7 @@ namespace CloudStream.Fragments
 
                 vlcIntent.SetDataAndType(uri, "video/*");
 
-                vlcIntent.PutExtra("title", movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
+                vlcIntent.PutExtra("title", movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
                 vlcIntent.AddFlags(ActivityFlags.GrantReadUriPermission);
                 vlcIntent.AddFlags(ActivityFlags.GrantWriteUriPermission);
                 vlcIntent.AddFlags(ActivityFlags.GrantPrefixUriPermission);
@@ -641,16 +700,16 @@ namespace CloudStream.Fragments
                             else {
                                 // for (int i = 0; i < 1000; i++) {
                                 //    Java.Lang.Thread.Sleep(10);
-                               Android.Net.Uri u = manager.GetUriForDownloadedFile(subId);
+                                Android.Net.Uri u = manager.GetUriForDownloadedFile(subId);
 
-                                string truePath = "file://" + Android.OS.Environment.ExternalStorageDirectory +  "/" + Android.OS.Environment.DirectoryDownloads + "/" + SUBTITLE_PATH;
+                                string truePath = "file://" + Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/" + SUBTITLE_PATH;
                                 string _truePath = manager.GetUriForDownloadedFile(subId).Path;
                                 string __truePath = activeSubtitles[currentActiveSubtitle];
 
                                 string subtitlePath = __truePath;
 
-                              vlcIntent.PutExtra("subtitles_location", subtitlePath);
-                              // vlcIntent.PutExtra("item_location", truePath);
+                                vlcIntent.PutExtra("subtitles_location", subtitlePath);
+                                // vlcIntent.PutExtra("item_location", truePath);
 
                                 // intent.PutExtra(EXTRA_SUBTITLE_NAMES, activeSubtitlesNames[currentActiveSubtitle]);
                                 print("Loaded subtitles: " + activeSubtitlesNames[currentActiveSubtitle] + "||" + activeSubtitles[currentActiveSubtitle]);
@@ -666,19 +725,19 @@ namespace CloudStream.Fragments
                     }
                 }
 
-               
+
                 StartActivityForResult(vlcIntent, 42);
 
 
 
             }
             else if (id == 1) {
-                //HistoryPressTitle(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + activeLinksNames[flink[pos]], true);
-                if (!currentMain && movieProvider[moveSelectedID] == 4) {
-                    HistoryPressTitle(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + currentEpisodeName + "|" + activeLinksNames[flink[pos]], true);
+                //HistoryPressTitle(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + activeLinksNames[flink[pos]], true);
+                if (!currentMain && movieProvider[movieSelectedID] == 4) {
+                    HistoryPressTitle(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + currentEpisodeName + "|" + activeLinksNames[flink[pos]], true);
                 }
                 else {
-                    HistoryPressTitle(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + activeLinksNames[flink[pos]], true);
+                    HistoryPressTitle(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + activeLinksNames[flink[pos]], true);
 
                 }
 
@@ -689,20 +748,20 @@ namespace CloudStream.Fragments
                 // string link = activeLinks[flink[pos]];
                 UpdateList();
                 _re.ScrollToPosition(pos);
-                StartNewDownload(link, (movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]]).ToLower().Replace(" ","_"), (movieIsAnime[moveSelectedID] ? "Anime" : "Movie"));
+                StartNewDownload(link, (movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]]).ToLower().Replace(" ", "_"), (movieIsAnime[movieSelectedID] ? "Anime" : "Movie"));
 
             }
             else if (id == 3) {
                 UpdateList();
                 _re.ScrollToPosition(pos);
 
-                RemoveDownload(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]], mainActivity, this.View);
+                RemoveDownload(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]], mainActivity, this.View);
             }
             else if (id == 4) {
-                ax_Downloads.PlayDownloadFileFromTitle((movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]]).ToLower().Replace(" ","_"));
+                ax_Downloads.PlayDownloadFileFromTitle((movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]]).ToLower().Replace(" ", "_"));
             }
             else if (id == 5) {
-                print("Loading: " + movieTitles[moveSelectedID] + " | " + activeLinksNames[flink[pos]]);
+                print("Loading: " + movieTitles[movieSelectedID] + " | " + activeLinksNames[flink[pos]]);
 
                 ClipboardManager clip = (ClipboardManager)Context.GetSystemService(Context.ClipboardService);
                 clip.PrimaryClip = ClipData.NewPlainText("Link", activeLinks[flink[pos]]);
@@ -716,18 +775,18 @@ namespace CloudStream.Fragments
             }
             else if (id == 7) {
                 //string link = activeLinks[flink[pos]];
-                print("Loading: " + movieTitles[moveSelectedID] + " | " + activeLinksNames[flink[pos]]);
+                print("Loading: " + movieTitles[movieSelectedID] + " | " + activeLinksNames[flink[pos]]);
 
                 ClipboardManager clip = (ClipboardManager)Context.GetSystemService(Context.ClipboardService);
                 clip.PrimaryClip = ClipData.NewPlainText("Link", "https://movies123.pro" + activeLinks[flink[pos]]);
                 ShowSnackBar("Copied " + activeLinksNames[flink[pos]] + " Link To Clipboard!", ax_links.View);
             }
             else if (id == 9) {
-                if (!currentMain && movieProvider[moveSelectedID] == 4) {
-                    HistoryPressTitle(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + currentEpisodeName + "|" + activeLinksNames[flink[pos]]);
+                if (!currentMain && movieProvider[movieSelectedID] == 4) {
+                    HistoryPressTitle(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + currentEpisodeName + "|" + activeLinksNames[flink[pos]]);
                 }
                 else {
-                    HistoryPressTitle(movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + activeLinksNames[flink[pos]]);
+                    HistoryPressTitle(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + activeLinksNames[flink[pos]]);
 
                 }
 
@@ -752,8 +811,8 @@ namespace CloudStream.Fragments
                     menu.MenuItemClick += (s, arg) =>
                     {
                         print("ITEMID:" + arg.Item.ItemId.ToString());
-                    // currentActiveSubtitle = -1;
-                    int _pos = -1;
+                        // currentActiveSubtitle = -1;
+                        int _pos = -1;
                         for (int i = 0; i < activeSubtitlesNames.Count; i++) {
                             if (activeSubtitlesNames[i] == arg.Item.TitleFormatted.ToString()) {
                                 _pos = i;
@@ -765,14 +824,14 @@ namespace CloudStream.Fragments
                             ShowSnackBar("Copied " + activeSubtitlesNames[_pos] + " Subtitle Link To Clipboard!", ax_links.View);
                         }
 
-                    // Toast.MakeText(mainActivity, string.Format("Menu {0} clicked", arg.Item.TitleFormatted), ToastLength.Short).Show();
-                };
+                        // Toast.MakeText(mainActivity, string.Format("Menu {0} clicked", arg.Item.TitleFormatted), ToastLength.Short).Show();
+                    };
 
                     menu.DismissEvent += (s, arg) =>
                     {
-                    //Toast.MakeText(mainActivity, string.Format("Menu dissmissed"), ToastLength.Short).Show();
+                        //Toast.MakeText(mainActivity, string.Format("Menu dissmissed"), ToastLength.Short).Show();
 
-                };
+                    };
 
                     menu.Show();
                 }
@@ -781,7 +840,7 @@ namespace CloudStream.Fragments
             }
             else if (id == 11) {
 
-                //StartNewDownload(activeSubtitles[currentActiveSubtitle], movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]] + " | " + activeSubtitlesNames[currentActiveSubtitle], "Subtitles");
+                //StartNewDownload(activeSubtitles[currentActiveSubtitle], movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]] + " | " + activeSubtitlesNames[currentActiveSubtitle], "Subtitles");
                 if (SHOW_INFO_SUBTITLES) {
                     DownloadSubtitle(true, pos);
                 }
@@ -821,7 +880,7 @@ namespace CloudStream.Fragments
 
             }
             else if (id == 12) {
-                string subtitleURL = movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]] + " | " + activeSubtitlesNames[currentActiveSubtitle];
+                string subtitleURL = movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]] + " | " + activeSubtitlesNames[currentActiveSubtitle];
                 DoLink(0, pos, null, subtitleURL);
             }
         }

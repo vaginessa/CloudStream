@@ -138,7 +138,7 @@ namespace CloudStream.Fragments
             {
                 //An item has been clicked
                 HistoryPressTitle(movieTitles[wlink[position]]);
-                moveSelectedID = wlink[position];
+                movieSelectedID = wlink[position];
                 Context context = _view.Context;
                 Intent intent = new Intent(context, typeof(SearchResultsActivity));
                 // intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, values[position]);
@@ -262,7 +262,7 @@ namespace CloudStream.Fragments
 
                 }
 
-                moveSelectedID = wlink[position];
+                movieSelectedID = wlink[position];
                 Context context = _view.Context;
                 Intent intent = new Intent(context, typeof(SearchResultsActivity));
                 // intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, values[position]);

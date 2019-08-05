@@ -92,6 +92,7 @@ namespace CloudStream
             Snackbar.Make(_anchor, inp, Snackbar.LengthLong).SetAction(actionText, a).Show();
         }
 
+
         static View anchor;
 
         public static List<Chromecast> allChromeCasts = new List<Chromecast>();
@@ -312,7 +313,7 @@ namespace CloudStream
     SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
             System.Net.ServicePointManager.SecurityProtocol &= ~SecurityProtocolType.Ssl3;
 
-            print("----------------------- " + ServicePointManager.SecurityProtocol + " ----------------------------" );
+            print("----------------------- " + ServicePointManager.SecurityProtocol + " ----------------------------");
 
             // SaveVideoToDisk("https://youtu.be/dQw4w9WgXcQ","mp4NeverGonaGiveYouUp");
 
@@ -644,6 +645,83 @@ namespace CloudStream
             return "";
         }
 
+        static bool CheckIfURLIsValid(string uriName)
+        {
+            Uri uriResult;
+            return Uri.TryCreate(uriName, UriKind.Absolute, out uriResult)
+                && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+        }
+
+        public static string GetM3UFileFromLoadedLinks(List<int> flinks = null, bool reverse = false)
+        {
+            string fileText = "";
+            fileText += "#EXTM3U\n";
+            List<string> allRez = new List<string>();
+            for (int i = 0; i < activeLinks.Count; i++) {
+                bool addToList = false;
+                if (flinks == null) {
+                    addToList = true;
+                }
+                else {
+                    if (flinks.Contains(i)) {
+                        addToList = true;
+                    }
+                }
+                if (CheckIfURLIsValid(activeLinks[i])) {
+                    allRez.Add("#EXTINF:" + i + "," + activeLinksNames[i] + "\n" + activeLinks[i] + "\n");
+                }
+            }
+            if(allRez.Count == 0) {
+                return "error";
+            }
+            if (reverse) {
+                allRez.Reverse();
+            }
+            for (int i = 0; i < allRez.Count; i++) {
+                fileText += allRez[i];
+            }
+
+            return fileText;
+        }
+
+        public static string GenerateM3UFileFromLoadedLinks(string name = null, bool justHeaderFileName = false, List<int> flinks = null, bool reverse = false)
+        {
+            string writeData = GetM3UFileFromLoadedLinks(flinks, reverse);
+            if(writeData == "error") {
+                return "error";
+            }
+            if (name == null) {
+                Regex rgx = new Regex("[^a-zA-Z0-9 -]");
+                print(movieTitles[movieSelectedID]);
+                name = movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "");
+                name = name.Replace("_", " ");
+                name = rgx.Replace(name, "").ToLower().Replace(" ", "_");
+            }
+            string absolutePath = Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads;
+            string basePath = absolutePath + "/Links";
+            Java.IO.File dir = new Java.IO.File(basePath);
+            dir.Mkdirs();
+
+            string subPath = name + ".m3u";
+            string rootPath = basePath + "/" + subPath;
+            try {
+                File.Delete(rootPath);
+            }
+            catch (System.Exception) {
+
+            }
+            Java.IO.File file = new Java.IO.File(basePath, subPath);
+            file.CreateNewFile();
+            file.Mkdir();
+            Java.IO.FileWriter writer = new Java.IO.FileWriter(file);
+            // Writes the content to the file
+            writer.Write(writeData);
+            writer.Flush();
+            writer.Close();
+            return justHeaderFileName ? basePath : rootPath;
+        }
+
+
         static async void SaveVideoToDisk(string link, string title)
         {
             var id = YoutubeClient.ParseVideoId(link);
@@ -703,8 +781,6 @@ namespace CloudStream
             catch (System.Exception) {
                 print("Download yt failed");
                 ShowSnackBar("Youtube Download Failed");
-
-
             }
 
             var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
@@ -712,9 +788,10 @@ namespace CloudStream
             edit.PutLong(title, -1);
             edit.PutString("P___" + title, shortPath);
             edit.Commit();
+
+
             try {
                 ax_Downloads.ax_downloads.UpdateList();
-
             }
             catch (System.Exception) {
 
@@ -732,17 +809,28 @@ namespace CloudStream
             Android.App.Application.Context.StartActivity(promptInstall);
         }
 
+        public static void OpenPathAsVieo(string path)
+        {
+            Android.Net.Uri uri = Android.Net.Uri.Parse(path);
+
+            Intent intent = new Intent(Intent.ActionView).SetDataAndType(uri, "video/mp4");
+            Android.App.Application.Context.StartActivity(intent);
+        }
+
         static Java.Lang.Thread downloadThred;
         public static void DownloadFromLink(string url, string title, string snackBar = "", SupportFragment v = null, string ending = "", bool openFile = false)
         {
             print("DOWNLOADING: " + url);
+
             DownloadManager.Request request = new DownloadManager.Request(Android.Net.Uri.Parse(url));
             request.SetDescription(title);
             request.SetTitle(title);
             string mainPath = Android.OS.Environment.DirectoryDownloads;
             string subPath = title + ending;
             string fullPath = mainPath + "/" + subPath;
+
             print("PATH: " + fullPath);
+
             request.SetDestinationInExternalPublicDir(mainPath, subPath);
             request.SetVisibleInDownloadsUi(true);
             request.SetNotificationVisibility(DownloadVisibility.VisibleNotifyCompleted);
@@ -753,6 +841,8 @@ namespace CloudStream
                 ShowSnackBar(snackBar, v.View);
             }
             long downloadId = manager.Enqueue(request);
+
+            // AUTO OPENS FILE WHEN DONE DOWNLOADING
             if (openFile) {
                 downloadThred = new Java.Lang.Thread(() =>
                 {
@@ -815,11 +905,11 @@ namespace CloudStream
             }
             long downloadId = manager.Enqueue(request); //start the download and return the id of the download. this id can be used to get info about the file (the size, the download progress ...) you can also stop the download by using this id     
 
-
+            // SAVE DATA FOR USE IN DOWNLOAD SELECTION
             var localC = Application.Context.GetSharedPreferences("Downloads", FileCreationMode.Private);
             var edit = localC.Edit();
-            edit.PutLong(title, downloadId);
-            edit.PutString("P___" + title, path);
+            edit.PutLong(title, downloadId); // TITLE
+            edit.PutString("P___" + title, path); // FULL PATH
             edit.Commit();
 
             try {
@@ -833,7 +923,7 @@ namespace CloudStream
 
         public static void RemoveDownload(string title, Context c, View v)
         {
-            title = title.ToLower().Replace(" ", "_").Replace(".mp4", "") + ".mp4";
+            title = title.ToLower().Replace(" ", "_").Replace(".mp4", "") + ".mp4"; // TEMP FIX, CAN JUST DOWNLOAD/REMOVE MP4 FILES BECAUSE OF A LIMITATION WITH VLC (IT WILL NOT RUN VIDEOS WITH NO EXTENTION)
             long longId = DownloadsGetLong(title);
             string pathId = DownloadGetPath(title);
             bool error = true;
@@ -877,7 +967,7 @@ namespace CloudStream
 
 
 
-
+            // ---------- REMOVE REFRENCE SHOULD NEVER HAPPEND, JUST IN CASE ----------
             Action<View> removeRef = (View) =>
             {
                 print("remove ref");
@@ -1047,12 +1137,15 @@ namespace CloudStream
 
                 if (d != "") {
                     print("Passed gogo download site");
+
+                    // ----- JS EMULATION, CHECK USED BY WEBSITE TO STOP WEB SCRAPE BOTS, DID NOT STOP ME >:) -----
+
                     tokenCode = FindHTML(d, "var tc = \'", "'");
                     _token = FindHTML(d, "_token\": \"", "\"");
                     string funct = "function _tsd_tsd_ds(" + FindHTML(d, "function _tsd_tsd_ds(", "</script>").Replace("\"", "'") + " log(_tsd_tsd_ds('" + tokenCode + "'))";
                     // print(funct);
                     if (funct == "function _tsd_tsd_ds( log(_tsd_tsd_ds(''))") {
-                        print(d);
+                        print(d); // ERROR IN LOADING JS
                     }
                     var engine = new Engine()
                     .SetValue("log", new Action<string>(PraseJavaScript));
@@ -1075,6 +1168,7 @@ namespace CloudStream
             }
 
         }
+
         static void DownloadMp4(string url)
         {
             WebClient client = new WebClient();
@@ -1365,7 +1459,7 @@ namespace CloudStream
                         print("-------------------- HD --------------------");
                         string url = tempTitle + GetgogoByFile(d);
                         print(url);
-                        if (!activeLinks.Contains(url) && !url.EndsWith(".viduplayer.com/urlset/v.mp4")) {
+                        if (!activeLinks.Contains(url) && !url.EndsWith(".viduplayer.com/urlset/v.mp4") && !url.Contains("Error")) {
                             activeLinks.Add(url);
                             activeLinksNames.Add("HD Viduplayer");
                         }
@@ -2088,7 +2182,7 @@ namespace CloudStream
             return allLike.Count;
         }
 
-        public static int moveSelectedID = 0;
+        public static int movieSelectedID = 0;
         static bool hdMovieIsDone = false;
         static bool __done = false;
 
@@ -2604,7 +2698,14 @@ namespace CloudStream
 
                             for (int i = 0; i < newDownloads.Count; i++) {
                                 print("NEW DOWNLOAD: " + newDownloads[i]);
-                                d = client.DownloadString(newDownloads[i]);
+                                try {
+                                    newDownloads[i] = newDownloads[i].Replace("//w1.", "//ww1."); // FIX BUG
+                                    d = client.DownloadString(newDownloads[i]);
+
+                                }
+                                catch (System.Exception) {
+                                    continue;
+                                }
 
                                 string mp4Find = "mp4upload\",\"id\":\"";
                                 string trollFind = "trollvid\",\"id\":\"";
@@ -3728,7 +3829,7 @@ namespace CloudStream
                 }
                 print(displayLink);
                 //activeLinks.Add(displayLink);
-                //activeLinksNames.Add(movieTitles[moveSelectedID] +  " Season " + sp + " | Episode " + ep);
+                //activeLinksNames.Add(movieTitles[movieSelectedID] +  " Season " + sp + " | Episode " + ep);
                 __linksDone++;
                 if (__linksDone >= __totalLinks) {
                     __done = true;

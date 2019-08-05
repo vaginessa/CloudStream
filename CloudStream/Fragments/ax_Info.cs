@@ -140,8 +140,8 @@ namespace CloudStream.Fragments
 
             subtitleSpinner.ItemSelected += SubtitleSpinner_ItemSelected;
 
-            currentMovie = moviesActive[moveSelectedID];
-            m_title.Text = movieTitles[moveSelectedID].Replace("B___", "").Replace(" (Bookmark)", "");
+            currentMovie = moviesActive[movieSelectedID];
+            m_title.Text = movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "");
 
 
 
@@ -180,7 +180,7 @@ namespace CloudStream.Fragments
             };
 
 
-            if (movieProvider[moveSelectedID] == 3) {
+            if (movieProvider[movieSelectedID] == 3) {
                 m_dec.SetLines(2);
             }
 
