@@ -10,7 +10,7 @@ A console application of the app for Windows and Linux can be found at: https://
 
 ***Features:***
 
-**AdFree**, No ads whatsoever
++ **AdFree**, No ads whatsoever
 
 + No tracking/analytics 
 
