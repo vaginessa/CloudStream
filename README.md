@@ -20,6 +20,8 @@ Download any Raw Link or YouTube/Mp4Embeded video
 
 Bookmark TV-shows and movies for quick access
 
+Chromecast directly from the app
+
 Watch history that can easily be toggled and removed
 
 Examle: https://youtu.be/kkoTmyR3rNc
