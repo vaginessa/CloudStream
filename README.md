@@ -12,17 +12,17 @@ A console application of the app for Windows and Linux can be found at: https://
 
 **AdFree**, No ads whatsoever
 
-No tracking/analytics 
++ No tracking/analytics 
 
-Download and stream movies, Tv-Shows and anime
++ Download and stream movies, Tv-Shows and anime
 
-Download any Raw Link or YouTube/Mp4Embeded video
++ Download any Raw Link or YouTube/Mp4Embeded video
 
-Bookmark TV-shows and movies for quick access
++ Bookmark TV-shows and movies for quick access
 
-Chromecast directly from the app
++ Chromecast directly from the app
 
-Watch history that can easily be toggled and removed
++ Watch history that can easily be toggled and removed
 
 Examle: https://youtu.be/kkoTmyR3rNc
 
@@ -32,18 +32,26 @@ This app dosen't use a p2p connection or any private servers hosted by me. It ta
 
 It takes the links from:
 
-https://movies123.pro/ (Movie)
++ https://movies123.pro/ (Movie)
 
-https://zmovies.me/ (Backup Movie)
++ https://zmovies.me/ (Backup Movie)
 
-https://movies123.pro/ (HD TV-Series)
++ https://movies123.pro/ (HD TV-Series)
 
-https://grabthebeast.com/ (Tv-Series)
++ https://grabthebeast.com/ (Tv-Series)
 
-https://www3.gogoanime.io/ (HD Anime)
++ https://www3.gogoanime.io/ (HD Anime)
 
-https://gogoanime.cool (HD Backup Anime)
++ https://gogoanime.cool (HD Backup Anime)
 
-https://ww1.kuroani.me/ (Anime)
++ https://ww1.kuroani.me/ (Anime)
 
-https://ww.9animes.net/ (Backup Anime)
++ https://ww.9animes.net/ (Backup Anime)
+
+***Github libarys:***
+
++ Chromecast: https://github.com/kakone/GoogleCast
+
++ Youtube Download: https://github.com/Tyrrrz/YoutubeExplode
+
++ JS interpreter (Avoid bot detection): https://github.com/sebastienros/jint
