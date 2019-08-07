@@ -48,7 +48,7 @@ It takes the links from:
 
 + https://ww.9animes.net/ (Backup Anime)
 
-***Github libarys:***
+***Github Libraries:***
 
 + Chromecast: https://github.com/kakone/GoogleCast
 
