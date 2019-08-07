@@ -103,6 +103,8 @@ namespace CloudStream
                     }
                 }
             };
+
+         
             //print(poster.);
 
             // SupportToolbar toolBar = FindViewById<SupportToolbar>(Resource.Id.toolBar);
@@ -127,12 +129,7 @@ namespace CloudStream
         public void CastVideoStart()
         {
             print("START");
-            try {
-                updateThred.Join();
-            }
-            catch (Exception) {
-
-            }
+         
             updateThred = new Java.Lang.Thread(() =>
             {
                 try {
@@ -179,23 +176,36 @@ namespace CloudStream
 
         void UpdateTime()
         {
-            double currentTime = GetChromeTime();
+            //  CastUpdateStatus();
 
-            if (castingPaused) {
-                castLastUpdate = currentTime -1;
+            if (!castingPlaying) {
                 castUpdatedNow = DateTime.Now;
             }
 
-            if (castingDuration - currentTime < 0) {
-                castingVideo = false;
-                chromeStart.Visibility = ViewStates.Gone;
-                updateThred.Join();
-                Finish();
+            double currentTime = GetChromeTime();
+
+            
+
+            if (castingDuration - currentTime <= 4) {
+                MovieEnd();
             }
 
             leftCastTxt.Text = ConvertTimeToString(currentTime);
             rightCastTxt.Text = ConvertTimeToString(castingDuration - currentTime);
             seekBar.Progress = (int)Math.Round((currentTime * 100) / castingDuration);
+        }
+
+
+        public void MovieEnd()
+        {
+            castingVideo = false;
+            chromeStart.Visibility = ViewStates.Gone;
+            Finish();
+        }
+
+        public static void ChangePauseBtt()
+        {
+            pauseBtt.SetBackgroundResource(castingPaused ? Resource.Drawable.ic_media_play_dark : Resource.Drawable.ic_media_pause_dark);
         }
 
 

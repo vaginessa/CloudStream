@@ -44,6 +44,7 @@ using Jint;
 using GoogleCast;
 using GoogleCast.Models.Media;
 using GoogleCast.Channels;
+using GoogleCast.Models;
 
 namespace CloudStream
 {
@@ -239,12 +240,11 @@ namespace CloudStream
         {
             try {
                 await chromeChannel.StopAsync();
-                castingVideo = false;
-
             }
             catch (System.Exception) {
-
+                await Task.CompletedTask; // TO PREVENT CRASH BUG
             }
+            castingVideo = false;
 
         }
 
@@ -254,11 +254,10 @@ namespace CloudStream
                 await chromeChannel.StopAsync();
             }
             catch (System.Exception) {
-
+                await Task.CompletedTask;
             }
             try {
                 chromeSender.Disconnect();
-
             }
             catch (System.Exception) {
 
@@ -295,53 +294,158 @@ namespace CloudStream
         public static List<string> castingSubtitleNames = new List<string>();
         public static double castingDuration;
         public static bool castingPaused = false;
+        public static bool castingPlaying = false;
         public static string castingTitle = "";
 
-        public static double castLastUpdate = 0;
+        // ------ AUDIO ------ 
+        static int castCurrentVolume;
+        public Android.Media.AudioManager mAudioManager;
+        public static int castmaxVolume;
+        public static bool isDestory;
+        private Task voluemChangeTask;
+
+        // ------ CASTINGTIMER ------
         public static DateTime castUpdatedNow;
+        public static double castLastUpdate;
+
         // public static double castCurrentTime = 0;
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            isDestory = true;
+        }
+
+
+        private static async Task SetVolumeAsync()
+        {
+            if (castingVideo) {
+                await SendChannelCommandAsync<IReceiverChannel>(IsStopped, null, async c => await c.SetVolumeAsync(castCurrentVolume / (float)castmaxVolume));
+            }
+            else {
+                await Task.CompletedTask;
+            }
+        }
+        private static async Task SendChannelCommandAsync<TChannel>(bool condition, Func<TChannel, Task> action, Func<TChannel, Task> otherwise) where TChannel : IChannel
+        {
+            await InvokeAsync(condition ? action : otherwise);
+        }
+
+        private static async Task InvokeAsync<TChannel>(Func<TChannel, Task> action) where TChannel : IChannel
+        {
+            if (action != null) {
+                await action.Invoke(chromeSender.GetChannel<TChannel>());
+            }
+        }
+
+        private static bool IsStopped
+        {
+            get {
+                var mediaChannel = chromeSender.GetChannel<IMediaChannel>();
+                return mediaChannel.Status == null || !string.IsNullOrEmpty(mediaChannel.Status.FirstOrDefault()?.IdleReason);
+            }
+        }
+
+        public void ChangeVolume()
+        {
+            while (!isDestory) {
+                //int count = 0;
+                try {
+                    Java.Lang.Thread.Sleep(20);
+                }
+                catch (System.Exception) {
+
+                }
+                if (castCurrentVolume < mAudioManager.GetStreamVolume(Android.Media.Stream.Music)) {
+                    print("volunm+");
+                    //  count++;
+                    castCurrentVolume = mAudioManager.GetStreamVolume(Android.Media.Stream.Music);
+                    Task.Run(SetVolumeAsync);
+                    //  mAudioManager.SetStreamVolume(Android.Media.Stream.Music, castCurrentVolume, Android.Media.VolumeNotificationFlags.RemoveSoundAndVibrate);
+                }
+                if (castCurrentVolume > mAudioManager.GetStreamVolume(Android.Media.Stream.Music)) {
+                    print("volunm-");
+                    //count++;
+                    castCurrentVolume = mAudioManager.GetStreamVolume(Android.Media.Stream.Music);
+                    Task.Run(SetVolumeAsync);
+
+                    // mAudioManager.SetStreamVolume(Android.Media.Stream.Music, castCurrentVolume, Android.Media.VolumeNotificationFlags.RemoveSoundAndVibrate);
+                }
+            }
+        }
+
+        public void onVolumeChangeListener()
+        {
+            castCurrentVolume = mAudioManager.GetStreamVolume(Android.Media.Stream.Music);
+            voluemChangeTask = new Task(ChangeVolume);
+            voluemChangeTask.Start();
+        }
 
         public static async void CastVideo(string url)
         {
-            chromeStart.Visibility = ViewStates.Visible;
-            castingVideo = true;
-            castingPaused = false;
-            castingUrl = url;
-            castingPosterId = moviesActive[movieSelectedID].posterID;
-            castingSubtitleNames = new List<string>();
-            castingSubtitleUrls = new List<string>();
-            castingTitle = movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "");
 
-            for (int i = 0; i < allProviderNames.Length; i++) {
-                castingTitle.Replace(" (" + allProviderNames[i] +")", "");
-            }
+         //   try {
 
-            for (int i = 0; i < activeSubtitles.Count; i++) {
-                castingSubtitleUrls.Add(activeSubtitles[i]);
-                castingSubtitleNames.Add(activeSubtitlesNames[i]);
-            }
+                chromeStart.Visibility = ViewStates.Visible;
+                castingVideo = true;
+                castingPaused = false;
+                castingUrl = url;
+                castingPosterId = moviesActive[movieSelectedID].posterID;
+                castingSubtitleNames = new List<string>();
+                castingSubtitleUrls = new List<string>();
+                castingTitle = movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "");
+                for (int i = 0; i < allProviderNames.Length; i++) {
+                    castingTitle = castingTitle.Replace(" (" + allProviderNames[i] + ")", "");
+                }
 
-            chromeMedia = await chromeChannel.LoadAsync(
-                     new MediaInformation() { ContentId = url });
-            castingDuration = (double)chromeMedia.Media.Duration;
-            castUpdatedNow = DateTime.Now;
-            castLastUpdate = 0;
-            print("START!!");
+                for (int i = 0; i < activeSubtitles.Count; i++) {
+                    castingSubtitleUrls.Add(activeSubtitles[i]);
+                    castingSubtitleNames.Add(activeSubtitlesNames[i]);
+                }
 
-            //chromeMedia.Media.Metadata.Title = castingTitle;
-       //     try {
+                GenericMediaMetadata mediaMetadata = new GenericMediaMetadata();
+
+                mediaMetadata.Title = castingTitle;
+                chromeMedia = await chromeChannel.LoadAsync(
+                         new MediaInformation() { ContentId = url, Metadata = mediaMetadata });
+
+                print("START!!");
+                castingDuration = (double)chromeMedia.Media.Duration;
+            print("!1");
+            Task.Run(SetVolumeAsync);
+            print("!2");
+            chromeChannel.StatusChanged += ChromeChannel_StatusChanged; ;
+            print("!3");
+
+                castUpdatedNow = DateTime.Now;
+                castLastUpdate = 0;
+
                 ChromeCastActivity.chromeCastActivity.CastVideoStart();
+            print("!4");
+           // }
+           // catch (System.Exception) {
+            //    await Task.CompletedTask;
+           // }
 
-          //  }
-        //    catch (System.Exception) {
+        }
 
-         //   }
+        private static void ChromeChannel_StatusChanged(object sender, EventArgs e)
+        {
+            MediaStatus mm = chromeChannel.Status.FirstOrDefault();
+            castingPaused = (mm.PlayerState == "PAUSED");
+            castingPlaying = (mm.PlayerState == "PLAYING");
+
+            print(mm.PlayerState);
+
+            castUpdatedNow = DateTime.Now;
+            castLastUpdate = mm.CurrentTime;
+
+            //print(mm.CurrentTime);
+            ChromeCastActivity.ChangePauseBtt();
         }
 
         public static void ChromeSetPauseState(bool paused)
         {
             if (paused) {
-
                 chromeChannel.PauseAsync();
             }
             else {
@@ -351,15 +455,20 @@ namespace CloudStream
 
         public static double GetChromeTime()
         {
-            TimeSpan t = DateTime.Now.Subtract(castUpdatedNow);
-            double currentTime = castLastUpdate + t.TotalSeconds;
-            return currentTime;
+            try {
+                double test = chromeChannel.Status.First().CurrentTime; // WILL CAUSE CRASH IF STOPPED BY EXTRARNAL
+                TimeSpan t = DateTime.Now.Subtract(castUpdatedNow);
+                double currentTime = castLastUpdate + t.TotalSeconds;
+                return currentTime;
+            }
+            catch (System.Exception) {
+                return castingDuration; // CAST STOPPED FROM EXTERNAL
+            }
+
         }
 
         public static void SetChromeTime(double time)
         {
-            castUpdatedNow = DateTime.Now;
-            castLastUpdate = time;
             chromeChannel.SeekAsync(time);
         }
 
@@ -378,38 +487,47 @@ namespace CloudStream
                 return;
             }
 
+            // if (chromeRecivers.Count() > 0) {
             foreach (IReceiver r in chromeRecivers) {
                 if (r.FriendlyName == name) {
                     chromeSender = new Sender();
 
                     // Connect to the Chromecast
-                    await chromeSender.ConnectAsync(r);
-                    chromeRecivever = r;
-                    Console.WriteLine("CONNECTED");
-                    chromeChannel = chromeSender.GetChannel<IMediaChannel>();
-                    await chromeSender.LaunchAsync(chromeChannel);
-                    isConnectedToChromeCast = true;
-                    chromeThread = new Java.Lang.Thread(() =>
-                    {
-                        try {
-                            ChromeOnConnect();
-                        }
-                        finally {
-                            chromeThread.Join();
-                        }
+                    try {
+                        await chromeSender.ConnectAsync(r);
+                        chromeRecivever = r;
+                        Console.WriteLine("CONNECTED");
+                        chromeChannel = chromeSender.GetChannel<IMediaChannel>();
+                        await chromeSender.LaunchAsync(chromeChannel);
+                        isConnectedToChromeCast = true;
+                        chromeThread = new Java.Lang.Thread(() =>
+                        {
+                            try {
+                                ChromeOnConnect();
+                            }
+                            finally {
+                                chromeThread.Join();
+                            }
 
-                    });
-                    chromeThread.Start();
+                        });
+                        chromeThread.Start();
+                    }
+                    catch (System.Exception) {
+                        await Task.CompletedTask; // JUST IN CASE
+                    }
+
 
                     return;
                 }
             }
+            //}
         }
 
         private void ChromeSender_Disconnected(object sender, EventArgs e)
         {
             isConnectedToChromeCast = false;
             chromeStart.Visibility = ViewStates.Gone;
+            print("DAAAAAAAAAAAAA DISCONNECTED");
         }
 
         public static FloatingActionButton chromeStart;
@@ -432,6 +550,14 @@ namespace CloudStream
                 chromeSender = new Sender();
                 chromeSender.Disconnected += ChromeSender_Disconnected;
                 GetAllChromeDevices();
+
+
+                //   volumePlayer = Android.Media.MediaPlayer.Create(this,Android.Net.Uri.Empty);
+                SetContentView(Resource.Layout.Main);
+                mAudioManager = (Android.Media.AudioManager)GetSystemService(Context.AudioService);
+                castmaxVolume = mAudioManager.GetStreamMaxVolume(Android.Media.Stream.Music);
+                onVolumeChangeListener();
+                //  volumePlayer.Start();
             }
 
             mainActivity = this;
@@ -2159,7 +2285,7 @@ namespace CloudStream
 
         public static void Search(string inp)
         {
-          
+
             movieTitles = new List<string>();
             fwordLink = new List<string>();
             activeLinks = new List<string>();
@@ -2175,7 +2301,7 @@ namespace CloudStream
                 */
             GetTitles(inp);
             //  if (useChromeCast) {
-             //   GetAllChromeDevices();
+            //   GetAllChromeDevices();
             //}
             //return ;
         }
@@ -3158,94 +3284,94 @@ namespace CloudStream
             //try {
 
 
-                string movies123 = "https://movies123.pro/search/" + rinput.Replace("+", "%20");
+            string movies123 = "https://movies123.pro/search/" + rinput.Replace("+", "%20");
 
-                WebClient client = new WebClient();
-                string mD = "";
-               // try {
-                    mD = client.DownloadString(movies123);
-              //  }
-               // catch (System.Exception) {
+            WebClient client = new WebClient();
+            string mD = "";
+            // try {
+            mD = client.DownloadString(movies123);
+            //  }
+            // catch (System.Exception) {
 
-              //  }
-                bool canMovie = ax_Settings.SettingsGetChecked(0);
-                bool canShow = ax_Settings.SettingsGetChecked(8);
+            //  }
+            bool canMovie = ax_Settings.SettingsGetChecked(0);
+            bool canShow = ax_Settings.SettingsGetChecked(8);
 
-                while (mD.Contains("/movie/") || mD.Contains("/tv-series/")) {
-                   // print("DA");
-                    /*
-                    data - filmName = "Iron Man"
-                data - year = "2008"
-                data - imdb = "IMDb: 7.9"
-                data - duration = "126 min"
-                data - country = "United States"
-                data - genre = "Action, Adventure, Sci-Fi"
-                data - descript = "Tony a boss of a Technology group, after his encounter in Afghanistan, became a symbol of justice as he built High-Tech armors and suits, to act as..."
-                data - star_prefix = ""
-                data - key = "0"
-                data - quality = "itemAbsolute_hd"
-                data - rating = "4.75"
-                        */
-                    print("--::--");
-                    int tvIndex = mD.IndexOf("/tv-series/");
-                    int movieIndex = mD.IndexOf("/movie/");
-                    bool isMovie = movieIndex < tvIndex;
-              //  print("--1");
-                    if (tvIndex == -1) { isMovie = true; }
-                    if (movieIndex == -1) { isMovie = false; }
+            while (mD.Contains("/movie/") || mD.Contains("/tv-series/")) {
+                // print("DA");
+                /*
+                data - filmName = "Iron Man"
+            data - year = "2008"
+            data - imdb = "IMDb: 7.9"
+            data - duration = "126 min"
+            data - country = "United States"
+            data - genre = "Action, Adventure, Sci-Fi"
+            data - descript = "Tony a boss of a Technology group, after his encounter in Afghanistan, became a symbol of justice as he built High-Tech armors and suits, to act as..."
+            data - star_prefix = ""
+            data - key = "0"
+            data - quality = "itemAbsolute_hd"
+            data - rating = "4.75"
+                    */
+                print("--::--");
+                int tvIndex = mD.IndexOf("/tv-series/");
+                int movieIndex = mD.IndexOf("/movie/");
+                bool isMovie = movieIndex < tvIndex;
+                //  print("--1");
+                if (tvIndex == -1) { isMovie = true; }
+                if (movieIndex == -1) { isMovie = false; }
 
-               // print("--2");
+                // print("--2");
 
                 Movie m = new Movie();
-                    m.year = ReadDataMovie(mD, "data-year");
-                    m.imdbRating = ReadDataMovie(mD, "data-imdb");
-                    m.runtime = ReadDataMovie(mD, "data-duration");
-                    m.genre = ReadDataMovie(mD, "data-genre");
-                    m.plot = ReadDataMovie(mD, "data-descript");
-                    m.posterID = ReadDataMovie(mD, "<img src=\"/dist/image/default_poster.jpg\" data-src");
-                    m.type = isMovie ? "movie" : "tv-series";
-             //   print("--3");
+                m.year = ReadDataMovie(mD, "data-year");
+                m.imdbRating = ReadDataMovie(mD, "data-imdb");
+                m.runtime = ReadDataMovie(mD, "data-duration");
+                m.genre = ReadDataMovie(mD, "data-genre");
+                m.plot = ReadDataMovie(mD, "data-descript");
+                m.posterID = ReadDataMovie(mD, "<img src=\"/dist/image/default_poster.jpg\" data-src");
+                m.type = isMovie ? "movie" : "tv-series";
+                //   print("--3");
 
-              //  print("--4");
+                //  print("--4");
 
                 string lookfor = isMovie ? "/movie/" : "/tv-series/";
 
-                    int mStart = mD.IndexOf(lookfor);
+                int mStart = mD.IndexOf(lookfor);
 
-                    mD = mD.Substring(mStart, mD.Length - mStart);
-                    mD = mD.Substring(7, mD.Length - 7);
-               // print("--5");
+                mD = mD.Substring(mStart, mD.Length - mStart);
+                mD = mD.Substring(7, mD.Length - 7);
+                // print("--5");
 
 
                 string rmd = lookfor + mD;
-                    //string realAPILink = mD.Substring(0, mD.IndexOf("-"));
-                    string _realMoveLink = "https://movies123.pro" + rmd.Substring(0, rmd.IndexOf("\""));
-                    if (!isMovie) {
-                        _realMoveLink = rmd.Substring(0, rmd.IndexOf("\"")); // /tv-series/ies/the-orville-season-2/gMSTqyRs
-                        _realMoveLink = _realMoveLink.Substring(11, _realMoveLink.Length - 11); //ies/the-orville-season-2/gMSTqyRs
-                        string found = _realMoveLink.Substring(0, _realMoveLink.IndexOf("/"));
-                        if (!found.Contains("-")) {
-                            _realMoveLink = _realMoveLink.Replace(found, ""); //the-orville-season-2/gMSTqyRs
-                        }
-                        _realMoveLink = "/tv-series" + _realMoveLink;
+                //string realAPILink = mD.Substring(0, mD.IndexOf("-"));
+                string _realMoveLink = "https://movies123.pro" + rmd.Substring(0, rmd.IndexOf("\""));
+                if (!isMovie) {
+                    _realMoveLink = rmd.Substring(0, rmd.IndexOf("\"")); // /tv-series/ies/the-orville-season-2/gMSTqyRs
+                    _realMoveLink = _realMoveLink.Substring(11, _realMoveLink.Length - 11); //ies/the-orville-season-2/gMSTqyRs
+                    string found = _realMoveLink.Substring(0, _realMoveLink.IndexOf("/"));
+                    if (!found.Contains("-")) {
+                        _realMoveLink = _realMoveLink.Replace(found, ""); //the-orville-season-2/gMSTqyRs
                     }
-              //  print("--6");
+                    _realMoveLink = "/tv-series" + _realMoveLink;
+                }
+                //  print("--6");
 
                 fwordLink.Add(_realMoveLink);
-                    print("::::::::::::::::::::::" + _realMoveLink + " | " + isMovie);
+                print("::::::::::::::::::::::" + _realMoveLink + " | " + isMovie);
 
-                    int titleStart = mD.IndexOf("title=\"");
-                    string _allrmd = mD.Substring(titleStart + 7, mD.Length - titleStart - 7);
-                    _allrmd = _allrmd.Substring(0, _allrmd.IndexOf("\""));
-                    _allrmd = _allrmd.Replace("&amp;", "and");
-                    m.title = _allrmd;
-                    if ((isMovie && canMovie) || (!isMovie && canShow)) {
-                        moviesActive.Add(m);
-                        movieIsAnime.Add(false);
-                        movieTitles.Add(_allrmd);
-                        movieProvider.Add(isMovie ? -1 : 4);
-                    }
-               // print("--7");
+                int titleStart = mD.IndexOf("title=\"");
+                string _allrmd = mD.Substring(titleStart + 7, mD.Length - titleStart - 7);
+                _allrmd = _allrmd.Substring(0, _allrmd.IndexOf("\""));
+                _allrmd = _allrmd.Replace("&amp;", "and");
+                m.title = _allrmd;
+                if ((isMovie && canMovie) || (!isMovie && canShow)) {
+                    moviesActive.Add(m);
+                    movieIsAnime.Add(false);
+                    movieTitles.Add(_allrmd);
+                    movieProvider.Add(isMovie ? -1 : 4);
+                }
+                // print("--7");
 
             }
             linksDone++;
