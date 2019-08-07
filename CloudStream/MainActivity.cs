@@ -103,12 +103,6 @@ namespace CloudStream
             return isConnectedToChromeCast;
         }
 
-        public static IEnumerable<IReceiver> chromeRecivers;
-        public static MediaStatus chromeMedia;
-        public static IMediaChannel chromeChannel;
-        public static Sender chromeSender;
-        public static bool isConnectedToChromeCast;
-
         public static List<string> GetChromeDevicesNames()
         {
             if (chromeRecivers == null) {
@@ -133,7 +127,7 @@ namespace CloudStream
         }
 
 
-        static int GetChromeCastImage(int id)
+        public static int GetChromeCastImage(int id)
         {
             // ALL CHROMECAST IMAGES FOR ANIMATION
             switch (id) {
@@ -211,7 +205,7 @@ namespace CloudStream
         void ChromeOnConnect()
         {
             for (int i = 0; i <= 30; i++) {
-                Java.Lang.Thread.Sleep(20);
+                Java.Lang.Thread.Sleep(30);
                 castAnimation = i;
                 Runnable m = new Runnable(SetCastAinmation);
                 RunOnUiThread(m);
@@ -234,18 +228,30 @@ namespace CloudStream
         void ChromeOnDisconnect()
         {
             for (int i = 0; i <= 30; i++) {
-                Java.Lang.Thread.Sleep(20);
+                Java.Lang.Thread.Sleep(30);
                 castAnimation = (30 - i);
                 Runnable m = new Runnable(SetCastAinmation);
                 RunOnUiThread(m);
             }
         }
 
+        public static async void StopMovieCast()
+        {
+            try {
+                await chromeChannel.StopAsync();
+                castingVideo = false;
+
+            }
+            catch (System.Exception) {
+
+            }
+
+        }
+
         public async void StopCast()
         {
             try {
                 await chromeChannel.StopAsync();
-
             }
             catch (System.Exception) {
 
@@ -259,11 +265,11 @@ namespace CloudStream
             }
             Console.WriteLine("STOP CASTING!");
             isConnectedToChromeCast = false;
+            castingVideo = false;
             chromeStart.Visibility = ViewStates.Gone;
             chromeThread = new Java.Lang.Thread(() =>
             {
                 try {
-
                     ChromeOnDisconnect();
                 }
                 finally {
@@ -274,13 +280,95 @@ namespace CloudStream
             chromeThread.Start();
         }
 
+
+        public static IEnumerable<IReceiver> chromeRecivers;
+        public static IReceiver chromeRecivever;
+        public static MediaStatus chromeMedia;
+        public static IMediaChannel chromeChannel;
+        public static Sender chromeSender;
+        public static bool isConnectedToChromeCast;
+
+        public static bool castingVideo;
+        public static string castingUrl;
+        public static string castingPosterId;
+        public static List<string> castingSubtitleUrls = new List<string>();
+        public static List<string> castingSubtitleNames = new List<string>();
+        public static double castingDuration;
+        public static bool castingPaused = false;
+        public static string castingTitle = "";
+
+        public static double castLastUpdate = 0;
+        public static DateTime castUpdatedNow;
+        // public static double castCurrentTime = 0;
+
         public static async void CastVideo(string url)
         {
-           // chromeStart.Visibility = ViewStates.Visible;
+            chromeStart.Visibility = ViewStates.Visible;
+            castingVideo = true;
+            castingPaused = false;
+            castingUrl = url;
+            castingPosterId = moviesActive[movieSelectedID].posterID;
+            castingSubtitleNames = new List<string>();
+            castingSubtitleUrls = new List<string>();
+            castingTitle = movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "");
+
+            for (int i = 0; i < allProviderNames.Length; i++) {
+                castingTitle.Replace(" (" + allProviderNames[i] +")", "");
+            }
+
+            for (int i = 0; i < activeSubtitles.Count; i++) {
+                castingSubtitleUrls.Add(activeSubtitles[i]);
+                castingSubtitleNames.Add(activeSubtitlesNames[i]);
+            }
 
             chromeMedia = await chromeChannel.LoadAsync(
                      new MediaInformation() { ContentId = url });
+            castingDuration = (double)chromeMedia.Media.Duration;
+            castUpdatedNow = DateTime.Now;
+            castLastUpdate = 0;
+            print("START!!");
+
+            //chromeMedia.Media.Metadata.Title = castingTitle;
+       //     try {
+                ChromeCastActivity.chromeCastActivity.CastVideoStart();
+
+          //  }
+        //    catch (System.Exception) {
+
+         //   }
         }
+
+        public static void ChromeSetPauseState(bool paused)
+        {
+            if (paused) {
+
+                chromeChannel.PauseAsync();
+            }
+            else {
+                chromeChannel.PlayAsync();
+            }
+        }
+
+        public static double GetChromeTime()
+        {
+            TimeSpan t = DateTime.Now.Subtract(castUpdatedNow);
+            double currentTime = castLastUpdate + t.TotalSeconds;
+            return currentTime;
+        }
+
+        public static void SetChromeTime(double time)
+        {
+            castUpdatedNow = DateTime.Now;
+            castLastUpdate = time;
+            chromeChannel.SeekAsync(time);
+        }
+
+        public static void SeekMedia(double sec)
+        {
+            print(GetChromeTime() + sec);
+            SetChromeTime(GetChromeTime() + sec);
+        }
+
         Java.Lang.Thread chromeThread;
 
         public async void ConnectToChromeDevice(string name)
@@ -296,6 +384,7 @@ namespace CloudStream
 
                     // Connect to the Chromecast
                     await chromeSender.ConnectAsync(r);
+                    chromeRecivever = r;
                     Console.WriteLine("CONNECTED");
                     chromeChannel = chromeSender.GetChannel<IMediaChannel>();
                     await chromeSender.LaunchAsync(chromeChannel);
@@ -323,7 +412,7 @@ namespace CloudStream
             chromeStart.Visibility = ViewStates.Gone;
         }
 
-        static FloatingActionButton chromeStart;
+        public static FloatingActionButton chromeStart;
 
         // ---------------------------------------------------------------------------------------------
 
@@ -395,7 +484,7 @@ namespace CloudStream
 
             //FloatingActionButton fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
             chromeStart = FindViewById<FloatingActionButton>(Resource.Id.fab);
-            // chromeStart.Visibility = isConnectedToChromeCast ? ViewStates.Visible : ViewStates.Gone;
+            chromeStart.Visibility = isConnectedToChromeCast ? ViewStates.Visible : ViewStates.Gone;
             chromeStart.SetImageResource(Resource.Drawable.ic_media_route_connected_dark_30_mtrl);
             chromeStart.Click += (o, e) =>
             {
@@ -403,7 +492,6 @@ namespace CloudStream
                 Intent intent = new Intent(chromeStart.Context, typeof(ChromeCastActivity));
                 StartActivity(intent);
             };
-
             //fab.SetImageResource( Resource.Drawable.settings_white_192x192);
             // fab.Visibility = ViewStates.Gone;
             /*            
@@ -663,7 +751,7 @@ namespace CloudStream
         //static int provider = 1;
         static readonly bool[] providerDubStatus = { true, false, false }; // sub/dub provider need to show status
 
-        public static bool debug = false;
+        public static bool debug = true;
         public static bool clearNext = false;
         static bool isDub = false;
         // public static bool renderLinks = false;
@@ -2071,9 +2159,7 @@ namespace CloudStream
 
         public static void Search(string inp)
         {
-            if (useChromeCast) {
-                GetAllChromeDevices();
-            }
+          
             movieTitles = new List<string>();
             fwordLink = new List<string>();
             activeLinks = new List<string>();
@@ -2088,6 +2174,9 @@ namespace CloudStream
                 titles_search.BeginInvoke(inp, null, null);
                 */
             GetTitles(inp);
+            //  if (useChromeCast) {
+             //   GetAllChromeDevices();
+            //}
             //return ;
         }
 
@@ -3066,23 +3155,24 @@ namespace CloudStream
 
         static void Link1()
         {
-            try {
+            //try {
 
 
-                string movies123 = "https://movies123.pro/search/" + rinput.Replace("+", " ");
+                string movies123 = "https://movies123.pro/search/" + rinput.Replace("+", "%20");
 
                 WebClient client = new WebClient();
                 string mD = "";
-                try {
+               // try {
                     mD = client.DownloadString(movies123);
-                }
-                catch (System.Exception) {
+              //  }
+               // catch (System.Exception) {
 
-                }
+              //  }
                 bool canMovie = ax_Settings.SettingsGetChecked(0);
                 bool canShow = ax_Settings.SettingsGetChecked(8);
 
                 while (mD.Contains("/movie/") || mD.Contains("/tv-series/")) {
+                   // print("DA");
                     /*
                     data - filmName = "Iron Man"
                 data - year = "2008"
@@ -3100,12 +3190,13 @@ namespace CloudStream
                     int tvIndex = mD.IndexOf("/tv-series/");
                     int movieIndex = mD.IndexOf("/movie/");
                     bool isMovie = movieIndex < tvIndex;
-
+              //  print("--1");
                     if (tvIndex == -1) { isMovie = true; }
                     if (movieIndex == -1) { isMovie = false; }
 
+               // print("--2");
 
-                    Movie m = new Movie();
+                Movie m = new Movie();
                     m.year = ReadDataMovie(mD, "data-year");
                     m.imdbRating = ReadDataMovie(mD, "data-imdb");
                     m.runtime = ReadDataMovie(mD, "data-duration");
@@ -3113,24 +3204,20 @@ namespace CloudStream
                     m.plot = ReadDataMovie(mD, "data-descript");
                     m.posterID = ReadDataMovie(mD, "<img src=\"/dist/image/default_poster.jpg\" data-src");
                     m.type = isMovie ? "movie" : "tv-series";
+             //   print("--3");
 
-                    if (debug) {
-                        print(m.title);
-                        print(m.imdbRating);
-                        print(m.runtime);
-                        print(m.genre);
-                        print(m.plot);
-                        print(m.posterID);
-                    }
-                    string lookfor = isMovie ? "/movie/" : "/tv-series/";
+              //  print("--4");
+
+                string lookfor = isMovie ? "/movie/" : "/tv-series/";
 
                     int mStart = mD.IndexOf(lookfor);
 
                     mD = mD.Substring(mStart, mD.Length - mStart);
                     mD = mD.Substring(7, mD.Length - 7);
+               // print("--5");
 
 
-                    string rmd = lookfor + mD;
+                string rmd = lookfor + mD;
                     //string realAPILink = mD.Substring(0, mD.IndexOf("-"));
                     string _realMoveLink = "https://movies123.pro" + rmd.Substring(0, rmd.IndexOf("\""));
                     if (!isMovie) {
@@ -3142,8 +3229,9 @@ namespace CloudStream
                         }
                         _realMoveLink = "/tv-series" + _realMoveLink;
                     }
+              //  print("--6");
 
-                    fwordLink.Add(_realMoveLink);
+                fwordLink.Add(_realMoveLink);
                     print("::::::::::::::::::::::" + _realMoveLink + " | " + isMovie);
 
                     int titleStart = mD.IndexOf("title=\"");
@@ -3157,15 +3245,19 @@ namespace CloudStream
                         movieTitles.Add(_allrmd);
                         movieProvider.Add(isMovie ? -1 : 4);
                     }
-                }
-                linksDone++;
-                //   SortMovies();
-
-                ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
-            }
-            catch (System.Exception) {
+               // print("--7");
 
             }
+            linksDone++;
+            print("--8");
+
+            //   SortMovies();
+
+            ax_Search.ax_search.ChangeBar((int)System.Math.Round(linksDone * 100 / totalLinks));
+            //}
+            //catch (System.Exception) {
+
+            //}
         }
         static void Link2()
         {
@@ -3564,7 +3656,7 @@ namespace CloudStream
                 simpleDelegate.BeginInvoke(null, null);
             }
 
-
+            print("TOTAL LINKS: " + tLinks);
             totalLinks = tLinks;
 
             GetBookMarks();

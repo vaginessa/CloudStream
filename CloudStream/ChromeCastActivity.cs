@@ -29,17 +29,80 @@ namespace CloudStream
         FloatingActionButton fab;
         static int offset = 0;
         static ImageView poster;
+        static ImageButton pauseBtt, backSecBtt, stopBtt;
+        static SeekBar seekBar;
+        static TextView leftCastTxt, rightCastTxt, titleTxt;
         protected override void OnCreate(Bundle savedInstanceState)
         {
-
-
             base.OnCreate(savedInstanceState);
             //Window.RequestFeature(WindowFeatures.NoTitle);
-
+            chromeCastActivity = this;
+         
             SetContentView(Resource.Layout.Activity_ChromeCast);
             poster = FindViewById<ImageView>(Resource.Id.posterID);
-            ImageButton pause = FindViewById<ImageButton>(Resource.Id.pauseButton);
-            poster.SetImageResource(Resource.Drawable.ic_media_route_connected_dark_00_mtrl + 0);
+            pauseBtt = FindViewById<ImageButton>(Resource.Id.CastPauseBtt);
+            backSecBtt = FindViewById<ImageButton>(Resource.Id.CastBackBtt);
+            stopBtt = FindViewById<ImageButton>(Resource.Id.CastStopBtt);
+            seekBar = FindViewById<SeekBar>(Resource.Id.seekBar);
+            leftCastTxt = FindViewById<TextView>(Resource.Id.castTimeleft);
+            rightCastTxt = FindViewById<TextView>(Resource.Id.castTimeright);
+            titleTxt = FindViewById<TextView>(Resource.Id.posterText);
+            titleTxt.Text = castingTitle;
+            print("POSTER: " + castingPosterId);
+            try {
+             //   poster.SetImageURI(Android.Net.Uri.Parse(castingPosterId));
+            }
+            catch (Exception) {
+
+            }
+
+            backSecBtt.Click += (o, e) =>
+            {
+                try {
+                    SeekMedia(-30);
+                }
+                catch (Exception) {
+
+                }
+            };
+
+            pauseBtt.Click += (o, e) =>
+            {
+                castingPaused = !castingPaused;
+                pauseBtt.SetBackgroundResource(castingPaused ? Resource.Drawable.ic_media_play_dark : Resource.Drawable.ic_media_pause_dark);
+                try {
+                    ChromeSetPauseState(castingPaused);
+
+                }
+                catch (Exception) {
+                }
+            };
+
+            stopBtt.Click += (o, e) =>
+            {
+                try {
+
+                    StopMovieCast();
+                }
+                catch (Exception) {
+
+                }
+                castingVideo = false;
+                chromeStart.Visibility = ViewStates.Gone;
+                Finish();
+            };
+
+            seekBar.ProgressChanged += (o, e) =>
+            {
+                if (e.FromUser) {
+                    try {
+                        SetChromeTime(e.Progress * (castingDuration / 100));
+                    }
+                    catch (Exception) {
+
+                    }
+                }
+            };
             //print(poster.);
 
             // SupportToolbar toolBar = FindViewById<SupportToolbar>(Resource.Id.toolBar);
@@ -61,10 +124,80 @@ namespace CloudStream
 
         }
 
-        private void Pause_Click(object sender, EventArgs e)
+        public void CastVideoStart()
         {
+            print("START");
+            try {
+                updateThred.Join();
+            }
+            catch (Exception) {
 
+            }
+            updateThred = new Java.Lang.Thread(() =>
+            {
+                try {
+                    while (castingVideo) {
+                        Java.Lang.Thread.Sleep(1000);
+                        RunOnUiThread(() => UpdateTime());
+                    }
+                }
+                finally {
+                    updateThred.Join();
+                }
+            });
+            updateThred.Start();
         }
+
+
+        static Java.Lang.Thread updateThred;
+
+        static string ForceLetters(int inp, int letters = 2)
+        {
+            int added = letters - inp.ToString().Length;
+            if (added > 0) {
+                return MultiplyString("0", added) + inp.ToString();
+            }
+            else {
+                return inp.ToString();
+            }
+        }
+        public static string MultiplyString(string s, int times)
+        {
+            return String.Concat(Enumerable.Repeat(s, times));
+        }
+
+        static string ConvertTimeToString(double time)
+        {
+            int sec = (int)Math.Round(time);
+            int rsec = (sec % 60);
+            int min = (int)Math.Ceiling((sec - rsec) / 60f);
+            int rmin = min % 60;
+            int h = (int)Math.Ceiling((min - rmin) / 60f);
+            int rh = h;// h % 24;
+            return (h > 0 ? ForceLetters(h) + ":" : "") + ((rmin >= 0 || h >= 0) ? ForceLetters(rmin) + ":" : "") + ForceLetters(rsec);
+        }
+
+        void UpdateTime()
+        {
+            double currentTime = GetChromeTime();
+
+            if (castingPaused) {
+                castLastUpdate = currentTime -1;
+                castUpdatedNow = DateTime.Now;
+            }
+
+            if (castingDuration - currentTime < 0) {
+                castingVideo = false;
+                chromeStart.Visibility = ViewStates.Gone;
+                updateThred.Join();
+                Finish();
+            }
+
+            leftCastTxt.Text = ConvertTimeToString(currentTime);
+            rightCastTxt.Text = ConvertTimeToString(castingDuration - currentTime);
+            seekBar.Progress = (int)Math.Round((currentTime * 100) / castingDuration);
+        }
+
 
         /*
         private void SetUpViewPager(ViewPager viewPager)

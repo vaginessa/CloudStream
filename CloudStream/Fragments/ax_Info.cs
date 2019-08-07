@@ -154,21 +154,23 @@ namespace CloudStream.Fragments
             print("CAST 2");
             castBtt = view.FindViewById<ImageButton>(Resource.Id.imageButton1);
             castBtt.Visibility = HaveChromeDevices() ? ViewStates.Visible : ViewStates.Invisible;
-
+            castBtt.SetBackgroundResource(isConnectedToChromeCast ? GetChromeCastImage(30) : GetChromeCastImage(0));
             if (!HaveChromeDevices()) {
                 m_title.TranslationX /= 4;
             }
-
+          
             castBtt.Click += (o, e) =>
             {
-                PopupMenu menu = new PopupMenu(ax_Info.ax_info.Context, view);
+                PopupMenu menu = new PopupMenu(ax_Info.ax_info.Context, (View)o);
                 menu.MenuInflater.Inflate(Resource.Menu.menu1, menu.Menu);
+         
                 var allChromeCasts = GetChromeDevicesNames();
                 for (int i = 0; i < allChromeCasts.Count; i++) {
                     menu.Menu.Add(allChromeCasts[i]);
                 }
                 if(isConnectedToChromeCast) { 
                     menu.Menu.Add("Disconnect");
+                    
                 }
 
                 menu.MenuItemClick += (s, arg) =>
@@ -184,6 +186,7 @@ namespace CloudStream.Fragments
                     //Toast.MakeText(mainActivity, string.Format("Menu dissmissed"), ToastLength.Short).Show();
 
                 };
+
 
                 menu.Show();
             };

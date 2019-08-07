@@ -613,18 +613,19 @@ namespace CloudStream.Fragments
 
         static Java.Lang.Thread tempThred;
         /// <summary>
-        /// id 0 = run VLC, 1 = Only history, 2 = Download, 3 = remove download, 4 = play download, 5 = copy link, 6 = chromecast, 7 = copy browser, 8 = Load links, 9 = Non invert history
+        /// id 0 = run VLC, 1 = Only history, 2 = Download, 3 = remove download, 4 = play download, 5 = copy link, 6 = chromecast, 7 = copy browser, 8 = Load links, 9 = Non invert history, 10 = copy subtitle URL, 11 = play vlc with subtitle, 12 = NOT USED
         /// </summary>
         /// <param name="id"></param>
         /// <param name="pos"></param>
         /// <param name="v"></param>
         void DoLink(int id, int pos, View v = null, string extra = "", bool useSub = false)
         {
-            print("AAA" + id + "|||" + pos);
             string link = activeLinks[flink[pos]];
             string linkName = activeLinksNames[flink[pos]];
-            print("AAA" + link + ":::" + linkName);
-            if (movieProvider[movieSelectedID] == 4 && linkName.StartsWith("Episode") && currentMain && (id == 0 || id == 8)) {
+
+
+
+            if (movieProvider[movieSelectedID] == 4 && linkName.StartsWith("Episode") && currentMain && (id == 0 || id == 8)) { // ------------- EPISODE SELECT TV SERIES -------------
                 string episode = FindHTML(linkName, "Episode ", ":");
                 print("Episode id:" + episode);
                 List<string> _activeLinks = new List<string>();
@@ -662,7 +663,7 @@ namespace CloudStream.Fragments
 
 
             }
-            else if (id == 0) {
+            else if (id == 0) { // ------------- RUN VLC -------------
 
                 // Intent intent = new Intent(Intent.ActionView);
 
@@ -731,7 +732,7 @@ namespace CloudStream.Fragments
 
 
             }
-            else if (id == 1) {
+            else if (id == 1) { // ------------- REVERSE HISTORY (TOGGLE VIEWSTATE) -------------
                 //HistoryPressTitle(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + activeLinksNames[flink[pos]], true);
                 if (!currentMain && movieProvider[movieSelectedID] == 4) {
                     HistoryPressTitle(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + currentEpisodeName + "|" + activeLinksNames[flink[pos]], true);
@@ -744,44 +745,40 @@ namespace CloudStream.Fragments
                 UpdateList();
                 _re.ScrollToPosition(pos);
             }
-            else if (id == 2) {
+            else if (id == 2) { // ------------- DOWNLOAD -------------
                 // string link = activeLinks[flink[pos]];
                 UpdateList();
                 _re.ScrollToPosition(pos);
                 StartNewDownload(link, (movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]]).ToLower().Replace(" ", "_"), (movieIsAnime[movieSelectedID] ? "Anime" : "Movie"));
 
             }
-            else if (id == 3) {
+            else if (id == 3) { // ------------- REMOVE DOWNLOAD -------------
                 UpdateList();
                 _re.ScrollToPosition(pos);
 
                 RemoveDownload(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]], mainActivity, this.View);
             }
-            else if (id == 4) {
+            else if (id == 4) { // ------------- PLAY DOWNLOADED FILE -------------
                 ax_Downloads.PlayDownloadFileFromTitle((movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "_" + activeLinksNames[flink[pos]]).ToLower().Replace(" ", "_"));
             }
-            else if (id == 5) {
-                print("Loading: " + movieTitles[movieSelectedID] + " | " + activeLinksNames[flink[pos]]);
+            else if (id == 5) { // ------------- COPY LINK -------------
+                //print("Loading: " + movieTitles[movieSelectedID] + " | " + activeLinksNames[flink[pos]]);
 
                 ClipboardManager clip = (ClipboardManager)Context.GetSystemService(Context.ClipboardService);
                 clip.PrimaryClip = ClipData.NewPlainText("Link", activeLinks[flink[pos]]);
                 ShowSnackBar("Copied " + activeLinksNames[flink[pos]] + " Link To Clipboard!", ax_links.View);
             }
-            else if (id == 6) { // CHOMECAST
-                //string link = activeLinks[flink[pos]];
+            else if (id == 6) { // ------------- CHOMECAST -------------
                 CastVideo(link);
-               // PlayLink(link);
-
+                Intent intent = new Intent(Context, typeof(ChromeCastActivity));
+                StartActivity(intent);
             }
-            else if (id == 7) {
-                //string link = activeLinks[flink[pos]];
-                print("Loading: " + movieTitles[movieSelectedID] + " | " + activeLinksNames[flink[pos]]);
-
+            else if (id == 7) { // ------------- COPY BROWSER SITE (TV-SERIES ONLY) -------------
                 ClipboardManager clip = (ClipboardManager)Context.GetSystemService(Context.ClipboardService);
                 clip.PrimaryClip = ClipData.NewPlainText("Link", "https://movies123.pro" + activeLinks[flink[pos]]);
                 ShowSnackBar("Copied " + activeLinksNames[flink[pos]] + " Link To Clipboard!", ax_links.View);
             }
-            else if (id == 9) {
+            else if (id == 9) { // ------------- JUST TOGGLE AS VIEWED HISTORY -------------
                 if (!currentMain && movieProvider[movieSelectedID] == 4) {
                     HistoryPressTitle(movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + "|" + currentEpisodeName + "|" + activeLinksNames[flink[pos]]);
                 }
@@ -793,7 +790,7 @@ namespace CloudStream.Fragments
                 UpdateList();
                 _re.ScrollToPosition(pos);
             }
-            else if (id == 10) {
+            else if (id == 10) { // ------------- COPY SUBTITLE URL -------------
                 if (SHOW_INFO_SUBTITLES) {
                     ClipboardManager clip = (ClipboardManager)Context.GetSystemService(Context.ClipboardService);
                     clip.PrimaryClip = ClipData.NewPlainText("Link", activeSubtitles[currentActiveSubtitle]);
@@ -838,7 +835,7 @@ namespace CloudStream.Fragments
 
 
             }
-            else if (id == 11) {
+            else if (id == 11) { // ------------- PLAY VLC WITH SUBTITLE -------------
 
                 //StartNewDownload(activeSubtitles[currentActiveSubtitle], movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]] + " | " + activeSubtitlesNames[currentActiveSubtitle], "Subtitles");
                 if (SHOW_INFO_SUBTITLES) {
@@ -879,7 +876,7 @@ namespace CloudStream.Fragments
                 }
 
             }
-            else if (id == 12) {
+            else if (id == 12) { // ------------- NOT USED, WAS USED TO CAST WITH A DOWNLOAD SUBTITLE -------------
                 string subtitleURL = movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]] + " | " + activeSubtitlesNames[currentActiveSubtitle];
                 DoLink(0, pos, null, subtitleURL);
             }
