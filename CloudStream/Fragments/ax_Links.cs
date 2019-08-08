@@ -87,7 +87,7 @@ namespace CloudStream.Fragments
 
         static string EXTRA_HASH_OPENSUBTITLES = "hash.opensubtitles";
         static string EXTRA_HASHES_OPENSUBTITLES = "video_list.hash.opensubtitles";
-
+        const bool useSubtitleOnChromeCast = false;
         public override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -124,7 +124,7 @@ namespace CloudStream.Fragments
             ImageButton playListBtt = view.FindViewById<ImageButton>(Resource.Id.playList);
             playListBtt.Click += (o, e) =>
             {
-                string path = MainActivity.GenerateM3UFileFromLoadedLinks("TempList", flinks: flink, reverse: movieIsAnime[movieSelectedID]);
+                string path = MainActivity.GenerateM3UFileFromLoadedLinks("TempList", flinks: flink, reverse: movieIsAnime[movieSelectedID],placeInLinksFolder:false);
                 if (path != "error") {
                     OpenPathAsVieo(path);
                 }
@@ -485,9 +485,9 @@ namespace CloudStream.Fragments
                 simpleHolder.mTxtView.Text = mValues[position].Replace("_", " ");
 
                 // simpleHolder.mImgBtt.SetImageResource(());
-                simpleHolder.mImgBtt.Background.SetVisible(false, true);
-                simpleHolder.mImgBtt.SetBackgroundColor(new Color(0, 0, 0, 0));
-                simpleHolder.mImgBtt.SetImageResource(Resource.Drawable.warrow2);
+              //  simpleHolder.mImgBtt.Background.SetVisible(false, true);
+              //  simpleHolder.mImgBtt.SetBackgroundColor(new Color(0, 0, 0, 0));
+                //simpleHolder.mImgBtt.SetBackgroundDrawable(Resource.Drawable.warrow2);
 
                 /*
                 if(movieProvider[movieSelectedID] == 4 && mValues[position].StartsWith("Episode")) {
@@ -558,9 +558,15 @@ namespace CloudStream.Fragments
                         bool add = true;
                         if ((checks[i] == "Remove Download" || checks[i] == "Play Downloaded File") && !DownloadsGetIfDownloaded(movieTitles[movieSelectedID] + "_" + mValues[pos])) { add = false; }
                         if (checks[i] == "Chromecast" && !IsConnectedToChromecast()) { add = false; }
+                        if (checks[i] == "Chromecast With Subtitles" && !IsConnectedToChromecast()) { add = false; } else if(checks[i] == "Chromecast With Subtitles") { add = add = activeSubtitles.Count > 0; }
+                        if(checks[i] == "Chromecast With Subtitles" && !useSubtitleOnChromeCast) {
+                            add = false;
+                        }
+
                         if (checks[i] == "Copy Browser Link (ADS)") { add = false; }
                         if (checks[i] == "Mark As Watched") { add = false; }
                         if (checks[i] == "Load Links") { add = false; }
+
                         if (SHOW_INFO_SUBTITLES) {
                             if (checks[i] == "Copy Subtitle Link") { add = currentActiveSubtitle > 0; }
                             if (checks[i] == "Play With Subtitles") { add = currentActiveSubtitle > 0; }
@@ -598,7 +604,7 @@ namespace CloudStream.Fragments
         /// <summary>
         /// { "Play", "Toggle Viewstate", "Download", "Remove Download", "Play Downloaded File", "Copy Link", "Chromecast", "Copy Browser Link (ADS)", "Load Links","Mark As Watched" ,"Copy Subtitle Link", "Play With Subtitles" };
         /// </summary>
-        public static readonly string[] checks = { "Play", "Toggle Viewstate", "Download", "Remove Download", "Play Downloaded File", "Copy Link", "Chromecast", "Copy Browser Link (ADS)", "Load Links", "Mark As Watched", "Copy Subtitle Link", "Play With Subtitles" };
+        public static readonly string[] checks = { "Play", "Toggle Viewstate", "Download", "Remove Download", "Play Downloaded File", "Copy Link", "Chromecast", "Copy Browser Link (ADS)", "Load Links", "Mark As Watched", "Copy Subtitle Link", "Play With Subtitles", "Chromecast With Subtitles" };
         public static int TitleToInt(string title)
         {
             //string[] checks = { "Play", "Toggle Viewstate", "Download", "Remove Download", "Play Downloaded File", "Copy Link" };
@@ -666,7 +672,12 @@ namespace CloudStream.Fragments
             else if (id == 0) { // ------------- RUN VLC -------------
 
                 // Intent intent = new Intent(Intent.ActionView);
+                /*
+                string absolutePath = Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads;
+                string basePath = absolutePath + "/Youtube";
+                string subPath = "yeet" + ".mp4";
 
+                string rootPath = basePath + "/" + subPath; */
                 Android.Net.Uri uri = Android.Net.Uri.Parse(link);
                 // intent.SetData(uri);
                 // intent.PutExtra("title", movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
@@ -678,7 +689,6 @@ namespace CloudStream.Fragments
                 Intent vlcIntent = new Intent(Intent.ActionView);
                 vlcIntent.SetPackage("org.videolan.vlc");
 
-                vlcIntent.SetDataAndType(uri, "video/*");
 
                 vlcIntent.PutExtra("title", movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]]);
                 vlcIntent.AddFlags(ActivityFlags.GrantReadUriPermission);
@@ -707,7 +717,7 @@ namespace CloudStream.Fragments
                                 string _truePath = manager.GetUriForDownloadedFile(subId).Path;
                                 string __truePath = activeSubtitles[currentActiveSubtitle];
 
-                                string subtitlePath = __truePath;
+                                string subtitlePath = truePath;//activeSubtitles[currentActiveSubtitle];
 
                                 vlcIntent.PutExtra("subtitles_location", subtitlePath);
                                 // vlcIntent.PutExtra("item_location", truePath);
@@ -726,6 +736,7 @@ namespace CloudStream.Fragments
                     }
                 }
 
+                vlcIntent.SetDataAndType(uri, "video/*");
 
                 StartActivityForResult(vlcIntent, 42);
 
@@ -769,6 +780,7 @@ namespace CloudStream.Fragments
                 ShowSnackBar("Copied " + activeLinksNames[flink[pos]] + " Link To Clipboard!", ax_links.View);
             }
             else if (id == 6) { // ------------- CHOMECAST -------------
+                castWithSubtitle = -1;
                 CastVideo(link);
                 Intent intent = new Intent(Context, typeof(ChromeCastActivity));
                 StartActivity(intent);
@@ -876,9 +888,45 @@ namespace CloudStream.Fragments
                 }
 
             }
-            else if (id == 12) { // ------------- NOT USED, WAS USED TO CAST WITH A DOWNLOAD SUBTITLE -------------
+            else if (id == -100) { // ------------- NOT USED, WAS USED TO CAST WITH A DOWNLOAD SUBTITLE -------------
                 string subtitleURL = movieTitles[movieSelectedID].Replace("B___", "").Replace(" (Bookmark)", "") + " | " + activeLinksNames[flink[pos]] + " | " + activeSubtitlesNames[currentActiveSubtitle];
                 DoLink(0, pos, null, subtitleURL);
+            }
+            else if(id == 12) { // ------------- CHROMECAST WITH SUBTITLES -------------
+                PopupMenu menu = new PopupMenu(ax_links.Context, v);
+                menu.MenuInflater.Inflate(Resource.Menu.menu1, menu.Menu);
+
+
+                for (int i = 0; i < activeSubtitles.Count; i++) {
+                    menu.Menu.Add(activeSubtitlesNames[i]);
+                }
+
+                menu.MenuItemClick += (s, arg) =>
+                {
+                    print("ITEMID:" + arg.Item.ItemId.ToString());
+                    currentActiveSubtitle = -1;
+                    for (int i = 0; i < activeSubtitlesNames.Count; i++) {
+                        if (activeSubtitlesNames[i] == arg.Item.TitleFormatted.ToString()) {
+                            currentActiveSubtitle = i;
+                        }
+                    }
+                    if (currentActiveSubtitle != -1) {
+                        castWithSubtitle = currentActiveSubtitle;
+                        CastVideo(link);
+                        Intent intent = new Intent(Context, typeof(ChromeCastActivity));
+                        StartActivity(intent);
+                    }
+
+                    // Toast.MakeText(mainActivity, string.Format("Menu {0} clicked", arg.Item.TitleFormatted), ToastLength.Short).Show();
+                };
+
+                menu.DismissEvent += (s, arg) =>
+                {
+                    //Toast.MakeText(mainActivity, string.Format("Menu dissmissed"), ToastLength.Short).Show();
+
+                };
+
+                menu.Show();
             }
         }
 

@@ -2930,16 +2930,19 @@ namespace CloudStream
 		{
 			
 			// aapt resource value: 0x7f0d0000
-			public const int drawer_view = 2131558400;
+			public const int border = 2131558400;
 			
 			// aapt resource value: 0x7f0d0001
-			public const int menu1 = 2131558401;
+			public const int drawer_view = 2131558401;
 			
 			// aapt resource value: 0x7f0d0002
-			public const int menu2 = 2131558402;
+			public const int menu1 = 2131558402;
 			
 			// aapt resource value: 0x7f0d0003
-			public const int sample_actions = 2131558403;
+			public const int menu2 = 2131558403;
+			
+			// aapt resource value: 0x7f0d0004
+			public const int sample_actions = 2131558404;
 			
 			static Menu()
 			{

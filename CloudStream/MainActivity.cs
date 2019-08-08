@@ -292,10 +292,12 @@ namespace CloudStream
         public static string castingPosterId;
         public static List<string> castingSubtitleUrls = new List<string>();
         public static List<string> castingSubtitleNames = new List<string>();
+        public static int castWithSubtitle = -1;
         public static double castingDuration;
         public static bool castingPaused = false;
         public static bool castingPlaying = false;
         public static string castingTitle = "";
+        public static bool firstCast = false;
 
         // ------ AUDIO ------ 
         static int castCurrentVolume;
@@ -383,8 +385,8 @@ namespace CloudStream
         public static async void CastVideo(string url)
         {
 
-         //   try {
-
+            try {
+                firstCast = true;
                 chromeStart.Visibility = ViewStates.Visible;
                 castingVideo = true;
                 castingPaused = false;
@@ -404,27 +406,56 @@ namespace CloudStream
 
                 GenericMediaMetadata mediaMetadata = new GenericMediaMetadata();
 
+                bool validSubtitle = false;
+                var mediaInfo = new MediaInformation() { ContentId = url, Metadata = mediaMetadata };
+                if (castWithSubtitle != -1) {
+                    if (CheckIfURLIsValid(activeSubtitles[castWithSubtitle])) {
+                        print("CHROMESUBTITLE: " + activeSubtitlesNames[castWithSubtitle]);
+                        validSubtitle = true;
+                        //  https://static.movies123.pro/files/tracks/JhUzWRukqeuUdRrPCe0R3lUJ1SmknAVSv670Ep0cXipm1JfMgNWa379VKKAz8nvFMq2ksu7bN5tCY5tXXKS4Lrr1tLkkipdLJNArNzVSu2g.srt
+                        mediaInfo.Tracks = new Track[]
+                                    {
+                                new Track() {  TrackId = 1, Language = "en-US" , Name = activeSubtitlesNames[castWithSubtitle], TrackContentId = activeSubtitles[castWithSubtitle] }
+                                    };
+                        mediaInfo.TextTrackStyle = new TextTrackStyle()
+                        {
+                            BackgroundColor = System.Drawing.Color.Transparent,
+                            EdgeColor = System.Drawing.Color.Black,
+                            EdgeType = TextTrackEdgeType.DropShadow
+                        };
+                    }
+                }
+
+
                 mediaMetadata.Title = castingTitle;
-                chromeMedia = await chromeChannel.LoadAsync(
-                         new MediaInformation() { ContentId = url, Metadata = mediaMetadata });
+                if (validSubtitle) {
+                    chromeMedia = await chromeChannel.LoadAsync(mediaInfo, true, 1);
+                }
+                else {
+                    chromeMedia = await chromeChannel.LoadAsync(mediaInfo);
+                }
 
                 print("START!!");
                 castingDuration = (double)chromeMedia.Media.Duration;
-            print("!1");
-            Task.Run(SetVolumeAsync);
-            print("!2");
-            chromeChannel.StatusChanged += ChromeChannel_StatusChanged; ;
-            print("!3");
+                print("!1");
+                Task.Run(SetVolumeAsync);
+                print("!2");
+                chromeChannel.StatusChanged += ChromeChannel_StatusChanged; ;
+                print("!3");
 
                 castUpdatedNow = DateTime.Now;
                 castLastUpdate = 0;
 
                 ChromeCastActivity.chromeCastActivity.CastVideoStart();
-            print("!4");
-           // }
-           // catch (System.Exception) {
-            //    await Task.CompletedTask;
-           // }
+                print("!4");
+            }
+            catch (System.Exception) {
+                await Task.CompletedTask;
+            }
+        }
+
+        public void SetCastSubtitle(string url)
+        {
 
         }
 
@@ -909,7 +940,7 @@ namespace CloudStream
             return "";
         }
 
-        static bool CheckIfURLIsValid(string uriName)
+        public static bool CheckIfURLIsValid(string uriName)
         {
             Uri uriResult;
             return Uri.TryCreate(uriName, UriKind.Absolute, out uriResult)
@@ -948,7 +979,39 @@ namespace CloudStream
             return fileText;
         }
 
-        public static string GenerateM3UFileFromLoadedLinks(string name = null, bool justHeaderFileName = false, List<int> flinks = null, bool reverse = false)
+        public static long DownloadRaw(string url, string title, string fileEnd = "")
+        {
+            DownloadManager.Request request = new DownloadManager.Request(Android.Net.Uri.Parse(url)); /*init a request*/
+            request.SetDescription(title); //this description apears inthe android notification 
+            request.SetTitle(title);//this description apears inthe android notification 
+                                    // request.SetDestinationInExternalFilesDir(ax_Links.ax_links.Context,
+                                    //        dir,
+                                    //       title); //set destination
+                                    //OR
+
+            title = title.Replace(" ", "_") + fileEnd;
+
+            string path = title;
+
+            string rootPath = Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/" + title;
+            try {
+                File.Delete(rootPath);
+            }
+            catch (System.Exception) {
+
+            }
+            request.SetDestinationInExternalPublicDir(Android.OS.Environment.DirectoryDownloads, path);
+            request.SetVisibleInDownloadsUi(false);
+            //  request.SetNotificationVisibility(DownloadVisibility.Hidden);
+
+            DownloadManager manager;
+            manager = (DownloadManager)MainActivity.mainActivity.GetSystemService(Context.DownloadService);
+
+
+            return manager.Enqueue(request); //start the download and return the id of the download. this id can be used to get info about the file (the size, the download progress ...) you can also stop the download by using this id     
+        }
+
+        public static string GenerateM3UFileFromLoadedLinks(string name = null, bool justHeaderFileName = false, List<int> flinks = null, bool reverse = false, bool placeInLinksFolder = true)
         {
             string writeData = GetM3UFileFromLoadedLinks(flinks, reverse);
             if (writeData == "error") {
@@ -962,7 +1025,7 @@ namespace CloudStream
                 name = rgx.Replace(name, "").ToLower().Replace(" ", "_");
             }
             string absolutePath = Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads;
-            string basePath = absolutePath + "/Links";
+            string basePath = absolutePath + (placeInLinksFolder ? "/Links" : "");
             Java.IO.File dir = new Java.IO.File(basePath);
             dir.Mkdirs();
 
@@ -3328,6 +3391,7 @@ namespace CloudStream
                 m.runtime = ReadDataMovie(mD, "data-duration");
                 m.genre = ReadDataMovie(mD, "data-genre");
                 m.plot = ReadDataMovie(mD, "data-descript");
+                mD = RemoveOne(mD, "<img src=\"/dist/image/default_poster.jpg\"");
                 m.posterID = ReadDataMovie(mD, "<img src=\"/dist/image/default_poster.jpg\" data-src");
                 m.type = isMovie ? "movie" : "tv-series";
                 //   print("--3");

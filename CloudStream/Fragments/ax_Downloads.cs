@@ -226,8 +226,8 @@ namespace CloudStream.Fragments
 
                 simpleHolder.mImgBtt.Visibility = ViewStates.Visible;
                 simpleHolder.mImgBtt.Background.SetVisible(false, true);
-                simpleHolder.mImgBtt.SetBackgroundColor(new Color(0, 0, 0, 0));
-                simpleHolder.mImgBtt.SetImageResource(Resource.Drawable.warrow2);
+              //  simpleHolder.mImgBtt.SetBackgroundColor(new Color(0, 0, 0, 0));
+              //  simpleHolder.mImgBtt.SetImageResource(Resource.Drawable.warrow2);
 
                 simpleHolder.mImgBtt.Click += (o, e) =>
                 {

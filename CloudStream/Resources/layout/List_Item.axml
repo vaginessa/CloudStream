@@ -7,9 +7,11 @@
     android:paddingRight="16dp"
     android:paddingTop="8dp"
     android:paddingBottom="8dp"
+    
     android:gravity="center_vertical">
     <ImageButton
-        android:src="@android:drawable/ic_menu_gallery"
+        android:backgroundTint="@android:color/transparent"
+        android:src="@drawable/warrow2"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:scaleType="fitXY"
@@ -17,12 +19,11 @@
     <TextView
         android:id="@+id/text1"
         android:text=""
-        
-
         android:translationX="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?attr/textAppearanceListItem" />
+
 
  
 

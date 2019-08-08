@@ -32,25 +32,61 @@ namespace CloudStream
         static ImageButton pauseBtt, backSecBtt, stopBtt;
         static SeekBar seekBar;
         static TextView leftCastTxt, rightCastTxt, titleTxt;
+        static bool setPoster = false;
+        static long posterIDRaw = 0;
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
             //Window.RequestFeature(WindowFeatures.NoTitle);
             chromeCastActivity = this;
-         
+
             SetContentView(Resource.Layout.Activity_ChromeCast);
             poster = FindViewById<ImageView>(Resource.Id.posterID);
+
             pauseBtt = FindViewById<ImageButton>(Resource.Id.CastPauseBtt);
             backSecBtt = FindViewById<ImageButton>(Resource.Id.CastBackBtt);
             stopBtt = FindViewById<ImageButton>(Resource.Id.CastStopBtt);
+
             seekBar = FindViewById<SeekBar>(Resource.Id.seekBar);
+
             leftCastTxt = FindViewById<TextView>(Resource.Id.castTimeleft);
             rightCastTxt = FindViewById<TextView>(Resource.Id.castTimeright);
             titleTxt = FindViewById<TextView>(Resource.Id.posterText);
+
+
             titleTxt.Text = castingTitle;
+            pauseBtt.SetBackgroundResource(castingPaused ? Resource.Drawable.ic_media_play_dark : Resource.Drawable.ic_media_pause_dark);
+
+
             print("POSTER: " + castingPosterId);
+            setPoster = true;
+
+            if (castingPosterId != null && castingPosterId != "") {
+                if (CheckIfURLIsValid(castingPosterId)) {
+                    if (!firstCast) {
+                        string rootPath = Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/" + "TempPoster";
+                        poster.SetImageURI(Android.Net.Uri.Parse(rootPath));
+                        setPoster = true;
+                        poster.SetBackgroundResource(Resource.Menu.border);
+                    }
+                    else {
+                        try {
+                            posterIDRaw = DownloadRaw(castingPosterId, "TempPoster");
+                            setPoster = false;
+                            firstCast = false;
+                        }
+                        catch (Exception) {
+
+                        }
+                    }
+                }
+            }
+
+
+
             try {
-             //   poster.SetImageURI(Android.Net.Uri.Parse(castingPosterId));
+                //   poster.SetImageURI(Android.Net.Uri.Parse(castingPosterId));
             }
             catch (Exception) {
 
@@ -104,7 +140,7 @@ namespace CloudStream
                 }
             };
 
-         
+
             //print(poster.);
 
             // SupportToolbar toolBar = FindViewById<SupportToolbar>(Resource.Id.toolBar);
@@ -129,7 +165,7 @@ namespace CloudStream
         public void CastVideoStart()
         {
             print("START");
-         
+
             updateThred = new Java.Lang.Thread(() =>
             {
                 try {
@@ -183,8 +219,23 @@ namespace CloudStream
             }
 
             double currentTime = GetChromeTime();
+            if (!setPoster) {
+                DownloadManager manager;
+                manager = (DownloadManager)MainActivity.mainActivity.GetSystemService(Context.DownloadService);
+                try {
+                    Android.Net.Uri uri = manager.GetUriForDownloadedFile(posterIDRaw); // ERROR IF FILE DOSENT EXIST
+                                                                                        // print("POSTERURI: " + uri);
+                    string rootPath = Android.OS.Environment.ExternalStorageDirectory + "/" + Android.OS.Environment.DirectoryDownloads + "/" + "TempPoster";
+                    poster.SetImageURI(Android.Net.Uri.Parse(rootPath));
+                    setPoster = true;
+                    poster.SetBackgroundResource(Resource.Menu.border);
+                }
+                catch (Exception) {
 
-            
+
+                }
+            }
+
 
             if (castingDuration - currentTime <= 4) {
                 MovieEnd();

@@ -2,7 +2,7 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <SelectedDevice>Samsung SM-J510FN</SelectedDevice>
-    <AndroidDesignerPreferredDevice>Nexus 5</AndroidDesignerPreferredDevice>
+    <AndroidDesignerPreferredDevice>pixel</AndroidDesignerPreferredDevice>
     <AndroidDesignerPreferredTheme>Theme.Design.NoActionBar</AndroidDesignerPreferredTheme>
     <DefaultDevice>lolipop_5_0</DefaultDevice>
   </PropertyGroup>
