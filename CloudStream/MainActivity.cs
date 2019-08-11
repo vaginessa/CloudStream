@@ -1751,6 +1751,9 @@ namespace CloudStream
                     //XbHP6duxDnD~1558891507~83.186.0.0~c5i0DlNs
                     string veryURL = FindHTML(result, "https:\\/\\/verystream.com\\/e\\/", "\"");
                     string gogoStream = FindHTML(result, "https:\\/\\/gomostream.com", "\"");
+                    string gunURL = "https://gounlimited.to/" + FindHTML(result, "https:\\/\\/gounlimited.to\\/", ".html") + ".html";
+                    string onlyURL = "https://onlystream.tv" + FindHTML(result, "https:\\/\\/onlystream.tv", "\"").Replace("\\", "");
+
                     gogoStream = gogoStream.Replace(",,&noneemb", "").Replace("\\", "");
                     //["https:\/\/redirector.googlevideo.com\/videoplayback?id=3559ed25eabf374d&itag=22&source=picasa&begin=0&requiressl=yes&mm=30&mn=sn-4g5ednsy&ms=nxu&mv=u&pl=44&sc=yes&ei=oenhXN27O62S8gOI07awBA&susc=ph&app=fife&mime=video\/mp4&cnr=14&dur=7561.903&lmt=1557947360209526&mt=1558308859&ipbits=0&keepalive=yes&ratebypass=yes&ip=2a01:4f8:110:3447::2&expire=1558316481&sparams=ip,ipbits,expire,id,itag,source,requiressl,mm,mn,ms,mv,pl,sc,ei,susc,app,mime,cnr,dur,lmt&signature=9ABF4766E7C2573C0171F8D1C6F0761B289483F1B9704140A09090666F4EED83.25A52B55EF6070C25DB2608CFBF0994166D1CA477F85D0CD71994980976993C6&key=us0","
                     //https:\/\/gomostream.com\/vid\/?v=eyJ0eXBlIjoibW92aWUiLCJpbWQiOiJ0dDAzNzE3NDYiLCJfIjoiMTI5NjUwODg1NTE3IiwidG9rZW4iOiI5MzExNTIifQ,,&noneemb",
@@ -1760,6 +1763,22 @@ namespace CloudStream
                     //"https:\/\/vcstream.to\/embed\/5cb01ff305468"]
 
                     //https://gomostream.com/vid/?v=eyJ0eXBlIjoibW92aWUiLCJpbWQiOiJ0dDAzNzE3NDYiLCJfIjoiMTI5NjUwODg1NTE3IiwidG9rZW4iOiI5MzExNTIifQ
+
+                    /*
+                      string result = Normal();
+            string mid = FindHTML(result, "mp4|", "|");
+            string server = FindHTML(result, mid + "|", "|");
+        //https://fs85.gounlimited.to/tea5vcfgdd2qzxfffm6ihk3y7oqcjl3bauga4fabqdu3pj7nl7apz3syla6q/v.mp4
+            print(mid + "<<>>" + server);
+            string end = "https://" + server + ".gounlimited.to/" + mid + "/v.mp4";
+
+                                string d = Normal();
+            string server = FindHTML(d, "urlset|", "|");
+            string mid = FindHTML(d, "logo|", "|");
+            string prefix = FindHTML(d,"ostreamcdn|", "|");
+            string _url = "https://"+prefix+ ".ostreamcdn.com/" + server+"/" + mid + "/index-v1-a1.m3u8";
+                     */
+
                     if (veryURL != "") {
                         string d = client.DownloadString("https://verystream.com/e/" + veryURL);
                         // print(d);
@@ -1775,8 +1794,18 @@ namespace CloudStream
                         print("");
                     }
                     else {
-                        print("HD Link error (Read api)");
+                        print("HD Verystream Link error (Read api)");
                         print("");
+                    }
+                    try {
+                        progress = (int)System.Math.Round((urlsDone * 100f) / (urlServers + otherServers), MidpointRounding.AwayFromZero);
+                        ax_Links.ax_links.ChangeBar(progress); // 1   //int.Parse(MathF.Floor(100 * (urlsDone / (urlServers + otherServers))).ToString());  
+                        if (ax_Links.ax_links_sub != null) {
+                            ax_Links.ax_links_sub.ChangeBar(progress);
+                        }
+                    }
+                    catch (System.Exception) {
+
                     }
                     if (gogoStream != "") {
                         string d = client.DownloadString("https://gomostream.com" + gogoStream);
@@ -1794,17 +1823,95 @@ namespace CloudStream
                         print("");
                     }
                     else {
-                        print("HD Link error (Read api)");
+                        print("HD Viduplayer Link error (Read api)");
                         print("");
 
                     }
+                    try {
+                        progress = (int)System.Math.Round((urlsDone * 100f) / (urlServers + otherServers), MidpointRounding.AwayFromZero);
+                        ax_Links.ax_links.ChangeBar(progress); // 1   //int.Parse(MathF.Floor(100 * (urlsDone / (urlServers + otherServers))).ToString());  
+                        if (ax_Links.ax_links_sub != null) {
+                            ax_Links.ax_links_sub.ChangeBar(progress);
+                        }
+                    }
+                    catch (System.Exception) {
+
+                    }
+
+                    if (gunURL != "") {
+                        string d = client.DownloadString(gunURL);
+                        string mid = FindHTML(d, "mp4|", "|");
+                        string server = FindHTML(d, mid + "|", "|");
+                        string url = "https://" + server + ".gounlimited.to/" + mid + "/v.mp4";
+                        if (!activeLinks.Contains(url) && mid != "" && server != "") {
+                            activeLinks.Add(url);
+                            activeLinksNames.Add("HD Go Unlimited");
+                        }
+                        print("-------------------- HD --------------------");
+                        print(url);
+
+                        print("--------------------------------------------");
+                        print("");
+                    }
+                    else {
+                        print("HD Go Link error (Read api)");
+                        print("");
+                    }
+
+                    try {
+                        progress = (int)System.Math.Round((urlsDone * 100f) / (urlServers + otherServers), MidpointRounding.AwayFromZero);
+                        ax_Links.ax_links.ChangeBar(progress); // 1   //int.Parse(MathF.Floor(100 * (urlsDone / (urlServers + otherServers))).ToString());  
+                        if (ax_Links.ax_links_sub != null) {
+                            ax_Links.ax_links_sub.ChangeBar(progress);
+                        }
+                    }
+                    catch (System.Exception) {
+
+                    }
+
+                    if (onlyURL != "") {
+                        string d = client.DownloadString(onlyURL);
+                        string server = "";//FindHTML(d, "urlset|", "|");
+                        string mid = FindHTML(d, "logo|", "|");
+
+                        if (mid == "" || mid.Length < 10) {
+                            mid = FindHTML(d, "mp4|", "|");
+                        }
+
+                        string prefix = FindHTML(d, "ostreamcdn|", "|");
+
+                        string url = "";
+                        if (server != "") {
+                            url = "https://" + prefix + ".ostreamcdn.com/" + server + "/" + mid + "/v/mp4"; // /index-v1-a1.m3u8 also works if you want the m3u8 file instead
+                        }
+                        else {
+                            url = "https://" + prefix + ".ostreamcdn.com/" + mid + "/v/mp4";
+                        }
+                        if (!activeLinks.Contains(url) && mid != "" && prefix != "" && mid.Length > 10) {
+                            activeLinks.Add(url);
+                            activeLinksNames.Add("HD Onlystream");
+                        }
+                        else {
+                            print(d);
+                            print("FAILED URL: " + url);
+                        }
+                        print("-------------------- HD --------------------");
+                        print(url);
+
+                        print("--------------------------------------------");
+                        print("");
+                    }
+                    else {
+                        print("HD Only Link error (Read api)");
+                        print("");
+                    }
+
                     hdMovieIsDone = true;
 
                 }
                 else {
                     print("HD Link error (no response)");
                     hdMovieIsDone = true;
-
                 }
 
             }
