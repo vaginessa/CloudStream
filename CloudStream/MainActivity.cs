@@ -1780,18 +1780,24 @@ namespace CloudStream
                      */
 
                     if (veryURL != "") {
-                        string d = client.DownloadString("https://verystream.com/e/" + veryURL);
-                        // print(d);
-                        print("-------------------- HD --------------------");
-                        string url = tempTitle + "https://verystream.com/gettoken/" + FindHTML(d, "videolink\">", "<");
-                        print(url);
-                        if (!activeLinks.Contains(url) && url != "https://verystream.com/gettoken/") {
-                            activeLinks.Add(url);
-                            activeLinksNames.Add("HD Verystream");
-                        }
+                        try {
+                            string d = client.DownloadString("https://verystream.com/e/" + veryURL);
+                            // print(d);
+                            print("-------------------- HD --------------------");
+                            string url = tempTitle + "https://verystream.com/gettoken/" + FindHTML(d, "videolink\">", "<");
+                            print(url);
+                            if (!activeLinks.Contains(url) && url != "https://verystream.com/gettoken/") {
+                                activeLinks.Add(url);
+                                activeLinksNames.Add("HD Verystream");
+                            }
 
-                        print("--------------------------------------------");
-                        print("");
+                            print("--------------------------------------------");
+                            print("");
+                        }
+                        catch (System.Exception) {
+
+                        }
+                   
                     }
                     else {
                         print("HD Verystream Link error (Read api)");
@@ -1808,19 +1814,24 @@ namespace CloudStream
 
                     }
                     if (gogoStream != "") {
-                        string d = client.DownloadString("https://gomostream.com" + gogoStream);
-                        //print(d);
-                        // print("https://gomostream.com" + gogoStream);
-                        //https://v16.viduplayer.com/vxokfmpswoalavf4eqnivlo2355co6iwwgaawrhe7je3fble4vtvcgek2jha/v.mp4
-                        print("-------------------- HD --------------------");
-                        string url = tempTitle + GetgogoByFile(d);
-                        print(url);
-                        if (!activeLinks.Contains(url) && !url.EndsWith(".viduplayer.com/urlset/v.mp4") && !url.Contains("Error")) {
-                            activeLinks.Add(url);
-                            activeLinksNames.Add("HD Viduplayer");
+                        try {
+                            string d = client.DownloadString("https://gomostream.com" + gogoStream);
+                            //print(d);
+                            // print("https://gomostream.com" + gogoStream);
+                            //https://v16.viduplayer.com/vxokfmpswoalavf4eqnivlo2355co6iwwgaawrhe7je3fble4vtvcgek2jha/v.mp4
+                            print("-------------------- HD --------------------");
+                            string url = tempTitle + GetgogoByFile(d);
+                            print(url);
+                            if (!activeLinks.Contains(url) && !url.EndsWith(".viduplayer.com/urlset/v.mp4") && !url.Contains("Error")) {
+                                activeLinks.Add(url);
+                                activeLinksNames.Add("HD Viduplayer");
+                            }
+                            print("--------------------------------------------");
+                            print("");
                         }
-                        print("--------------------------------------------");
-                        print("");
+                        catch (System.Exception) {
+                        }
+                  
                     }
                     else {
                         print("HD Viduplayer Link error (Read api)");
@@ -1839,19 +1850,25 @@ namespace CloudStream
                     }
 
                     if (gunURL != "") {
-                        string d = client.DownloadString(gunURL);
-                        string mid = FindHTML(d, "mp4|", "|");
-                        string server = FindHTML(d, mid + "|", "|");
-                        string url = "https://" + server + ".gounlimited.to/" + mid + "/v.mp4";
-                        if (!activeLinks.Contains(url) && mid != "" && server != "") {
-                            activeLinks.Add(url);
-                            activeLinksNames.Add("HD Go Unlimited");
-                        }
-                        print("-------------------- HD --------------------");
-                        print(url);
+                        try {
+                            string d = client.DownloadString(gunURL);
+                            string mid = FindHTML(d, "mp4|", "|");
+                            string server = FindHTML(d, mid + "|", "|");
+                            string url = "https://" + server + ".gounlimited.to/" + mid + "/v.mp4";
+                            if (!activeLinks.Contains(url) && mid != "" && server != "") {
+                                activeLinks.Add(url);
+                                activeLinksNames.Add("HD Go Unlimited");
+                            }
+                            print("-------------------- HD --------------------");
+                            print(url);
 
-                        print("--------------------------------------------");
-                        print("");
+                            print("--------------------------------------------");
+                            print("");
+                        }
+                        catch (System.Exception) {
+
+                        }
+                     
                     }
                     else {
                         print("HD Go Link error (Read api)");
@@ -1870,36 +1887,42 @@ namespace CloudStream
                     }
 
                     if (onlyURL != "") {
-                        string d = client.DownloadString(onlyURL);
-                        string server = "";//FindHTML(d, "urlset|", "|");
-                        string mid = FindHTML(d, "logo|", "|");
+                        try {
+                            string d = client.DownloadString(onlyURL);
+                            string server = "";//FindHTML(d, "urlset|", "|");
+                            string mid = FindHTML(d, "logo|", "|");
 
-                        if (mid == "" || mid.Length < 10) {
-                            mid = FindHTML(d, "mp4|", "|");
+                            if (mid == "" || mid.Length < 10) {
+                                mid = FindHTML(d, "mp4|", "|");
+                            }
+
+                            string prefix = FindHTML(d, "ostreamcdn|", "|");
+
+                            string url = "";
+                            if (server != "") {
+                                url = "https://" + prefix + ".ostreamcdn.com/" + server + "/" + mid + "/v/mp4"; // /index-v1-a1.m3u8 also works if you want the m3u8 file instead
+                            }
+                            else {
+                                url = "https://" + prefix + ".ostreamcdn.com/" + mid + "/v/mp4";
+                            }
+                            if (!activeLinks.Contains(url) && mid != "" && prefix != "" && mid.Length > 10) {
+                                activeLinks.Add(url);
+                                activeLinksNames.Add("HD Onlystream");
+                            }
+                            else {
+                                print(d);
+                                print("FAILED URL: " + url);
+                            }
+                            print("-------------------- HD --------------------");
+                            print(url);
+
+                            print("--------------------------------------------");
+                            print("");
+                        }
+                        catch (System.Exception) {
+
                         }
 
-                        string prefix = FindHTML(d, "ostreamcdn|", "|");
-
-                        string url = "";
-                        if (server != "") {
-                            url = "https://" + prefix + ".ostreamcdn.com/" + server + "/" + mid + "/v/mp4"; // /index-v1-a1.m3u8 also works if you want the m3u8 file instead
-                        }
-                        else {
-                            url = "https://" + prefix + ".ostreamcdn.com/" + mid + "/v/mp4";
-                        }
-                        if (!activeLinks.Contains(url) && mid != "" && prefix != "" && mid.Length > 10) {
-                            activeLinks.Add(url);
-                            activeLinksNames.Add("HD Onlystream");
-                        }
-                        else {
-                            print(d);
-                            print("FAILED URL: " + url);
-                        }
-                        print("-------------------- HD --------------------");
-                        print(url);
-
-                        print("--------------------------------------------");
-                        print("");
                     }
                     else {
                         print("HD Only Link error (Read api)");
@@ -3466,8 +3489,9 @@ namespace CloudStream
             //  }
             bool canMovie = ax_Settings.SettingsGetChecked(0);
             bool canShow = ax_Settings.SettingsGetChecked(8);
-
-            while (mD.Contains("/movie/") || mD.Contains("/tv-series/")) {
+            int counter = 0;
+            while (   (mD.Contains("/movie/") || mD.Contains("/tv-series/") ) && counter < 100) {
+                counter++;
                 // print("DA");
                 /*
                 data - filmName = "Iron Man"
@@ -3486,11 +3510,11 @@ namespace CloudStream
                 int tvIndex = mD.IndexOf("/tv-series/");
                 int movieIndex = mD.IndexOf("/movie/");
                 bool isMovie = movieIndex < tvIndex;
-                //  print("--1");
+               //   print("--1");
                 if (tvIndex == -1) { isMovie = true; }
                 if (movieIndex == -1) { isMovie = false; }
 
-                // print("--2");
+               //  print("--2");
 
                 Movie m = new Movie();
                 m.year = ReadDataMovie(mD, "data-year");
@@ -3498,20 +3522,27 @@ namespace CloudStream
                 m.runtime = ReadDataMovie(mD, "data-duration");
                 m.genre = ReadDataMovie(mD, "data-genre");
                 m.plot = ReadDataMovie(mD, "data-descript");
-                mD = RemoveOne(mD, "<img src=\"/dist/image/default_poster.jpg\"");
-                m.posterID = ReadDataMovie(mD, "<img src=\"/dist/image/default_poster.jpg\" data-src");
-                m.type = isMovie ? "movie" : "tv-series";
-                //   print("--3");
 
-                //  print("--4");
+                m.type = isMovie ? "movie" : "tv-series";
+               //    print("--3");
+
+              //  print("--4");
 
                 string lookfor = isMovie ? "/movie/" : "/tv-series/";
 
                 int mStart = mD.IndexOf(lookfor);
-
+                if(mStart == -1) {
+                    print("API ERROR!");
+                   // print(mD);
+                    print(m.year + "|" + m.imdbRating + "|" + isMovie + "|" + lookfor);
+                    continue;
+                }
                 mD = mD.Substring(mStart, mD.Length - mStart);
                 mD = mD.Substring(7, mD.Length - 7);
-                // print("--5");
+                //string bMd = RemoveOne(mD, "<img src=\"/dist/image/default_poster.jpg\"");
+                m.posterID = ReadDataMovie(mD, "<img src=\"/dist/image/default_poster.jpg\" data-src");
+              //  print("--5");
+              //  print(m.posterID);
 
 
                 string rmd = lookfor + mD;
@@ -3526,10 +3557,10 @@ namespace CloudStream
                     }
                     _realMoveLink = "/tv-series" + _realMoveLink;
                 }
-                //  print("--6");
+               //   print("--6");
 
                 fwordLink.Add(_realMoveLink);
-                print("::::::::::::::::::::::" + _realMoveLink + " | " + isMovie);
+               // print("::::::::::::::::::::::" + _realMoveLink + " | " + isMovie);
 
                 int titleStart = mD.IndexOf("title=\"");
                 string _allrmd = mD.Substring(titleStart + 7, mD.Length - titleStart - 7);
@@ -3537,6 +3568,8 @@ namespace CloudStream
                 _allrmd = _allrmd.Replace("&amp;", "and");
                 m.title = _allrmd;
                 if ((isMovie && canMovie) || (!isMovie && canShow)) {
+
+                  
                     moviesActive.Add(m);
                     movieIsAnime.Add(false);
                     movieTitles.Add(_allrmd);
@@ -3546,7 +3579,7 @@ namespace CloudStream
 
             }
             linksDone++;
-            print("--8");
+          //  print("--8");
 
             //   SortMovies();
 
@@ -4213,8 +4246,6 @@ namespace CloudStream
         static void __GetLinkSeries(string sp, string ep, int cThred)
         {
             try {
-
-
                 if (cThred != thredNumber) return;
 
                 WebClient client = new WebClient();
@@ -4292,8 +4323,7 @@ namespace CloudStream
                 }
             }
             catch (System.Exception) {
-
-                throw;
+                //throw;
             }
         }
 
